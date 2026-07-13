@@ -20,8 +20,14 @@ fn production_fixtures_initialize_docs_state_and_qa_context() {
 
         assert_eq!(output.exit_code, 0, "{}", output.stderr);
         assert!(output.stdout.contains("claims_persisted:"));
-        assert!(repo.join(".codewiki/config.yml").exists());
-        assert!(repo.join(".codewiki/sources.yml").exists());
+        assert!(
+            repo.join(".agents/skills/codewiki/project/config.yml")
+                .exists()
+        );
+        assert!(
+            repo.join(".agents/skills/codewiki/project/sources.yml")
+                .exists()
+        );
         assert!(repo.join("docs/quickstart.md").exists());
         assert!(repo.join("docs/source-map.md").exists());
         assert!(repo.join("docs/domain/overview.md").exists());

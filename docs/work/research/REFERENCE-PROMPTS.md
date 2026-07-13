@@ -48,7 +48,7 @@ The purpose is not to copy either prompt. The purpose is to extract compatible p
 ### Weaknesses to Avoid
 
 - The system prompt is monolithic. It contains many product-specific rules, connector details, CLI references, and local-path assumptions that would make CodeWiki heavy and brittle if copied directly.
-- It assumes OpenWiki-specific paths and modes, such as global wiki storage and repository `openwiki/` output. CodeWiki needs repo-native `.codewiki/**`, `docs/**`, and skill packaging semantics.
+- It assumes OpenWiki-specific paths and modes, such as global wiki storage and repository `openwiki/` output. CodeWiki needs repo-native `.agents/skills/codewiki/project/**`, `docs/**`, and skill packaging semantics.
 - It mixes stable safety rules, source-ingestion rules, mode behavior, output policy, and CLI help into one prompt surface. CodeWiki should use progressive disclosure instead.
 - Its subagent guidance should not be copied as a default. CodeWiki should follow the host agent runtime rules and only use subagents when explicitly permitted or requested.
 - The page budget is useful as a guardrail but should not become a hard universal limit. CodeWiki targets complete semantic coverage over repeated syncs, not a fixed page count.
@@ -86,8 +86,8 @@ CodeWiki should combine them this way:
 
 | CodeWiki Need | Adopt From OpenWiki | Adopt From DeepWiki | CodeWiki Adjustment |
 | --- | --- | --- | --- |
-| Initial documentation | Evidence-first init, planning before writing, high-quality docs bar | Mode-specific prompt shape | Generate `.codewiki/plan.yml` plus `docs/**`; do not rely on a temporary-only plan. |
-| Incremental sync | Surgical update, docs impact plan, no-op when current | Cache awareness | Track prior analysis in SQLite and `.codewiki/plan.yml`, then update only affected docs. |
+| Initial documentation | Evidence-first init, planning before writing, high-quality docs bar | Mode-specific prompt shape | Generate `.agents/skills/codewiki/project/plan.yml` plus `docs/**`; do not rely on a temporary-only plan. |
+| Incremental sync | Surgical update, docs impact plan, no-op when current | Cache awareness | Track prior analysis in SQLite and `.agents/skills/codewiki/project/plan.yml`, then update only affected docs. |
 | Q&A after docs exist | Wiki-first answering, source fallback only when needed | Structured context blocks and same-language response | Answer from `docs/**` first, then plan/state/SQLite/source/provider only when justified. |
 | Deep repo research | Targeted exploration and source/Git evidence | Iterative research prompts | Use as an internal mode for hard questions or incomplete docs; save durable findings back into CodeWiki state when relevant. |
 | Provider/runtime tools | Minimal default tool surface and clear boundaries | Retrieval pipeline concept | Lazy-activate Octocode/codebase-memory-mcp/CocoIndex only by trigger; do not require them for every run. |
@@ -109,9 +109,9 @@ Do not build one giant prompt. Use a layered prompt system:
    - `deep-research`: focused iterative investigation for hard questions or weak docs.
 
 3. Runtime repo packet
-   - `.codewiki/config.yml`
-   - `.codewiki/plan.yml`
-   - `.codewiki/AGENTS.md`
+   - `.agents/skills/codewiki/project/config.yml`
+   - `.agents/skills/codewiki/project/plan.yml`
+   - `.agents/skills/codewiki/project/AGENTS.md`
    - Git status/change summary
    - provider availability/status
    - docs freshness metadata
@@ -146,7 +146,7 @@ This architecture keeps the skill portable across repositories while still givin
 - Implement the accepted `docs/**` generated docs structure from `docs/decisions/ADR-0005-codewiki-generated-docs-structure.md` in CodeWiki prompt modules.
 - Define SQLite tables for claims, evidence, pages, symbols, provider snapshots, and sync runs.
 - Define how CodeWiki records “docs answered the question” versus “source fallback was required” for future sync prioritization.
-- Decide how much of the prompt architecture should be rendered into target-repo `.codewiki/AGENTS.md`.
+- Decide how much of the prompt architecture should be rendered into target-repo `.agents/skills/codewiki/project/AGENTS.md`.
 
 ## Recommendation
 

@@ -61,8 +61,17 @@ if [[ ! -f "$SOURCE_DIR/skill/codewiki/SKILL.md" ]]; then
 fi
 
 mkdir -p "$INSTALL_ROOT"
+PROJECT_BACKUP=""
+if [[ -d "$INSTALL_DIR/project" ]]; then
+  PROJECT_BACKUP="$tmpdir/project"
+  cp -R "$INSTALL_DIR/project" "$PROJECT_BACKUP"
+fi
 rm -rf "$INSTALL_DIR"
 cp -R "$SOURCE_DIR/skill/codewiki" "$INSTALL_DIR"
+if [[ -n "$PROJECT_BACKUP" ]]; then
+  rm -rf "$INSTALL_DIR/project"
+  cp -R "$PROJECT_BACKUP" "$INSTALL_DIR/project"
+fi
 if [[ -f "$SOURCE_DIR/Cargo.toml" && -d "$SOURCE_DIR/crates/codewiki-cli" ]]; then
   mkdir -p "$INSTALL_DIR/companion"
   cp "$SOURCE_DIR/Cargo.toml" "$INSTALL_DIR/companion/Cargo.toml"

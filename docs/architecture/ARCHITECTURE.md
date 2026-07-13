@@ -46,7 +46,7 @@ The core should not hard-code language/framework adapters. It should combine rep
 | Repo detector | Detect languages, frameworks, package managers, entrypoints, test/build tools, and docs | `crates/codewiki-detect` | Dynamic detection only; no core adapters |
 | Explorer | Select files/symbols/docs to inspect and record evidence | `crates/codewiki-explore` | Deterministic semantic snapshot v1; lexical hints are evidence, not final claims |
 | Evidence store | Persist facts, hypotheses, claims, source references, and claim/evidence links | `crates/codewiki-store` | SQLite local runtime state with migration and persistence helpers |
-| WikiPlan generator | Produce page plan, scope, confidence, open questions, and refresh strategy | `crates/codewiki-store`, `crates/codewiki-core` | Committed summary under `.codewiki/plan.yml` |
+| WikiPlan generator | Produce page plan, scope, confidence, open questions, and refresh strategy | `crates/codewiki-store`, `crates/codewiki-core` | Committed summary under `.agents/skills/codewiki/project/plan.yml` |
 | Doc generator | Write human/agent-readable wiki docs | `crates/codewiki-docs` | Canonical generated docs root is `docs/**` |
 | Sync engine | Detect stale docs and update safely | `crates/codewiki-core`, `crates/codewiki-docs`, `crates/codewiki-store` | Respects human-owned edits via generated-region markers |
 | Q&A engine | Answer from docs first, then evidence/source when needed | `crates/codewiki-store`, `skill/codewiki/references/qa.md` | Renders active/stale claim context and requires evidence citations |
@@ -71,7 +71,7 @@ Git repo + files + existing docs + optional source skill evidence
 CodeWiki uses three distinct wiki workspace layers. The workspace may be the source repository or a separate external/personal directory:
 
 ```text
-.codewiki/
+.agents/skills/codewiki/project/
   config.yml      # committed control config
   plan.yml        # committed semantic WikiPlan and sync plan
   AGENTS.md       # committed local CodeWiki agent guidance
@@ -82,7 +82,7 @@ docs/
   ...             # canonical generated semantic docs
 ```
 
-`docs/**` is the human/agent knowledge surface and the first source for Q&A. `.codewiki/**` is the committed control plane. SQLite state and rebuildable caches live outside the repository/workspace in platform app-data/cache directories.
+`docs/**` is the human/agent knowledge surface and the first source for Q&A. `.agents/skills/codewiki/project/**` is the committed control plane. SQLite state and rebuildable caches live outside the repository/workspace in platform app-data/cache directories.
 
 Semantic exploration v1 records bounded file, area, symbol, import/dependency-hint, and evidence-reference snapshots. These hints seed generated docs and future claim promotion, but they are not treated as fully resolved architecture without additional evidence.
 

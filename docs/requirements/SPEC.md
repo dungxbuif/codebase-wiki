@@ -56,10 +56,10 @@ CodeWiki is a Codex skill that builds and maintains a semantic wiki for software
 - Generated docs may live in the source repository or in an external/personal wiki workspace confirmed with the user.
 - `docs/quickstart.md` is the required generated entrypoint after successful init.
 - Canonical generated docs slots include quickstart, source map, architecture, domain, workflows, data models, API/interfaces, operations, testing, decisions, glossary, open questions, evidence, and optional area pages.
-- Project config lives in committed `.codewiki/config.yml`.
-- Plan/state summaries that should travel with the repo live in committed `.codewiki/plan.yml` or equivalent.
-- Target-repo CodeWiki agent guidance lives in committed `.codewiki/AGENTS.md`.
-- Source declarations live in `.codewiki/sources.yml`.
+- Project config lives in committed `.agents/skills/codewiki/project/config.yml`.
+- Plan/state summaries that should travel with the repo live in committed `.agents/skills/codewiki/project/plan.yml` or equivalent.
+- Target-repo CodeWiki agent guidance lives in committed `.agents/skills/codewiki/project/AGENTS.md`.
+- Source declarations live in `.agents/skills/codewiki/project/sources.yml`.
 - Git is the default source for code changes.
 - Non-Git sources are supported through user-provided source extension skills, not bundled providers.
 - Local runtime state lives outside the repo in SQLite and is keyed by repository identity.
@@ -87,7 +87,7 @@ CodeWiki is a Codex skill that builds and maintains a semantic wiki for software
 - Use CocoIndex only when repo size or repeated refresh/query workload justifies an indexing pipeline.
 - Provide install/activation guidance for runtime tools in the skill and target-repo CodeWiki agent instructions.
 - Keep committed config/docs separate from persistent local runtime state and rebuildable cache.
-- Treat `docs/**` as the generated knowledge surface and `.codewiki/**` as the committed control plane.
+- Treat `docs/**` as the generated knowledge surface and `.agents/skills/codewiki/project/**` as the committed control plane.
 - Ask for/confirm output workspace placement before writing when repo-local versus external/personal storage is ambiguous.
 - Use OpenWiki and deepwiki-open as technical references only; do not inherit their runtime architecture wholesale.
 - Install command should copy/install `skill/codewiki` into the target workspace at `.agents/skills/codewiki` by default.

@@ -27,10 +27,10 @@ trace:
 
 ## Acceptance Criteria
 
-- [x] Store layout names `.codewiki/config.yml`, `.codewiki/plan.yml`, and `.codewiki/AGENTS.md`.
+- [x] Store layout names `.agents/skills/codewiki/project/config.yml`, `.agents/skills/codewiki/project/plan.yml`, and `.agents/skills/codewiki/project/AGENTS.md`.
 - [x] Config skeleton records docs root, plan path, agents path, and lazy runtime tool policy.
 - [x] Plan skeleton records schema version and evidence policy.
-- [x] Target `.codewiki/AGENTS.md` guidance is docs-first and includes provider trigger rules.
+- [x] Target `.agents/skills/codewiki/project/AGENTS.md` guidance is docs-first and includes provider trigger rules.
 - [x] Rust tests verify the config/storage defaults.
 
 ## Verification Results
@@ -45,7 +45,7 @@ trace:
 
 - Command: `rtk cargo run -p codewiki-cli -- status`
 - Result: pass
-- Notes: status output includes `.codewiki/config.yml`, `.codewiki/plan.yml`, `.codewiki/AGENTS.md`, local SQLite state summary, and docs root.
+- Notes: status output includes `.agents/skills/codewiki/project/config.yml`, `.agents/skills/codewiki/project/plan.yml`, `.agents/skills/codewiki/project/AGENTS.md`, local SQLite state summary, and docs root.
 
 ## Docs Review
 

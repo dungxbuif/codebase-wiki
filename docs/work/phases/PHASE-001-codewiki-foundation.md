@@ -47,6 +47,7 @@ trace:
     - docs/work/tickets/TICKET-022-openwiki-deepwiki-docs-patterns.md
     - docs/work/tickets/TICKET-023-reference-baseline-and-source-provider-status.md
     - docs/work/tickets/TICKET-024-final-foundation-closure.md
+    - docs/work/tickets/TICKET-025-agent-workspace-control-plane.md
   bugs: []
   test_verification: docs/work/VALIDATION_MATRIX.md
   validation_matrix: docs/work/VALIDATION_MATRIX.md
@@ -81,7 +82,7 @@ trace:
 - Backlog items: `BL-001`, `BL-002`, `BL-003`, `BL-004`, `BL-005`, `BL-006`, `BL-007`, `BL-008`, `BL-009`, `BL-010`, `BL-011`, `BL-012`, `BL-013`
 - Roadmap: `docs/work/ROADMAP.md`
 - Requirements: `docs/requirements/SPEC.md`, `docs/requirements/REQUIREMENTS.md`
-- Tickets: `docs/work/tickets/TICKET-001-rust-cli-workspace.md` through `docs/work/tickets/TICKET-024-final-foundation-closure.md`
+- Tickets: `docs/work/tickets/TICKET-001-rust-cli-workspace.md` through `docs/work/tickets/TICKET-025-agent-workspace-control-plane.md`
 - Bugs: none
 - Test verification: `docs/work/VALIDATION_MATRIX.md`
 - Validation matrix: `docs/work/VALIDATION_MATRIX.md`
@@ -138,6 +139,7 @@ Create the complete foundation for CodeWiki as a repo-native skill that can init
 | TICKET-022 | ticket | OpenWiki/DeepWiki docs patterns | done | `docs/work/tickets/TICKET-022-openwiki-deepwiki-docs-patterns.md` |
 | TICKET-023 | ticket | Reference baseline and source provider status | done | `docs/work/tickets/TICKET-023-reference-baseline-and-source-provider-status.md` |
 | TICKET-024 | ticket | Final foundation closure | done | `docs/work/tickets/TICKET-024-final-foundation-closure.md` |
+| TICKET-025 | ticket | Agent workspace control plane | done | `docs/work/tickets/TICKET-025-agent-workspace-control-plane.md` |
 
 ## Dependencies
 

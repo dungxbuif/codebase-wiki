@@ -32,7 +32,7 @@ trace:
 - [x] Git is documented as the default code-change source.
 - [x] Non-Git sources are supported only through user-provided source extension skills.
 - [x] CodeWiki core does not define built-in Jira/Figma/provider commands.
-- [x] `.codewiki/sources.yml` is documented as the source registry.
+- [x] `.agents/skills/codewiki/project/sources.yml` is documented as the source registry.
 - [x] Rust companion helper can initialize an external wiki workspace without writing docs/control files into the source repository.
 - [x] Skill includes a copyable template for user-authored source extension skills.
 
@@ -44,7 +44,7 @@ trace:
 
 - Command: `rtk cargo test -p codewiki-core -p codewiki-store`
 - Result: pass
-- Notes: 22 tests passed across 4 suites; includes external workspace initialization and `.codewiki/sources.yml` rendering.
+- Notes: 22 tests passed across 4 suites; includes external workspace initialization and `.agents/skills/codewiki/project/sources.yml` rendering.
 
 - Command: `rtk cargo test`
 - Result: pass

@@ -12,7 +12,7 @@ This mirrors the useful part of OpenWiki's connector model without copying its b
 
 ## Source Registry
 
-Record sources in `.codewiki/sources.yml` inside the selected wiki workspace:
+Record sources in `.agents/skills/codewiki/project/sources.yml` inside the selected wiki workspace:
 
 ```yaml
 schema_version: 1
@@ -57,7 +57,7 @@ The source skill may use its own tools/connectors, but CodeWiki treats its outpu
 
 ## How CodeWiki Uses Source Extensions
 
-1. Read `.codewiki/sources.yml`.
+1. Read `.agents/skills/codewiki/project/sources.yml`.
 2. Always inspect Git/source repo evidence first for code truth.
 3. For each non-Git source, load or ask for the named source skill only when that source is relevant to the user request or sync scope.
 4. Convert source skill output into evidence items, claims, open questions, or docs impact notes.
@@ -66,7 +66,7 @@ The source skill may use its own tools/connectors, but CodeWiki treats its outpu
 
 Current implementation status:
 
-- Implemented: `.codewiki/sources.yml` registry generation with the primary Git source.
+- Implemented: `.agents/skills/codewiki/project/sources.yml` registry generation with the primary Git source.
 - Implemented: external/personal workspace support, where source repo evidence and wiki workspace can differ.
 - Implemented: source skill template and evidence packet contract.
 - Not implemented by design: built-in Jira/Figma/fix-note/provider commands or bundled connectors.
@@ -95,4 +95,4 @@ Its `SKILL.md` should say:
 - how to emit the evidence packet shape above;
 - what confidence labels mean for that source.
 
-CodeWiki can then reference it from `.codewiki/sources.yml` using `ref: skill:<skill-name>`.
+CodeWiki can then reference it from `.agents/skills/codewiki/project/sources.yml` using `ref: skill:<skill-name>`.

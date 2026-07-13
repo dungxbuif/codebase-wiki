@@ -24,7 +24,7 @@ Create the initial repo-native semantic wiki without approval gates. The output 
    - Never silently write docs into the source repo when the user asked for personal/external docs.
 
 3. Load existing context.
-   - Read existing `.codewiki/config.yml`, `.codewiki/plan.yml`, `.codewiki/AGENTS.md`, and `docs/**` if present.
+   - Read existing `.agents/skills/codewiki/project/config.yml`, `.agents/skills/codewiki/project/plan.yml`, `.agents/skills/codewiki/project/AGENTS.md`, and `docs/**` if present.
    - Read existing human docs such as `README*`, `docs/**`, ADRs, runbooks, API docs, and contribution/setup docs.
    - Treat existing human docs as source evidence, not generated output.
 
@@ -38,11 +38,11 @@ Create the initial repo-native semantic wiki without approval gates. The output 
    - Expand scope only when evidence requires it.
    - Avoid secrets and generated/vendor/cache directories.
 
-6. Create `.codewiki/plan.yml`.
+6. Create `.agents/skills/codewiki/project/plan.yml`.
    - Include repo identity, detected stack, proposed pages, coverage, evidence needs, confidence, stale/unknown areas, provider tool status, and refresh strategy.
    - If optional code intelligence is needed, record the trigger and selected provider.
 
-7. Create or update `.codewiki/sources.yml`.
+7. Create or update `.agents/skills/codewiki/project/sources.yml`.
    - Always include the primary Git source when a repository is involved.
    - Add non-Git sources only as declarations or user-provided source skill refs.
    - Do not assume CodeWiki has a built-in provider for Jira, Figma, or other systems.
@@ -51,9 +51,9 @@ Create the initial repo-native semantic wiki without approval gates. The output 
    - Always write `index.md`.
    - Create only evidence-backed canonical pages.
    - Use `areas/<area-slug>/overview.md` only for substantial areas.
-   - Mark uncertainties in `open-questions.md` and/or `.codewiki/plan.yml`.
+   - Mark uncertainties in `open-questions.md` and/or `.agents/skills/codewiki/project/plan.yml`.
 
-9. Write `.codewiki/AGENTS.md`.
+9. Write `.agents/skills/codewiki/project/AGENTS.md`.
    - Explain docs-first Q&A order.
    - Record optional provider activation notes for this repository.
    - Keep it local to CodeWiki behavior; do not replace the repository root `AGENTS.md`.

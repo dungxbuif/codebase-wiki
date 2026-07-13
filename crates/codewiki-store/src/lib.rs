@@ -560,12 +560,12 @@ pub struct StoreLayout {
 impl Default for StoreLayout {
     fn default() -> Self {
         Self {
-            committed_config_path: ".codewiki/config.yml",
-            committed_plan_path: ".codewiki/plan.yml",
-            committed_agents_path: ".codewiki/AGENTS.md",
-            committed_sources_path: ".codewiki/sources.yml",
+            committed_config_path: ".agents/skills/codewiki/project/config.yml",
+            committed_plan_path: ".agents/skills/codewiki/project/plan.yml",
+            committed_agents_path: ".agents/skills/codewiki/project/AGENTS.md",
+            committed_sources_path: ".agents/skills/codewiki/project/sources.yml",
             local_state_summary: "platform app data SQLite, keyed by repository identity",
-            cache_summary: ".codewiki/cache is rebuildable and may be ignored",
+            cache_summary: ".agents/skills/codewiki/project/cache is rebuildable and may be ignored",
         }
     }
 }
@@ -927,8 +927,8 @@ pub fn render_target_agents_md() -> String {
         "Use docs-first lazy activation:",
         "",
         "1. Read `docs/**`.",
-        "2. Read `.codewiki/plan.yml`.",
-        "3. Read `.codewiki/AGENTS.md`.",
+        "2. Read `.agents/skills/codewiki/project/plan.yml`.",
+        "3. Read `.agents/skills/codewiki/project/AGENTS.md`.",
         "4. Query local CodeWiki SQLite facts/evidence/claims when available.",
         "5. Inspect source files and Git history when docs are missing or stale.",
         "6. Activate external runtime tools only when evidence quality requires it.",
@@ -939,7 +939,7 @@ pub fn render_target_agents_md() -> String {
         "- codebase-memory-mcp is only for shared cross-session memory beyond CodeWiki SQLite state.",
         "- CocoIndex is only for repo scale or repeated refresh/query indexing workloads.",
         "",
-        "Record selected tools and trigger reasons in `.codewiki/config.yml` and local runtime state.",
+        "Record selected tools and trigger reasons in `.agents/skills/codewiki/project/config.yml` and local runtime state.",
         "",
     ]
     .join("\n")
@@ -981,10 +981,22 @@ mod tests {
     fn default_layout_includes_committed_paths() {
         let layout = StoreLayout::default();
 
-        assert_eq!(layout.committed_config_path, ".codewiki/config.yml");
-        assert_eq!(layout.committed_plan_path, ".codewiki/plan.yml");
-        assert_eq!(layout.committed_agents_path, ".codewiki/AGENTS.md");
-        assert_eq!(layout.committed_sources_path, ".codewiki/sources.yml");
+        assert_eq!(
+            layout.committed_config_path,
+            ".agents/skills/codewiki/project/config.yml"
+        );
+        assert_eq!(
+            layout.committed_plan_path,
+            ".agents/skills/codewiki/project/plan.yml"
+        );
+        assert_eq!(
+            layout.committed_agents_path,
+            ".agents/skills/codewiki/project/AGENTS.md"
+        );
+        assert_eq!(
+            layout.committed_sources_path,
+            ".agents/skills/codewiki/project/sources.yml"
+        );
     }
 
     #[test]
@@ -992,7 +1004,7 @@ mod tests {
         let yaml = CodeWikiConfig::default().to_yaml();
 
         assert!(yaml.contains("lazy_activation: true"));
-        assert!(yaml.contains("sources_path: .codewiki/sources.yml"));
+        assert!(yaml.contains("sources_path: .agents/skills/codewiki/project/sources.yml"));
         assert!(yaml.contains("code_intelligence_default: octocode"));
         assert!(yaml.contains("codebase_memory_mcp_trigger: shared cross-session memory"));
         assert!(yaml.contains("cocoindex_trigger: repo scale"));

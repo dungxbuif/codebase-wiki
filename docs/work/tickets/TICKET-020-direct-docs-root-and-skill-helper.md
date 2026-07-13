@@ -35,7 +35,7 @@ trace:
 ## Implementation Notes
 
 - Canonical generated docs now use paths such as `docs/quickstart.md`, `docs/source-map.md`, `docs/evidence/claims.md`, and `docs/areas/<area>/overview.md`.
-- Detection/exploration skip only `.codewiki/**` and known generated CodeWiki pages/directories, not all of `docs/**`.
+- Detection/exploration skip only `.agents/skills/codewiki/project/**` and known generated CodeWiki pages/directories, not all of `docs/**`.
 - `skill/codewiki/scripts/codewiki-helper.sh` resolves the Rust companion through `CODEWIKI_COMPANION_BIN`, `PATH`, `CODEWIKI_REPO`, installed `companion/` source, or a source checkout.
 - `scripts/install-codewiki-skill.sh` copies `skill/codewiki` and the Rust companion source into the installed skill package.
 

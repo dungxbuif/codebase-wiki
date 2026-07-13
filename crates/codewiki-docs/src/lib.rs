@@ -34,8 +34,8 @@ pub fn render_initial_index(repo_label: &str) -> String {
          - Semantic exploration: pending\n\
          - Full WikiPlan: pending\n\n\
          ## Start Here\n\n\
-         CodeWiki answers should use `docs/**` first, then `.codewiki/plan.yml`, \
-         `.codewiki/AGENTS.md`, local SQLite evidence, source files, Git history, and optional providers only when needed.\n\n\
+         CodeWiki answers should use `docs/**` first, then `.agents/skills/codewiki/project/plan.yml`, \
+         `.agents/skills/codewiki/project/AGENTS.md`, local SQLite evidence, source files, Git history, and optional providers only when needed.\n\n\
          - [Source map](./source-map.md)\n\
          - [Architecture overview](./architecture/overview.md)\n\
          - [Domain overview](./domain/overview.md)\n\
@@ -317,7 +317,7 @@ fn render_architecture_page(semantic_markdown: Option<&str>) -> String {
         content.push_str(semantic_markdown);
         content.push_str("\n\n## Interpretation Status\n\n- Component boundaries: evidence-backed hints, not final claims.\n- Dependency direction: lexical import hints only.\n- Runtime behavior: pending deeper exploration and/or provider activation when needed.\n");
     } else {
-        content.push_str("Architecture synthesis is pending. Future sync runs should record runtime components, dependency direction, constraints, and change risks here.\n\n## Current Evidence\n\nSee `evidence/sources.md` and `.codewiki/plan.yml` for detected repository signals.\n");
+        content.push_str("Architecture synthesis is pending. Future sync runs should record runtime components, dependency direction, constraints, and change risks here.\n\n## Current Evidence\n\nSee `evidence/sources.md` and `.agents/skills/codewiki/project/plan.yml` for detected repository signals.\n");
     }
     content
 }

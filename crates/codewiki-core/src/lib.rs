@@ -184,7 +184,10 @@ fn sync_workspace(
     workspace_root: &Path,
     context: &RuntimeContext,
 ) -> Result<String, String> {
-    if !workspace_root.join(".codewiki").exists() {
+    if !workspace_root
+        .join(".agents/skills/codewiki/project")
+        .exists()
+    {
         return Err("CodeWiki is not initialized; run `codewiki init` first".to_string());
     }
     let detection = detect_repository(source_root)
@@ -211,7 +214,7 @@ fn sync_workspace(
         .unwrap_or("repository");
     let mut actions = Vec::new();
     write_if_changed(
-        &workspace_root.join(".codewiki/plan.yml"),
+        &workspace_root.join(".agents/skills/codewiki/project/plan.yml"),
         &render_plan_with_detection(&detection),
         &mut actions,
     )?;
@@ -297,17 +300,17 @@ pub fn init_workspace(
 
     let mut actions = Vec::new();
     write_if_missing(
-        &workspace_root.join(".codewiki/config.yml"),
+        &workspace_root.join(".agents/skills/codewiki/project/config.yml"),
         &CodeWikiConfig::default().to_yaml(),
         &mut actions,
     )?;
     write_if_missing(
-        &workspace_root.join(".codewiki/plan.yml"),
+        &workspace_root.join(".agents/skills/codewiki/project/plan.yml"),
         &render_plan_with_detection(&detection),
         &mut actions,
     )?;
     write_if_missing(
-        &workspace_root.join(".codewiki/AGENTS.md"),
+        &workspace_root.join(".agents/skills/codewiki/project/AGENTS.md"),
         &render_target_agents_md(),
         &mut actions,
     )?;
@@ -317,7 +320,7 @@ pub fn init_workspace(
         source_root.to_string_lossy().to_string(),
     );
     write_if_missing(
-        &workspace_root.join(".codewiki/sources.yml"),
+        &workspace_root.join(".agents/skills/codewiki/project/sources.yml"),
         &render_sources_yaml(&primary_source, &[]),
         &mut actions,
     )?;
@@ -479,8 +482,16 @@ mod tests {
 
         assert_eq!(output.exit_code, 0);
         assert!(output.stdout.contains("runtime: rust"));
-        assert!(output.stdout.contains(".codewiki/config.yml"));
-        assert!(output.stdout.contains(".codewiki/AGENTS.md"));
+        assert!(
+            output
+                .stdout
+                .contains(".agents/skills/codewiki/project/config.yml")
+        );
+        assert!(
+            output
+                .stdout
+                .contains(".agents/skills/codewiki/project/AGENTS.md")
+        );
     }
 
     #[test]
@@ -521,10 +532,22 @@ mod tests {
         let output = run_with_context(["init"], &context);
 
         assert_eq!(output.exit_code, 0, "{}", output.stderr);
-        assert!(repo.join(".codewiki/config.yml").exists());
-        assert!(repo.join(".codewiki/plan.yml").exists());
-        assert!(repo.join(".codewiki/AGENTS.md").exists());
-        assert!(repo.join(".codewiki/sources.yml").exists());
+        assert!(
+            repo.join(".agents/skills/codewiki/project/config.yml")
+                .exists()
+        );
+        assert!(
+            repo.join(".agents/skills/codewiki/project/plan.yml")
+                .exists()
+        );
+        assert!(
+            repo.join(".agents/skills/codewiki/project/AGENTS.md")
+                .exists()
+        );
+        assert!(
+            repo.join(".agents/skills/codewiki/project/sources.yml")
+                .exists()
+        );
         assert!(repo.join("docs/quickstart.md").exists());
         assert!(repo.join("docs/source-map.md").exists());
         assert!(repo.join("docs/architecture/overview.md").exists());
@@ -532,7 +555,7 @@ mod tests {
         assert!(output.stdout.contains("migration_version: 1"));
         assert!(output.stdout.contains("claims_persisted:"));
         assert!(
-            fs::read_to_string(repo.join(".codewiki/plan.yml"))
+            fs::read_to_string(repo.join(".agents/skills/codewiki/project/plan.yml"))
                 .expect("read plan")
                 .contains("detected:")
         );
@@ -566,8 +589,13 @@ mod tests {
         };
         let base = temp_path("codewiki-core-preserve");
         let repo = base.join("repo");
-        fs::create_dir_all(repo.join(".codewiki")).expect("create .codewiki");
-        fs::write(repo.join(".codewiki/config.yml"), "custom: true\n").expect("write config");
+        fs::create_dir_all(repo.join(".agents/skills/codewiki/project"))
+            .expect("create .agents/skills/codewiki/project");
+        fs::write(
+            repo.join(".agents/skills/codewiki/project/config.yml"),
+            "custom: true\n",
+        )
+        .expect("write config");
         let context = RuntimeContext {
             cwd: repo.clone(),
             app_data_base: base.join("app-data"),
@@ -579,7 +607,8 @@ mod tests {
 
         assert_eq!(output.exit_code, 0, "{}", output.stderr);
         assert_eq!(
-            fs::read_to_string(repo.join(".codewiki/config.yml")).expect("read config"),
+            fs::read_to_string(repo.join(".agents/skills/codewiki/project/config.yml"))
+                .expect("read config"),
             "custom: true\n"
         );
         assert!(output.stdout.contains("preserved:"));
@@ -659,8 +688,16 @@ mod tests {
         let output = init_workspace(&source, &workspace, &context).expect("init workspace");
 
         assert!(output.contains("workspace:"));
-        assert!(workspace.join(".codewiki/config.yml").exists());
-        assert!(workspace.join(".codewiki/sources.yml").exists());
+        assert!(
+            workspace
+                .join(".agents/skills/codewiki/project/config.yml")
+                .exists()
+        );
+        assert!(
+            workspace
+                .join(".agents/skills/codewiki/project/sources.yml")
+                .exists()
+        );
         assert!(workspace.join("docs/quickstart.md").exists());
         assert!(
             fs::read_to_string(workspace.join("docs/source-map.md"))
@@ -672,10 +709,14 @@ mod tests {
                 .expect("read claims")
                 .contains("claim:")
         );
-        assert!(!source.join(".codewiki/config.yml").exists());
+        assert!(
+            !source
+                .join(".agents/skills/codewiki/project/config.yml")
+                .exists()
+        );
         assert!(!source.join("docs/quickstart.md").exists());
         assert!(
-            fs::read_to_string(workspace.join(".codewiki/sources.yml"))
+            fs::read_to_string(workspace.join(".agents/skills/codewiki/project/sources.yml"))
                 .expect("read sources")
                 .contains("primary: true")
         );

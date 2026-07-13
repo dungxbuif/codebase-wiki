@@ -29,7 +29,7 @@ Problem: CodeWiki needs deterministic defaults for committed config, plan, local
 
 Scope:
 
-- Add Rust companion models for `.codewiki/config.yml`, `.codewiki/plan.yml`, and `.codewiki/AGENTS.md`.
+- Add Rust companion models for `.agents/skills/codewiki/project/config.yml`, `.agents/skills/codewiki/project/plan.yml`, and `.agents/skills/codewiki/project/AGENTS.md`.
 - Include docs-first lazy activation and runtime provider selection policy in generated guidance.
 - Keep actual filesystem writes out of this ticket.
 
@@ -46,7 +46,7 @@ Out of scope:
 - `StoreLayout`: committed config, plan, local AGENTS path, state/cache summaries.
 - `CodeWikiConfig`: schema version, docs root, plan path, agents path, tool policy.
 - `WikiPlan`: initial plan skeleton and evidence policy.
-- `render_target_agents_md`: target-repository `.codewiki/AGENTS.md` content.
+- `render_target_agents_md`: target-repository `.agents/skills/codewiki/project/AGENTS.md` content.
 
 ## Verification Plan
 

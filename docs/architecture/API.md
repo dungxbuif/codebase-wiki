@@ -26,7 +26,7 @@ Document HTTP endpoints, RPC methods, events, CLI commands, or any other public 
 | `codewiki help` / `codewiki --help` | companion command | none | implemented | Prints scaffold usage and companion-tool status. |
 | `codewiki version` / `codewiki --version` | companion command | none | implemented | Prints current package version. |
 | `codewiki status` | companion command | none | implemented | Prints Rust companion status, command list, detection capabilities, config path, local state summary, and docs root. |
-| `codewiki init [path]` | companion command | local filesystem | implemented | Creates missing `.codewiki/config.yml`, `.codewiki/plan.yml`, `.codewiki/AGENTS.md`, `docs/quickstart.md`, and applies local SQLite migrations. Defaults to the current directory when `path` is omitted. |
+| `codewiki init [path]` | companion command | local filesystem | implemented | Creates missing `.agents/skills/codewiki/project/config.yml`, `.agents/skills/codewiki/project/plan.yml`, `.agents/skills/codewiki/project/AGENTS.md`, `docs/quickstart.md`, and applies local SQLite migrations. Defaults to the current directory when `path` is omitted. |
 | `codewiki sync [path]` | companion command | local filesystem | implemented | Re-detects repository signals, compares generated plan/docs to desired output, updates changed/missing generated files, and no-ops when current. |
 
 ## Errors

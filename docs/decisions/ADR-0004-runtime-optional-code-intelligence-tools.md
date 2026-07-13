@@ -46,12 +46,12 @@ Runtime install policy:
 - Do not bundle these tools into the CodeWiki skill.
 - The skill provides install/activation guidance.
 - Agents install or activate tools at runtime inside the local target repository only after the trigger is met.
-- Provider/tool choice is recorded in `.codewiki/config.yml`, `.codewiki/AGENTS.md`, and local runtime state.
+- Provider/tool choice is recorded in `.agents/skills/codewiki/project/config.yml`, `.agents/skills/codewiki/project/AGENTS.md`, and local runtime state.
 - Do not run Octocode + codebase-memory-mcp + CocoIndex together by default.
 
 Docs-first activation policy:
 
-- After CodeWiki has generated docs, Q&A must use `docs/**`, `.codewiki/plan.yml`, `.codewiki/AGENTS.md`, and local SQLite facts/evidence/claims before activating external tools.
+- After CodeWiki has generated docs, Q&A must use `docs/**`, `.agents/skills/codewiki/project/plan.yml`, `.agents/skills/codewiki/project/AGENTS.md`, and local SQLite facts/evidence/claims before activating external tools.
 - Source/Git inspection comes next when docs are missing, stale, or insufficient.
 - External tools activate only when docs/state/source cannot answer with enough evidence or when the question explicitly requires graph/index/memory capabilities.
 

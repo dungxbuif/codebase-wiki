@@ -136,8 +136,8 @@ Maintain CodeWiki as a complete repo-native Codex skill for semantic wiki genera
 - Use Octocode as the default first-choice code-intelligence provider when a provider is needed.
 - Use codebase-memory-mcp only for shared cross-session memory beyond CodeWiki SQLite state.
 - Use CocoIndex only when repo scale or repeated refresh/query workload justifies an indexing pipeline.
-- Use docs-first lazy activation: generated docs, `.codewiki` plan/instructions, SQLite evidence, and source/Git are checked before activating external tools.
-- Add deterministic defaults for `.codewiki/config.yml`, `.codewiki/plan.yml`, and `.codewiki/AGENTS.md` in the Rust companion store crate.
+- Use docs-first lazy activation: generated docs, `.agents/skills/codewiki/project` plan/instructions, SQLite evidence, and source/Git are checked before activating external tools.
+- Add deterministic defaults for `.agents/skills/codewiki/project/config.yml`, `.agents/skills/codewiki/project/plan.yml`, and `.agents/skills/codewiki/project/AGENTS.md` in the Rust companion store crate.
 - Preserve durable state across LLM changes and new sessions via committed config plus local SQLite state.
 - Treat the CodeWiki skill as the final product.
 - Keep Rust as a companion tool for deterministic local operations, not the primary user experience.
@@ -149,18 +149,18 @@ Maintain CodeWiki as a complete repo-native Codex skill for semantic wiki genera
 - Use OpenWiki as the reference for evidence, write-boundary, docs-first, sync/no-op discipline, quickstart-first docs, section directories, and avoiding thin pages.
 - Use DeepWiki as the reference for generated wiki structure metadata, per-page relevant source files, related pages, importance, diagrams/tables/citations, structured RAG context packets, same-language answers, and focused deep research.
 - Do not copy either reference prompt wholesale; CodeWiki should use a small skill entry plus mode-specific prompt modules and copy the product patterns.
-- Standardize target-repo generated docs directly under `docs/`; keep `.codewiki/**` for committed control-plane files.
+- Standardize target-repo generated docs directly under `docs/`; keep `.agents/skills/codewiki/project/**` for committed control-plane files.
 - Keep `skill/codewiki/SKILL.md` as a compact router and put mode-specific workflow detail in `skill/codewiki/references/`.
 - Start SQLite durable state with an executor-agnostic migration registry in `codewiki-store`.
 - Resolve local state/cache paths from repository identity and apply migrations through the local `sqlite3` executable.
-- Add `codewiki init [path]` to create target `.codewiki/**`, `docs/quickstart.md`, and initialize local SQLite state.
+- Add `codewiki init [path]` to create target `.agents/skills/codewiki/project/**`, `docs/quickstart.md`, and initialize local SQLite state.
 - Add repository detection v1 for languages, package managers, framework hints, entrypoints, tests, and docs signals.
 - Add typed WikiPlan v1, planned pages, confidence, evidence, and claim models.
 - Generate canonical starter docs for `quickstart.md`, `source-map.md`, OpenWiki-style section directories, and evidence pages during init.
 - Add `codewiki sync [path]` compare/update/no-op skeleton and ignore only generated CodeWiki canonical pages during detection, not all human-authored `docs/**`.
 - Support repo-local and external/personal wiki workspace placement; ask before writing when ambiguous.
 - Treat Git as the default source and support non-Git sources only through user-provided source extension skills.
-- Write `.codewiki/sources.yml` during initialization with Git as the primary source, including when docs are placed in an external/personal workspace.
+- Write `.agents/skills/codewiki/project/sources.yml` during initialization with Git as the primary source, including when docs are placed in an external/personal workspace.
 - Provide a copyable source-skill template so users can add Jira/Figma/fix-note style sources as separate skills instead of CodeWiki core providers.
 - Install CodeWiki project-locally by default under the target repository's `.agents/skills/codewiki`; use `CODEWIKI_INSTALL_SCOPE=global` only when global Codex installation is explicitly desired.
 - Add semantic exploration v1 as a deterministic companion boundary for bounded file, area, symbol, import/dependency-hint, and evidence-reference snapshots.
@@ -174,7 +174,8 @@ Maintain CodeWiki as a complete repo-native Codex skill for semantic wiki genera
 - Add `skill/codewiki/scripts/codewiki-helper.sh`; make the installer build `bin/codewiki` for binary-first companion usage and keep copied Rust companion source as fallback.
 - Copy OpenWiki/DeepWiki docs quality patterns into CodeWiki: `quickstart.md` entrypoint, section directories only for real areas, `## Backlog` instead of stubs, and DeepWiki-style relevant-source-files blocks.
 - Record reference baselines for future updates: OpenWiki `2fb44a876db8cca461ad1c0767931d95495763a3`; deepwiki-open `16f35a0fc0284e99b7963bbf4e8585e9957e2fe1`.
-- Source/change providers currently follow a registry + source-skill contract: Git is default, `.codewiki/sources.yml` records sources, and non-Git systems are user-provided source skills that emit evidence packets. CodeWiki core does not bundle OpenWiki-style connectors.
+- Source/change providers currently follow a registry + source-skill contract: Git is default, `.agents/skills/codewiki/project/sources.yml` records sources, and non-Git systems are user-provided source skills that emit evidence packets. CodeWiki core does not bundle OpenWiki-style connectors.
+- CodeWiki no longer creates a root `.codewiki/` directory. The only project-local control plane is `.agents/skills/codewiki/project/`, and the installer preserves that `project/` directory when updating the skill package.
 
 ## Next Steps
 

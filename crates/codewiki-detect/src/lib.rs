@@ -141,7 +141,7 @@ fn collect_files(
 }
 
 fn is_generated_codewiki_path(path: &Path) -> bool {
-    path.starts_with(".codewiki") || is_generated_docs_path(path)
+    path.starts_with(".agents/skills/codewiki/project") || is_generated_docs_path(path)
 }
 
 fn is_generated_docs_path(path: &Path) -> bool {
@@ -367,7 +367,11 @@ mod tests {
     fn ignores_generated_codewiki_files() {
         let root = temp_fixture("generated");
         write_file(&root, "docs/quickstart.md", "# generated\n");
-        write_file(&root, ".codewiki/plan.yml", "schema_version: 1\n");
+        write_file(
+            &root,
+            ".agents/skills/codewiki/project/plan.yml",
+            "schema_version: 1\n",
+        );
         write_file(&root, "README.md", "# source doc\n");
 
         let detected = detect_repository(&root).expect("detect");

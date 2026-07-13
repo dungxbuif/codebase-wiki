@@ -28,7 +28,7 @@ Use this skill when the user asks to:
 - Keep committed project config/docs separate from local persistent state and rebuildable cache.
 - Git is the default source for code changes. Do not bundle Jira/Figma/etc. providers in CodeWiki core.
 - If the output location is ambiguous, confirm whether to write docs in the source repo or in an external/personal workspace before writing files.
-- Support non-Git sources through `.codewiki/sources.yml` and user-provided source extension skills.
+- Support non-Git sources through `.agents/skills/codewiki/project/sources.yml` and user-provided source extension skills.
 - Do not install every provider by default. Use Octocode as the first-choice code-intelligence provider when filesystem/Git exploration is insufficient; use codebase-memory-mcp and CocoIndex only under their specific triggers.
 
 ## Reference Loading
@@ -50,7 +50,7 @@ Keep this file as the compact router. Load bundled references only when needed:
 When initializing a target repository, prefer:
 
 ```text
-.codewiki/
+.agents/skills/codewiki/project/
   config.yml
   plan.yml
   AGENTS.md
@@ -107,8 +107,8 @@ Do not run all three by default. Choose the smallest tool set that satisfies the
 
 Do not vendor these tools into the skill. Prefer target-repo runtime setup:
 
-1. Record the selected tool and trigger reason in `.codewiki/config.yml`.
-2. Add or update `.codewiki/AGENTS.md` with local install/activation notes for that repository.
+1. Record the selected tool and trigger reason in `.agents/skills/codewiki/project/config.yml`.
+2. Add or update `.agents/skills/codewiki/project/AGENTS.md` with local install/activation notes for that repository.
 3. Install or activate the tool in the target repo only after the trigger is met.
 4. Record the tool version/config/evidence source in local runtime state.
 
@@ -119,8 +119,8 @@ If no optional tool is available, continue with Git/filesystem exploration and m
 After CodeWiki has generated docs, answer questions in this order:
 
 1. `docs/**`
-2. `.codewiki/plan.yml`
-3. `.codewiki/AGENTS.md`
+2. `.agents/skills/codewiki/project/plan.yml`
+3. `.agents/skills/codewiki/project/AGENTS.md`
 4. local SQLite facts/evidence/claims
 5. source files and Git history
 6. external runtime tools, only when the earlier layers are stale, insufficient, or the user asks for graph/index/memory-heavy analysis
@@ -135,8 +135,8 @@ This means ordinary Q&A about documented architecture should not activate Octoco
 4. Explore source semantically with bounded file, area, symbol, import/dependency-hint, and evidence snapshots.
 5. Build a WikiPlan with pages, scope, evidence needs, confidence, open questions, and refresh strategy.
 6. Generate `docs/**` from evidence and mark uncertainty explicitly.
-7. Write `.codewiki/config.yml` and `.codewiki/plan.yml`.
-8. Write `.codewiki/AGENTS.md` with CodeWiki-local instructions, including optional runtime tool status.
+7. Write `.agents/skills/codewiki/project/config.yml` and `.agents/skills/codewiki/project/plan.yml`.
+8. Write `.agents/skills/codewiki/project/AGENTS.md` with CodeWiki-local instructions, including optional runtime tool status.
 9. Record verification commands or skip reasons.
 
 ## Sync Workflow

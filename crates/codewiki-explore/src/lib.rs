@@ -365,7 +365,7 @@ fn collect_candidate_files(
 }
 
 fn is_generated_codewiki_path(path: &Path) -> bool {
-    path.starts_with(".codewiki") || is_generated_docs_path(path)
+    path.starts_with(".agents/skills/codewiki/project") || is_generated_docs_path(path)
 }
 
 fn is_generated_docs_path(path: &Path) -> bool {

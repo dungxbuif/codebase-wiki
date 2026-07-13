@@ -5,7 +5,7 @@ Load this reference for every `init` and `sync` run, and when Q&A needs to expla
 ## Target Repository Layers
 
 ```text
-.codewiki/
+.agents/skills/codewiki/project/
   config.yml
   plan.yml
   AGENTS.md
@@ -41,11 +41,11 @@ docs/
       overview.md
 ```
 
-`docs/**` is the knowledge surface. `.codewiki/**` is the committed control plane. SQLite state and rebuildable cache live outside the repo/workspace.
+`docs/**` is the knowledge surface. `.agents/skills/codewiki/project/**` is the committed control plane. SQLite state and rebuildable cache live outside the repo/workspace.
 
 Because CodeWiki writes directly into `docs/`, existing unmarked human-authored files must be preserved. Generated content should be written only to canonical pages that are missing or contain CodeWiki generated-region markers.
 
-This structure may live either inside the source repository or inside a separate personal/external wiki workspace. When outside the source repository, `.codewiki/sources.yml` records the source repository and any additional evidence sources.
+This structure may live either inside the source repository or inside a separate personal/external wiki workspace. When outside the source repository, `.agents/skills/codewiki/project/sources.yml` records the source repository and any additional evidence sources.
 
 ## Page Rules
 

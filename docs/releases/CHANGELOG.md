@@ -28,9 +28,9 @@ All notable changes should be recorded here.
 - Added the initial Rust workspace scaffold and verified `codewiki status`.
 - Reframed CodeWiki as a skill-first product, added `skill/codewiki`, and added a repository-based skill installer.
 - Documented runtime provider selection policy: Octocode first when needed, codebase-memory-mcp for memory trigger, CocoIndex for indexing trigger.
-- Added Rust companion config/storage skeleton for `.codewiki/config.yml`, `.codewiki/plan.yml`, and `.codewiki/AGENTS.md`.
+- Added Rust companion config/storage skeleton for `.agents/skills/codewiki/project/config.yml`, `.agents/skills/codewiki/project/plan.yml`, and `.agents/skills/codewiki/project/AGENTS.md`.
 - Added reference prompt analysis comparing OpenWiki and DeepWiki patterns for CodeWiki prompt architecture.
-- Standardized generated target-repo docs structure: `docs/**` as knowledge surface and `.codewiki/**` as committed control plane.
+- Standardized generated target-repo docs structure: `docs/**` as knowledge surface and `.agents/skills/codewiki/project/**` as committed control plane.
 - Added CodeWiki bundled workflow references for docs structure, init, sync, Q&A, and deep research.
 - Added the first executor-agnostic SQLite migration for CodeWiki durable local state.
 - Added local state/cache path resolution and sqlite3-backed migration application.
@@ -40,7 +40,7 @@ All notable changes should be recorded here.
 - Added canonical starter docs generation for `quickstart`, `source-map`, OpenWiki-style section directories, and `evidence/**`.
 - Added `codewiki sync [path]` compare/update/no-op skeleton.
 - Added skill-first support design for external/personal wiki workspaces and user-provided non-Git source extension skills.
-- Added `.codewiki/sources.yml` generation, external workspace initialization support, and a source-skill template for custom non-Git evidence sources.
+- Added `.agents/skills/codewiki/project/sources.yml` generation, external workspace initialization support, and a source-skill template for custom non-Git evidence sources.
 - Added semantic exploration v1 for bounded file, area, symbol, import/dependency-hint, and evidence-reference snapshots used by generated wiki docs.
 - Added durable claim persistence v1 for semantic files, symbols, evidence items, claims, and claim/evidence links in local SQLite.
 - Added staleness detection and SQLite-backed Q&A context rendering with active/stale claim separation.

@@ -16,14 +16,14 @@ These are hints until promoted into durable claims. Do not present lexical impor
 
 ## Default Flow
 
-1. Start with generated docs and `.codewiki/plan.yml` if they exist.
+1. Start with generated docs and `.agents/skills/codewiki/project/plan.yml` if they exist.
 2. Use Git/filesystem and companion helper output where available to build a bounded semantic snapshot.
 3. Prefer source files, package/config files, tests, and existing docs over generated/vendor/cache files.
 4. Group findings by area and cite file paths/symbols.
 5. Write generated docs only from evidence-backed statements or explicit hypotheses.
 6. Promote deterministic claims only when they cite evidence IDs.
 7. Persist reusable evidence/claims in local SQLite when the companion helper is available.
-8. Record gaps in `docs/open-questions.md` or `.codewiki/plan.yml`.
+8. Record gaps in `docs/open-questions.md` or `.agents/skills/codewiki/project/plan.yml`.
 
 ## Evidence Rules
 

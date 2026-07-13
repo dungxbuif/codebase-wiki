@@ -4,7 +4,7 @@ Load this reference when the user asks to update, refresh, reconcile, or sync an
 
 Also load `docs-structure.md`.
 Also load `workspace-placement.md` when source repo and wiki workspace may differ.
-Also load `source-extensions.md` when `.codewiki/sources.yml` contains non-Git sources or the user asks to include them.
+Also load `source-extensions.md` when `.agents/skills/codewiki/project/sources.yml` contains non-Git sources or the user asks to include them.
 
 ## Goal
 
@@ -13,13 +13,13 @@ Update only the wiki content affected by repository or documentation changes. Pr
 ## Procedure
 
 1. Load current CodeWiki state.
-   - Read `.codewiki/config.yml`, `.codewiki/plan.yml`, `.codewiki/AGENTS.md`, `.codewiki/sources.yml`, and `docs/quickstart.md`.
+   - Read `.agents/skills/codewiki/project/config.yml`, `.agents/skills/codewiki/project/plan.yml`, `.agents/skills/codewiki/project/AGENTS.md`, `.agents/skills/codewiki/project/sources.yml`, and `docs/quickstart.md`.
    - Inspect the relevant existing generated pages before editing.
 
 2. Determine change scope.
    - Use Git status/diff/log as the default source of code changes.
-   - Treat non-Git sources as optional source extension evidence from `.codewiki/sources.yml`.
-   - Compare changed files to `.codewiki/plan.yml` coverage and page ownership.
+   - Treat non-Git sources as optional source extension evidence from `.agents/skills/codewiki/project/sources.yml`.
+   - Compare changed files to `.agents/skills/codewiki/project/plan.yml` coverage and page ownership.
    - Include human docs changes as source evidence changes.
 
 3. Build a docs impact plan.
@@ -38,8 +38,8 @@ Update only the wiki content affected by repository or documentation changes. Pr
    - Preserve human-owned sections unless the user asked to overwrite them.
 
 6. Update control state.
-   - Refresh `.codewiki/plan.yml` coverage, confidence, stale areas, and open questions.
-   - Update `.codewiki/AGENTS.md` only when local CodeWiki rules or provider status changed.
+   - Refresh `.agents/skills/codewiki/project/plan.yml` coverage, confidence, stale areas, and open questions.
+   - Update `.agents/skills/codewiki/project/AGENTS.md` only when local CodeWiki rules or provider status changed.
 
 7. Record verification.
    - Run relevant checks or record skip reasons.

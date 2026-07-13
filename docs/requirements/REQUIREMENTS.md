@@ -27,7 +27,7 @@ shared_fields: [functional_requirements, non_functional_requirements]
 | REQ-006 | CodeWiki's Rust helper tooling must remain companion tooling while OpenWiki and deepwiki-open are used as references. | high | User direction | implemented |
 | REQ-007 | CodeWiki must be installable as a Codex skill from this repository with a single install command. | high | User direction | implemented |
 | REQ-008 | CodeWiki must use Octocode as the default first-choice code-intelligence provider when needed, while gating codebase-memory-mcp and CocoIndex behind specific memory/indexing triggers. | high | User direction | implemented |
-| REQ-009 | CodeWiki generated docs must use `docs/**` as the knowledge surface and `.codewiki/**` as the committed control plane. | high | User direction | implemented |
+| REQ-009 | CodeWiki generated docs must use `docs/**` as the knowledge surface and `.agents/skills/codewiki/project/**` as the committed control plane. | high | User direction | implemented |
 
 ## Non-Functional Requirements
 

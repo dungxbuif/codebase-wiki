@@ -5,8 +5,8 @@ Load this reference when the user asks questions about a repository that already
 ## Answer Order
 
 1. Read `docs/**` first.
-2. Read `.codewiki/plan.yml`.
-3. Read `.codewiki/AGENTS.md`.
+2. Read `.agents/skills/codewiki/project/plan.yml`.
+3. Read `.agents/skills/codewiki/project/AGENTS.md`.
 4. Use local SQLite facts/evidence/claims if available.
 5. Inspect source files and Git history only when docs/state are missing, stale, ambiguous, or contradicted.
 6. Activate optional external tools only when earlier layers are insufficient or the user requests graph/index/memory-heavy analysis.
@@ -37,7 +37,7 @@ Treat stale claims as warnings, not answer facts. If a stale claim is relevant, 
 Use concise references such as:
 
 - `docs/architecture/overview.md`
-- `.codewiki/plan.yml`
+- `.agents/skills/codewiki/project/plan.yml`
 - `src/foo/bar.ts`
 - `symbol: PaymentService.authorize`
 - `command: cargo test -p crate_name`

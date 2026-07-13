@@ -37,7 +37,7 @@ trace:
 
 ## Implementation Status
 
-- Implemented: `.codewiki/sources.yml` registry with primary Git source.
+- Implemented: `.agents/skills/codewiki/project/sources.yml` registry with primary Git source.
 - Implemented: external/personal workspace mode, so source repo and wiki workspace can differ.
 - Implemented: source extension reference and source-skill template.
 - Implemented: sync/init guidance that treats Git as default code truth and non-Git source skills as bounded evidence producers.

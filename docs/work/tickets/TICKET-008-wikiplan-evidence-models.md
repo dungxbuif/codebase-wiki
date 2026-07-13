@@ -29,7 +29,7 @@ trace:
 
 - [x] Rust models define confidence, evidence kinds, claims, planned pages, and WikiPlan v1.
 - [x] Plan rendering includes detected stack, canonical pages, evidence policy, confidence, and open questions.
-- [x] Generated plan is deterministic and suitable for committed `.codewiki/plan.yml`.
+- [x] Generated plan is deterministic and suitable for committed `.agents/skills/codewiki/project/plan.yml`.
 - [x] Tests cover plan rendering and evidence/claim model defaults.
 
 ## Verification Results
