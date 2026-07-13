@@ -219,21 +219,23 @@ fn sync_workspace(
 
     if actions.is_empty() {
         Ok(format!(
-            "CodeWiki sync no-op\nsource: {}\nworkspace: {}\nstate_db: {}\nmigration_version: {}\nclaims_persisted: {}\n",
+            "CodeWiki sync no-op\nsource: {}\nworkspace: {}\nstate_db: {}\nmigration_version: {}\nclaims_persisted: {}\nstale_claims: {}\n",
             source_root.display(),
             workspace_root.display(),
             migration_report.sqlite_path.display(),
             migration_report.latest_version,
             persistence_report.claims_seen,
+            persistence_report.stale_claims_seen,
         ))
     } else {
         Ok(format!(
-            "CodeWiki synced\nsource: {}\nworkspace: {}\nstate_db: {}\nmigration_version: {}\nclaims_persisted: {}\n{}\n",
+            "CodeWiki synced\nsource: {}\nworkspace: {}\nstate_db: {}\nmigration_version: {}\nclaims_persisted: {}\nstale_claims: {}\n{}\n",
             source_root.display(),
             workspace_root.display(),
             migration_report.sqlite_path.display(),
             migration_report.latest_version,
             persistence_report.claims_seen,
+            persistence_report.stale_claims_seen,
             actions.join("\n")
         ))
     }
@@ -326,12 +328,13 @@ pub fn init_workspace(
     }
 
     Ok(format!(
-        "CodeWiki initialized\nsource: {}\nworkspace: {}\nstate_db: {}\nmigration_version: {}\nclaims_persisted: {}\n{}\n",
+        "CodeWiki initialized\nsource: {}\nworkspace: {}\nstate_db: {}\nmigration_version: {}\nclaims_persisted: {}\nstale_claims: {}\n{}\n",
         source_root.display(),
         workspace_root.display(),
         migration_report.sqlite_path.display(),
         migration_report.latest_version,
         persistence_report.claims_seen,
+        persistence_report.stale_claims_seen,
         actions.join("\n"),
     ))
 }

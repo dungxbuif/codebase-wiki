@@ -132,6 +132,19 @@ pub struct PersistenceReport {
     pub evidence_seen: usize,
     /// Claims persisted.
     pub claims_seen: usize,
+    /// Claims marked stale because supporting evidence changed.
+    pub stale_claims_seen: usize,
+}
+
+/// SQLite-backed Q&A context packet.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct QaContext {
+    /// Rendered Markdown context.
+    pub markdown: String,
+    /// Active claim rows included.
+    pub active_claims_seen: usize,
+    /// Stale claim rows included.
+    pub stale_claims_seen: usize,
 }
 
 /// Apply all bundled migrations to a SQLite database through a local `sqlite3` executable.
@@ -178,6 +191,12 @@ pub fn persist_exploration_with_sqlite(
         fnv1a64(format!("{repository_id}:{mode}:{}", snapshot.files.len()).as_bytes())
     );
     let claims = promote_claims_from_snapshot(snapshot);
+    let stale_claims_seen = count_stale_candidates(
+        sqlite_executable.as_ref(),
+        sqlite_path,
+        &repository_id,
+        snapshot,
+    )?;
     let mut sql = String::new();
     sql.push_str("PRAGMA foreign_keys = ON;\nBEGIN;\n");
     sql.push_str(&format!(
@@ -197,11 +216,18 @@ pub fn persist_exploration_with_sqlite(
     for file in &snapshot.files {
         let file_id = file_id(&repository_id, &file.path);
         sql.push_str(&format!(
+            "UPDATE claims SET status='stale', updated_at=CURRENT_TIMESTAMP WHERE repository_id='{}' AND status='active' AND id IN (SELECT ce.claim_id FROM claim_evidence ce JOIN evidence_items ei ON ei.id = ce.evidence_id WHERE ei.repository_id='{}' AND ei.source_path='{}' AND ei.content_hash IS NOT NULL AND ei.content_hash <> '{}');\n",
+            sql_quote(&repository_id),
+            sql_quote(&repository_id),
+            sql_quote(&file.path),
+            sql_quote(&file.content_hash),
+        ));
+        sql.push_str(&format!(
             "INSERT INTO files (id, repository_id, path, content_hash, language, role, is_generated, last_seen_run_id, updated_at) VALUES ('{}', '{}', '{}', '{}', {}, '{}', 0, '{}', CURRENT_TIMESTAMP) ON CONFLICT(repository_id, path) DO UPDATE SET content_hash=excluded.content_hash, language=excluded.language, role=excluded.role, last_seen_run_id=excluded.last_seen_run_id, updated_at=CURRENT_TIMESTAMP;\n",
             sql_quote(&file_id),
             sql_quote(&repository_id),
             sql_quote(&file.path),
-            sql_quote(&file_content_hash(file)),
+            sql_quote(&file.content_hash),
             sql_optional(file.language.as_deref()),
             sql_quote(file.role.as_str()),
             sql_quote(&run_id),
@@ -231,14 +257,14 @@ pub fn persist_exploration_with_sqlite(
                 file.symbols.len(),
                 file.imports.len()
             )),
-            sql_quote(&file_content_hash(file)),
+            sql_quote(&file.content_hash),
             sql_quote(&run_id),
         ));
     }
 
     for claim in &claims {
         sql.push_str(&format!(
-            "INSERT OR REPLACE INTO claims (id, repository_id, statement, status, confidence, owner, first_seen_run_id, last_verified_run_id, updated_at) VALUES ('{}', '{}', '{}', 'active', '{}', 'ai', '{}', '{}', CURRENT_TIMESTAMP);\n",
+            "INSERT INTO claims (id, repository_id, statement, status, confidence, owner, first_seen_run_id, last_verified_run_id, updated_at) VALUES ('{}', '{}', '{}', 'active', '{}', 'ai', '{}', '{}', CURRENT_TIMESTAMP) ON CONFLICT(id) DO UPDATE SET statement=excluded.statement, confidence=excluded.confidence, last_verified_run_id=excluded.last_verified_run_id, status=CASE WHEN claims.status='stale' THEN 'stale' ELSE excluded.status END, updated_at=CURRENT_TIMESTAMP;\n",
             sql_quote(&claim.id),
             sql_quote(&repository_id),
             sql_quote(&claim.statement),
@@ -265,7 +291,93 @@ pub fn persist_exploration_with_sqlite(
         symbols_seen: snapshot.files.iter().map(|file| file.symbols.len()).sum(),
         evidence_seen: snapshot.evidence.len(),
         claims_seen: claims.len(),
+        stale_claims_seen,
     })
+}
+
+/// Render a SQLite-backed Q&A context packet for a query.
+pub fn render_qa_context_with_sqlite(
+    sqlite_executable: impl AsRef<Path>,
+    sqlite_path: impl AsRef<Path>,
+    query: &str,
+    limit: usize,
+) -> Result<QaContext, String> {
+    let limit = limit.clamp(1, 50);
+    let like = format!("%{}%", sql_like_escape(query));
+    let sql = format!(
+        "SELECT 'active|' || c.id || '|' || c.confidence || '|' || replace(c.statement, char(10), ' ') || '|' || IFNULL(group_concat(ce.evidence_id || '@' || IFNULL(ei.source_path,''), ','), '') FROM claims c LEFT JOIN claim_evidence ce ON ce.claim_id = c.id LEFT JOIN evidence_items ei ON ei.id = ce.evidence_id WHERE c.status='active' AND (c.statement LIKE '{}' ESCAPE '\\' OR IFNULL(ei.source_path,'') LIKE '{}' ESCAPE '\\') GROUP BY c.id ORDER BY c.updated_at DESC LIMIT {};\nSELECT 'stale|' || c.id || '|' || c.confidence || '|' || replace(c.statement, char(10), ' ') || '|' || IFNULL(group_concat(ce.evidence_id || '@' || IFNULL(ei.source_path,''), ','), '') FROM claims c LEFT JOIN claim_evidence ce ON ce.claim_id = c.id LEFT JOIN evidence_items ei ON ei.id = ce.evidence_id WHERE c.status='stale' AND (c.statement LIKE '{}' ESCAPE '\\' OR IFNULL(ei.source_path,'') LIKE '{}' ESCAPE '\\') GROUP BY c.id ORDER BY c.updated_at DESC LIMIT {};",
+        sql_quote(&like),
+        sql_quote(&like),
+        limit,
+        sql_quote(&like),
+        sql_quote(&like),
+        limit,
+    );
+    let stdout = run_sqlite_capture(sqlite_executable.as_ref(), sqlite_path.as_ref(), &sql)?;
+    let mut active = Vec::new();
+    let mut stale = Vec::new();
+    for line in stdout.lines().filter(|line| !line.trim().is_empty()) {
+        let mut parts = line.splitn(5, '|');
+        let status = parts.next().unwrap_or_default();
+        let id = parts.next().unwrap_or_default();
+        let confidence = parts.next().unwrap_or_default();
+        let statement = parts.next().unwrap_or_default();
+        let evidence = parts.next().unwrap_or_default();
+        let rendered = render_qa_claim_line(id, confidence, statement, evidence);
+        match status {
+            "active" => active.push(rendered),
+            "stale" => stale.push(rendered),
+            _ => {}
+        }
+    }
+
+    let mut markdown = format!("# CodeWiki Q&A Context\n\nQuery: `{}`\n\n", query);
+    markdown.push_str("## Active Claims\n\n");
+    if active.is_empty() {
+        markdown.push_str("- none matched\n");
+    } else {
+        for row in &active {
+            markdown.push_str(row);
+        }
+    }
+    markdown.push_str("\n## Stale Claims\n\n");
+    if stale.is_empty() {
+        markdown.push_str("- none matched\n");
+    } else {
+        for row in &stale {
+            markdown.push_str(row);
+        }
+    }
+
+    Ok(QaContext {
+        markdown,
+        active_claims_seen: active.len(),
+        stale_claims_seen: stale.len(),
+    })
+}
+
+fn count_stale_candidates(
+    sqlite_executable: &Path,
+    sqlite_path: &Path,
+    repository_id: &str,
+    snapshot: &ExplorationSnapshot,
+) -> Result<usize, String> {
+    if !sqlite_path.exists() {
+        return Ok(0);
+    }
+    let mut total = 0;
+    for file in &snapshot.files {
+        let sql = format!(
+            "SELECT COUNT(DISTINCT ce.claim_id) FROM claim_evidence ce JOIN evidence_items ei ON ei.id = ce.evidence_id JOIN claims c ON c.id = ce.claim_id WHERE c.repository_id='{}' AND c.status='active' AND ei.repository_id='{}' AND ei.source_path='{}' AND ei.content_hash IS NOT NULL AND ei.content_hash <> '{}';",
+            sql_quote(repository_id),
+            sql_quote(repository_id),
+            sql_quote(&file.path),
+            sql_quote(&file.content_hash),
+        );
+        let stdout = run_sqlite_capture(sqlite_executable, sqlite_path, &sql)?;
+        total += stdout.trim().parse::<usize>().unwrap_or(0);
+    }
+    Ok(total)
 }
 
 fn run_sqlite(sqlite_executable: &Path, sqlite_path: &Path, sql: &str) -> Result<(), String> {
@@ -301,6 +413,32 @@ fn run_sqlite(sqlite_executable: &Path, sqlite_path: &Path, sql: &str) -> Result
     } else {
         Err(format!(
             "sqlite migration failed: {}",
+            String::from_utf8_lossy(&output.stderr).trim()
+        ))
+    }
+}
+
+fn run_sqlite_capture(
+    sqlite_executable: &Path,
+    sqlite_path: &Path,
+    sql: &str,
+) -> Result<String, String> {
+    let output = Command::new(sqlite_executable)
+        .arg(sqlite_path)
+        .arg(sql)
+        .output()
+        .map_err(|error| {
+            format!(
+                "failed to start sqlite executable `{}`: {error}",
+                sqlite_executable.display()
+            )
+        })?;
+
+    if output.status.success() {
+        Ok(String::from_utf8_lossy(&output.stdout).to_string())
+    } else {
+        Err(format!(
+            "sqlite query failed: {}",
             String::from_utf8_lossy(&output.stderr).trim()
         ))
     }
@@ -367,25 +505,39 @@ fn symbol_id(repository_id: &str, path: &str, name: &str, line: usize) -> String
     )
 }
 
-fn file_content_hash(file: &codewiki_explore::ExploredFile) -> String {
-    format!(
-        "{:016x}",
-        fnv1a64(
-            format!(
-                "{}:{}:{}:{}:{}",
-                file.path,
-                file.line_count,
-                file.symbols.len(),
-                file.imports.len(),
-                role_label(file.role)
-            )
-            .as_bytes()
-        )
-    )
+fn sql_like_escape(value: &str) -> String {
+    let mut escaped = String::new();
+    for ch in value.chars() {
+        match ch {
+            '\\' | '%' | '_' => {
+                escaped.push('\\');
+                escaped.push(ch);
+            }
+            '\'' => {
+                escaped.push('\'');
+                escaped.push('\'');
+            }
+            _ => escaped.push(ch),
+        }
+    }
+    escaped
 }
 
-fn role_label(role: FileRole) -> &'static str {
-    role.as_str()
+fn render_qa_claim_line(id: &str, confidence: &str, statement: &str, evidence: &str) -> String {
+    let mut line = format!("- `{id}` [{confidence}]: {statement}\n");
+    for item in evidence.split(',').filter(|item| !item.trim().is_empty()) {
+        let mut parts = item.splitn(2, '@');
+        let evidence_id = parts.next().unwrap_or_default();
+        let source_path = parts.next().unwrap_or_default();
+        if source_path.is_empty() {
+            line.push_str(&format!("  - evidence: `{evidence_id}`\n"));
+        } else {
+            line.push_str(&format!(
+                "  - evidence: `{evidence_id}` from `{source_path}`\n"
+            ));
+        }
+    }
+    line
 }
 
 /// Planned storage layout for committed and local state.
@@ -982,36 +1134,7 @@ mod tests {
         apply_migrations_with_sqlite(&sqlite, &db).expect("migrations apply");
 
         let identity = RepositoryIdentity::new(base.join("repo"), None);
-        let snapshot = ExplorationSnapshot {
-            schema_version: 1,
-            files: vec![codewiki_explore::ExploredFile {
-                path: "src/lib.rs".to_string(),
-                language: Some("Rust".to_string()),
-                role: FileRole::Source,
-                line_count: 3,
-                symbols: vec![codewiki_explore::ExploredSymbol {
-                    name: "build".to_string(),
-                    kind: "function".to_string(),
-                    line: 1,
-                }],
-                imports: vec!["std::fs".to_string()],
-                evidence_id: "file:test".to_string(),
-            }],
-            areas: vec![codewiki_explore::AreaSummary {
-                name: "src".to_string(),
-                file_count: 1,
-                symbol_count: 1,
-                roles: vec![FileRole::Source],
-            }],
-            dependency_hints: Vec::new(),
-            evidence: vec![codewiki_explore::EvidenceRef {
-                id: "file:test".to_string(),
-                path: "src/lib.rs".to_string(),
-                kind: "file".to_string(),
-            }],
-            truncated: false,
-            file_limit: 3_000,
-        };
+        let snapshot = test_snapshot("hash:test", 3, 1);
 
         let report = persist_exploration_with_sqlite(&sqlite, &db, &identity, "init", &snapshot)
             .expect("persist snapshot");
@@ -1035,6 +1158,42 @@ mod tests {
         assert_eq!(parts[2], "1");
         assert!(parts[3].parse::<usize>().expect("claims count") >= 2);
         assert!(parts[4].parse::<usize>().expect("claim evidence count") >= 2);
+
+        let _ = fs::remove_dir_all(base);
+    }
+
+    #[test]
+    fn sqlite_marks_claims_stale_and_renders_qa_context() {
+        let sqlite = if Path::new("/usr/bin/sqlite3").exists() {
+            PathBuf::from("/usr/bin/sqlite3")
+        } else {
+            PathBuf::from("sqlite3")
+        };
+        let base = std::env::temp_dir().join(format!(
+            "codewiki-store-stale-test-{}-{}",
+            std::process::id(),
+            unique_test_suffix()
+        ));
+        let db = base.join("state.sqlite3");
+        apply_migrations_with_sqlite(&sqlite, &db).expect("migrations apply");
+
+        let identity = RepositoryIdentity::new(base.join("repo"), None);
+        let first = test_snapshot("hash:before", 3, 1);
+        persist_exploration_with_sqlite(&sqlite, &db, &identity, "init", &first)
+            .expect("persist first snapshot");
+        let second = test_snapshot("hash:after", 3, 1);
+        let report = persist_exploration_with_sqlite(&sqlite, &db, &identity, "sync", &second)
+            .expect("persist changed snapshot");
+
+        assert!(report.stale_claims_seen >= 1);
+
+        let context = render_qa_context_with_sqlite(&sqlite, &db, "src/lib.rs", 10)
+            .expect("render qa context");
+
+        assert!(context.stale_claims_seen >= 1);
+        assert!(context.markdown.contains("## Active Claims"));
+        assert!(context.markdown.contains("## Stale Claims"));
+        assert!(context.markdown.contains("src/lib.rs"));
 
         let _ = fs::remove_dir_all(base);
     }
@@ -1101,5 +1260,46 @@ mod tests {
         )
         .expect("write suffix");
         slug_with_hash(&value)
+    }
+
+    fn test_snapshot(
+        content_hash: &str,
+        line_count: usize,
+        symbol_count: usize,
+    ) -> ExplorationSnapshot {
+        let symbols = (0..symbol_count)
+            .map(|index| codewiki_explore::ExploredSymbol {
+                name: format!("build{index}"),
+                kind: "function".to_string(),
+                line: index + 1,
+            })
+            .collect::<Vec<_>>();
+        ExplorationSnapshot {
+            schema_version: 1,
+            files: vec![codewiki_explore::ExploredFile {
+                path: "src/lib.rs".to_string(),
+                language: Some("Rust".to_string()),
+                role: FileRole::Source,
+                line_count,
+                content_hash: content_hash.to_string(),
+                symbols,
+                imports: vec!["std::fs".to_string()],
+                evidence_id: "file:test".to_string(),
+            }],
+            areas: vec![codewiki_explore::AreaSummary {
+                name: "src".to_string(),
+                file_count: 1,
+                symbol_count,
+                roles: vec![FileRole::Source],
+            }],
+            dependency_hints: Vec::new(),
+            evidence: vec![codewiki_explore::EvidenceRef {
+                id: "file:test".to_string(),
+                path: "src/lib.rs".to_string(),
+                kind: "file".to_string(),
+            }],
+            truncated: false,
+            file_limit: 3_000,
+        }
     }
 }

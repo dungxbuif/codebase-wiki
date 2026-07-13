@@ -89,6 +89,8 @@ Semantic exploration v1 records bounded file, area, symbol, import/dependency-hi
 
 Claim persistence v1 promotes deterministic source-backed structure claims from semantic snapshots and writes repository, run, file, symbol, evidence, claim, and claim/evidence-link rows into local SQLite. Generated `docs/codewiki/evidence/claims.md` mirrors those promoted claims so docs-first Q&A and SQLite-backed Q&A can share the same evidence base.
 
+Staleness v1 compares new semantic file content hashes against existing evidence hashes. When supporting file evidence changes, linked active claims are marked `stale` before new evidence is persisted. Q&A retrieval renders active and stale SQLite claims separately so agents can answer from fresh docs/state first and inspect stale source paths narrowly when needed.
+
 The canonical generated docs slots are defined by `docs/decisions/ADR-0005-codewiki-generated-docs-structure.md`: `index.md`, `map.md`, `architecture.md`, `domains.md`, `workflows.md`, `data.md`, `interfaces.md`, `operations.md`, `testing.md`, `decisions.md`, `glossary.md`, `open-questions.md`, `evidence/**`, and optional `areas/<area-slug>.md`.
 
 ## Runtime Flow
@@ -101,6 +103,7 @@ Skill workflow: CodeWiki init
   -> detect stack and repository shape
   -> explore source/docs with bounded semantic snapshot
   -> persist files, symbols, evidence, and promoted claims in SQLite
+  -> mark claims stale when supporting evidence changes
   -> create WikiPlan
   -> generate docs
   -> write checkpoints for future sync

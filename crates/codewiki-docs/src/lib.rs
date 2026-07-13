@@ -245,6 +245,7 @@ mod tests {
                 language: Some("Rust".to_string()),
                 role: codewiki_explore::FileRole::Source,
                 line_count: 10,
+                content_hash: "hash:test".to_string(),
                 symbols: vec![codewiki_explore::ExploredSymbol {
                     name: "build".to_string(),
                     kind: "function".to_string(),

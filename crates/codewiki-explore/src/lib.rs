@@ -158,6 +158,8 @@ pub struct ExploredFile {
     pub role: FileRole,
     /// Number of lines read.
     pub line_count: usize,
+    /// Stable content hash for the inspected text.
+    pub content_hash: String,
     /// Symbols discovered from generic lexical patterns.
     pub symbols: Vec<ExploredSymbol>,
     /// Import/use/include/require hints.
@@ -278,6 +280,7 @@ pub fn explore_repository_with_limit(
         let path = normalize_path(&relative_path);
         let role = infer_role(&relative_path);
         let language = language_for_path(&relative_path).map(str::to_string);
+        let content_hash = text_hash(&text);
         let symbols = extract_symbols(&text);
         let imports = extract_imports(&text);
         let evidence_id = evidence_id_for_path(&path);
@@ -301,6 +304,7 @@ pub fn explore_repository_with_limit(
             language,
             role,
             line_count: text.lines().count(),
+            content_hash,
             symbols,
             imports,
             evidence_id,
@@ -606,6 +610,10 @@ fn summarize_areas(files: &[ExploredFile]) -> Vec<AreaSummary> {
 
 fn evidence_id_for_path(path: &str) -> String {
     format!("file:{:016x}", fnv1a64(path.as_bytes()))
+}
+
+fn text_hash(text: &str) -> String {
+    format!("{:016x}", fnv1a64(text.as_bytes()))
 }
 
 fn stable_claim_id(statement: &str) -> String {
