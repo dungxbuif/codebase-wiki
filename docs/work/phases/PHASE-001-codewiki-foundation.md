@@ -87,6 +87,7 @@ Create the complete foundation for CodeWiki as a repo-native skill that can init
 | TICKET-001 | ticket | Rust CLI workspace scaffold | done | `docs/work/tickets/TICKET-001-rust-cli-workspace.md` |
 | TICKET-002 | ticket | Skill-first installer | done | `docs/work/tickets/TICKET-002-skill-first-installer.md` |
 | TICKET-003 | ticket | Config/storage skeleton | done | `docs/work/tickets/TICKET-003-config-storage-skeleton.md` |
+| TICKET-004 | ticket | SQLite state migrations | done | `docs/work/tickets/TICKET-004-sqlite-state-migrations.md` |
 | TBD | ticket | Implement repository detection and exploration contract | draft | TBD |
 | TBD | ticket | Implement WikiPlan schema and generator | draft | TBD |
 | TBD | ticket | Implement persistent SQLite runtime state | draft | TBD |

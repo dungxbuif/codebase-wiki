@@ -3,6 +3,37 @@
 /// Default CodeWiki schema version for committed project files.
 pub const CODEWIKI_SCHEMA_VERSION: u32 = 1;
 
+/// First durable local-state migration SQL.
+pub const INITIAL_STATE_MIGRATION_SQL: &str = include_str!("../migrations/001_initial_state.sql");
+
+/// A versioned SQLite migration bundled with CodeWiki.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct Migration {
+    /// Monotonic migration version.
+    pub version: u32,
+    /// Stable human-readable migration name.
+    pub name: &'static str,
+    /// SQLite SQL body.
+    pub sql: &'static str,
+}
+
+/// Return all bundled migrations in apply order.
+pub fn available_migrations() -> &'static [Migration] {
+    &[Migration {
+        version: 1,
+        name: "initial_state",
+        sql: INITIAL_STATE_MIGRATION_SQL,
+    }]
+}
+
+/// Return the latest bundled migration version.
+pub fn latest_migration_version() -> u32 {
+    available_migrations()
+        .last()
+        .map(|migration| migration.version)
+        .unwrap_or(0)
+}
+
 /// Planned storage layout for committed and local state.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct StoreLayout {
@@ -196,5 +227,44 @@ mod tests {
         assert!(guidance.contains("docs-first lazy activation"));
         assert!(guidance.contains("Octocode is the first-choice"));
         assert!(guidance.contains("CocoIndex is only"));
+    }
+
+    #[test]
+    fn migration_registry_is_ordered() {
+        let migrations = available_migrations();
+
+        assert_eq!(latest_migration_version(), 1);
+        assert_eq!(migrations[0].version, 1);
+        assert_eq!(migrations[0].name, "initial_state");
+    }
+
+    #[test]
+    fn initial_migration_contains_core_tables() {
+        let sql = INITIAL_STATE_MIGRATION_SQL;
+
+        for table in [
+            "schema_migrations",
+            "repositories",
+            "sync_runs",
+            "files",
+            "symbols",
+            "pages",
+            "evidence_items",
+            "claims",
+            "claim_evidence",
+            "provider_snapshots",
+            "open_questions",
+        ] {
+            assert!(sql.contains(&format!("CREATE TABLE IF NOT EXISTS {table}")));
+        }
+    }
+
+    #[test]
+    fn initial_migration_links_claims_to_evidence() {
+        let sql = INITIAL_STATE_MIGRATION_SQL;
+
+        assert!(sql.contains("PRIMARY KEY (claim_id, evidence_id)"));
+        assert!(sql.contains("FOREIGN KEY (claim_id) REFERENCES claims(id)"));
+        assert!(sql.contains("FOREIGN KEY (evidence_id) REFERENCES evidence_items(id)"));
     }
 }

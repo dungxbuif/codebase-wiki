@@ -77,6 +77,9 @@ Build CodeWiki as a complete repo-native Codex skill for semantic wiki generatio
 - `docs/work/research/REFERENCE-PROMPTS.md`
 - `docs/decisions/ADR-0005-codewiki-generated-docs-structure.md`
 - `skill/codewiki/references/`
+- `docs/work/tickets/TICKET-004-sqlite-state-migrations.md`
+- `docs/work/designs/DESIGN-004-sqlite-state-migrations.md`
+- `crates/codewiki-store/migrations/001_initial_state.sql`
 
 ## Recent Decisions
 
@@ -104,13 +107,15 @@ Build CodeWiki as a complete repo-native Codex skill for semantic wiki generatio
 - Do not copy either reference prompt wholesale; CodeWiki should use a small skill entry plus mode-specific prompt modules.
 - Standardize target-repo generated docs under `docs/codewiki/**`; keep `.codewiki/**` for committed control-plane files.
 - Keep `skill/codewiki/SKILL.md` as a compact router and put mode-specific workflow detail in `skill/codewiki/references/`.
+- Start SQLite durable state with an executor-agnostic migration registry in `codewiki-store`.
 
 ## Next Steps
 
 - Create execution tickets from `PHASE-001`.
 - Write detail design for config/storage and repository exploration before implementation.
 - Implement prompt module behavior in the actual CodeWiki init/sync/Q&A runtime.
-- Add target-repo `.codewiki/AGENTS.md` guidance for optional runtime tools during CodeWiki init.
+- Implement SQLite executor/path resolver for the migration registry.
+- Add target-repo `.codewiki/AGENTS.md` writing during CodeWiki init.
 - Build the skill init/sync/Q&A workflows first; use Rust only where deterministic helper behavior is needed.
 - Design SQLite schema and migrations next.
 
