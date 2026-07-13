@@ -58,7 +58,7 @@ trace:
 
 - Problem statement: CodeWiki must be a reusable Codex skill, not primarily a CLI product.
 - Why now: The user clarified that Rust is only a companion tool and requested a repository-based one-command installer.
-- Success outcome: The repo contains a skill package and a script that installs it into `$CODEX_HOME/skills/codewiki`.
+- Success outcome: The repo contains a skill package and a script that installs it into the target workspace at `.agents/skills/codewiki` by default.
 
 ### Context Loaded
 
@@ -76,7 +76,7 @@ trace:
 - Touched modules/files: `skill/codewiki/**`, `scripts/install-codewiki-skill.sh`, master docs, ADRs, ticket/design docs.
 - Direct dependencies inspected: current docs and existing Rust scaffold.
 - Contracts affected: skill install path and one-command installer.
-- Known unknowns: final marketplace/distribution packaging beyond `$CODEX_HOME/skills`.
+- Known unknowns: final marketplace/distribution packaging beyond project-local `.agents/skills`.
 - Scope expansion reason: direct user request changed product direction.
 
 ### Small Task Exemption
@@ -99,27 +99,27 @@ trace:
 | --- | --- |
 | `skill/codewiki/SKILL.md` | Primary product behavior and agent workflow |
 | `skill/codewiki/agents/openai.yaml` | Skill UI metadata |
-| `scripts/install-codewiki-skill.sh` | Installs the skill from the repo into Codex home |
+| `scripts/install-codewiki-skill.sh` | Installs the skill from the repo into the target workspace |
 | `crates/**` | Companion Rust tool workspace for deterministic support |
 
 ## 4. Execution Flow
 
 1. User runs installer command from the repository or via raw GitHub script.
 2. Installer clones the CodeWiki repository.
-3. Installer copies `skill/codewiki` into `$CODEX_HOME/skills/codewiki`.
+3. Installer copies `skill/codewiki` into `.agents/skills/codewiki` under the target workspace by default.
 4. Future Codex sessions can trigger the CodeWiki skill by name or task description.
 
 ## 5. API & Data Model Design
 
 - Install command: `scripts/install-codewiki-skill.sh`
 - Remote default: `https://github.com/dungxbuif/codebase-wiki.git`
-- Install target: `$CODEX_HOME/skills/codewiki`
+- Install target: `.agents/skills/codewiki` by default; `$CODEX_HOME/skills/codewiki` only when `CODEWIKI_INSTALL_SCOPE=global`.
 - Data model changes: none.
 
 ## 6. Security & Authorization
 
 - Authentication changes: none.
-- Authorization / Permissions: writes to `$CODEX_HOME/skills`.
+- Authorization / Permissions: writes to the target workspace `.agents/skills` by default.
 - Data Privacy / PII impact: none.
 - Input Validation: installer verifies `skill/codewiki/SKILL.md` exists before copying.
 

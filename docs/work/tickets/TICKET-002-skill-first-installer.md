@@ -90,7 +90,7 @@ AI fill:
 ## Test Expectations
 
 - Unit/static: `rtk bash -n scripts/install-codewiki-skill.sh`
-- Integration: not required because cloning/copying into `$CODEX_HOME` is an external install action.
+- Integration: not required because cloning/copying into the target workspace `.agents/skills` is an external install action.
 - E2E: not required yet.
 - UAT: not required.
 - Manual/platform: `rtk git remote -v`

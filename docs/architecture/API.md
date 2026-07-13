@@ -21,7 +21,7 @@ Document HTTP endpoints, RPC methods, events, CLI commands, or any other public 
 
 | Contract | Type | Auth | Status | Notes |
 | --- | --- | --- | --- | --- |
-| `curl -fsSL https://raw.githubusercontent.com/dungxbuif/codebase-wiki/master/scripts/install-codewiki-skill.sh \| bash` | install command | GitHub/repo access plus optional Cargo build | implemented | Installs `skill/codewiki` into the current target repository at `.codex/skills/codewiki` by default, builds `bin/codewiki` when Cargo is available, and keeps copied Rust companion source as fallback. Set `CODEWIKI_INSTALL_SCOPE=global` to install into `$CODEX_HOME/skills/codewiki`. |
+| `curl -fsSL https://raw.githubusercontent.com/dungxbuif/codebase-wiki/master/scripts/install-codewiki-skill.sh \| bash` | install command | GitHub/repo access plus optional Cargo build | implemented | Installs `skill/codewiki` into the current target repository at `.agents/skills/codewiki` by default, builds `bin/codewiki` when Cargo is available, and keeps copied Rust companion source as fallback. Set `CODEWIKI_INSTALL_SCOPE=global` to install into `$CODEX_HOME/skills/codewiki`. |
 | `skill/codewiki/scripts/codewiki-helper.sh [args...]` | skill helper script | optional Rust binary/source | implemented | Resolves the Rust companion through `CODEWIKI_COMPANION_BIN`, installed `bin/codewiki`, `PATH`, `CODEWIKI_REPO`, installed companion source, or source checkout. |
 | `codewiki help` / `codewiki --help` | companion command | none | implemented | Prints scaffold usage and companion-tool status. |
 | `codewiki version` / `codewiki --version` | companion command | none | implemented | Prints current package version. |

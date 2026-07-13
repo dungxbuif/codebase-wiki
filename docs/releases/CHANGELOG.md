@@ -53,6 +53,6 @@ All notable changes should be recorded here.
 - Reworked generated docs layout/content patterns from OpenWiki and DeepWiki: quickstart-first navigation, section directories, no thin pages, backlog-in-quickstart, and relevant-source-files blocks on source-backed pages.
 - Recorded current OpenWiki/deepwiki-open reference baseline commits and documented CodeWiki's source-extension status versus OpenWiki-style bundled connectors.
 - Closed the foundation phase with reconciled runtime status, phase trace, master docs, validation, README, and final verification evidence.
-- Changed the installer default to project-local installation under `.codex/skills/codewiki`; global installation now requires `CODEWIKI_INSTALL_SCOPE=global`.
+- Changed the installer default to project-local installation under `.agents/skills/codewiki`; global installation now requires `CODEWIKI_INSTALL_SCOPE=global`.
 - Reconciled README, roadmap, traceability, validation, and release-readiness docs for the completed CodeWiki foundation baseline.
 - Added CodeWiki-specific standards and reconciled implemented requirement statuses.

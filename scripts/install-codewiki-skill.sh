@@ -9,7 +9,7 @@ TARGET_DIR="${CODEWIKI_TARGET_DIR:-$PWD}"
 if [[ "$INSTALL_SCOPE" == "global" ]]; then
   INSTALL_ROOT="$CODEX_HOME/skills"
 else
-  INSTALL_ROOT="$TARGET_DIR/.codex/skills"
+  INSTALL_ROOT="$TARGET_DIR/.agents/skills"
 fi
 INSTALL_DIR="$INSTALL_ROOT/$SKILL_NAME"
 

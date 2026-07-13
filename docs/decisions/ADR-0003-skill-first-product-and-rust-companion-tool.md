@@ -37,7 +37,7 @@ CodeWiki is a skill-first product.
 
 Rust is a companion tool for the skill. It may provide deterministic helpers for repository inspection, config/state operations, validation, cache/index maintenance, and future performance-sensitive paths. The skill workflow, `SKILL.md`, installer, and repo-native docs/state model are the primary product surface.
 
-Provide a one-command installer from the repository that installs `skill/codewiki` into `$CODEX_HOME/skills/codewiki`.
+Provide a one-command installer from the repository that installs `skill/codewiki` into the target workspace at `.agents/skills/codewiki` by default. Global installation into `$CODEX_HOME/skills/codewiki` is an explicit opt-in for users who want a shared skill outside a project workspace.
 
 ## Options Considered
 
@@ -51,4 +51,3 @@ Provide a one-command installer from the repository that installs `skill/codewik
 - The Rust workspace should avoid over-owning UX and should expose helper behavior the skill can call.
 - The installer script is part of the product foundation.
 - Future tickets should prioritize skill init/sync/Q&A behavior and target-repo installation flow.
-

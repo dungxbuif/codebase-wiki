@@ -90,7 +90,7 @@ CodeWiki is a Codex skill that builds and maintains a semantic wiki for software
 - Treat `docs/**` as the generated knowledge surface and `.codewiki/**` as the committed control plane.
 - Ask for/confirm output workspace placement before writing when repo-local versus external/personal storage is ambiguous.
 - Use OpenWiki and deepwiki-open as technical references only; do not inherit their runtime architecture wholesale.
-- Install command should copy/install `skill/codewiki` into `$CODEX_HOME/skills/codewiki`.
+- Install command should copy/install `skill/codewiki` into the target workspace at `.agents/skills/codewiki` by default.
 
 ## Acceptance Criteria
 

@@ -39,7 +39,7 @@ curl -fsSL https://raw.githubusercontent.com/dungxbuif/codebase-wiki/master/scri
 By default this writes to:
 
 ```text
-<target-repo>/.codex/skills/codewiki
+<target-repo>/.agents/skills/codewiki
 ```
 
 From a local checkout, install with:
