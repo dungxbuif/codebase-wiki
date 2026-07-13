@@ -168,6 +168,8 @@ Maintain CodeWiki as a complete repo-native Codex skill for semantic wiki genera
 - Finalize CodeWiki-specific product/evidence/sync/tool standards and implemented requirement statuses.
 - Add `skill/codewiki/scripts/codewiki-helper.sh`; make the installer build `bin/codewiki` for binary-first companion usage and keep copied Rust companion source as fallback.
 - Copy OpenWiki/DeepWiki docs quality patterns into CodeWiki: `quickstart.md` entrypoint, section directories only for real areas, `## Backlog` instead of stubs, and DeepWiki-style relevant-source-files blocks.
+- Record reference baselines for future updates: OpenWiki `2fb44a876db8cca461ad1c0767931d95495763a3`; deepwiki-open `16f35a0fc0284e99b7963bbf4e8585e9957e2fe1`.
+- Source/change providers currently follow a registry + source-skill contract: Git is default, `.codewiki/sources.yml` records sources, and non-Git systems are user-provided source skills that emit evidence packets. CodeWiki core does not bundle OpenWiki-style connectors.
 
 ## Next Steps
 

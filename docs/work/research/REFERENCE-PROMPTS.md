@@ -23,6 +23,9 @@ This note compares prompt and wiki-control patterns from the two reference repos
 - OpenWiki prompt source: `references/openwiki/src/agent/prompt.ts`
 - DeepWiki prompt source: `references/deepwiki-open/api/prompts.py`
 - DeepWiki cache/export behavior: `references/deepwiki-open/api/api.py`
+- Reference baseline commits recorded on 2026-07-13:
+  - OpenWiki: `2fb44a876db8cca461ad1c0767931d95495763a3` (`references/openwiki`, `0.1.1-9-g2fb44a8`)
+  - deepwiki-open: `16f35a0fc0284e99b7963bbf4e8585e9957e2fe1` (`references/deepwiki-open`, `heads/main`)
 
 The purpose is not to copy either prompt. The purpose is to extract compatible prompt mechanics for a repo-native Codex skill that generates durable semantic documentation and supports docs-first Q&A.
 
@@ -40,6 +43,7 @@ The purpose is not to copy either prompt. The purpose is to extract compatible p
   - update is surgical, diff-aware, and may be a no-op when docs are already current.
 - Documentation quality bar: avoid thin pages, avoid raw file inventories, keep one canonical home per concept, and make the entrypoint navigable.
 - Explicit planning before writing: create an intended page/evidence plan before generating final docs.
+- Connector/change-source split: deterministic connector ingestion writes bounded raw/source data first, then the LLM reads that evidence and synthesizes wiki updates. This keeps credentialed fetching outside arbitrary model-controlled documentation writing.
 
 ### Weaknesses to Avoid
 
@@ -87,6 +91,7 @@ CodeWiki should combine them this way:
 | Q&A after docs exist | Wiki-first answering, source fallback only when needed | Structured context blocks and same-language response | Answer from `docs/**` first, then plan/state/SQLite/source/provider only when justified. |
 | Deep repo research | Targeted exploration and source/Git evidence | Iterative research prompts | Use as an internal mode for hard questions or incomplete docs; save durable findings back into CodeWiki state when relevant. |
 | Provider/runtime tools | Minimal default tool surface and clear boundaries | Retrieval pipeline concept | Lazy-activate Octocode/codebase-memory-mcp/CocoIndex only by trigger; do not require them for every run. |
+| Non-Git change sources | Connector ingestion contract and raw evidence discipline | Structured context packets | CodeWiki core should keep Git as default and route Jira/Figma/fix-note/internal systems through user-provided source skills that emit bounded evidence packets. |
 | Storage | Metadata and cache awareness | Per-repo/per-language wiki cache | Split committed config/docs, local durable state, and rebuildable cache. |
 
 ## Recommended CodeWiki Prompt Architecture

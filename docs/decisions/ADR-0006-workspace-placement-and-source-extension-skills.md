@@ -53,6 +53,15 @@ Non-Git sources are supported through a source extension contract:
 - Users or agents may create separate source skills that emit bounded evidence packets.
 - CodeWiki treats source skill output as untrusted evidence until reconciled with Git/source/docs.
 
+This intentionally adopts OpenWiki's deterministic-fetch-then-synthesis idea without adopting OpenWiki's bundled connector catalog. Credentialed or system-specific fetching belongs to separate source skills; CodeWiki core consumes the resulting evidence packet.
+
+Current implementation status:
+
+- The Rust companion initializes `.codewiki/sources.yml` with the primary Git source.
+- Skill references define the source extension contract and a copyable custom source-skill template.
+- Sync guidance reads `.codewiki/sources.yml`, treats Git as default truth, and invokes non-Git source skills only when relevant.
+- No built-in Jira, Figma, fix-note, chat, or issue-tracker providers are implemented in CodeWiki core.
+
 ## Source Registry Shape
 
 ```yaml
@@ -74,4 +83,3 @@ sources:
 - The Rust companion may keep deterministic helpers for `.codewiki/sources.yml`, but it must not become the primary UX.
 - No command such as `codewiki source add` is part of the intended skill UX.
 - Future source integrations should be separate skills/templates, not built-in providers.
-
