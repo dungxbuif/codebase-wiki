@@ -42,7 +42,7 @@ From a local checkout, install with:
 scripts/install-codewiki-skill.sh
 ```
 
-The installer copies `skill/codewiki`, builds `bin/codewiki` when Cargo is available, and keeps companion source as fallback. The skill wrapper `scripts/codewiki-helper.sh` prefers `CODEWIKI_COMPANION_BIN`, then the installed binary, then PATH/source fallback.
+The installer copies `skill/codewiki`, builds `bin/codewiki` when compatible Cargo/Rust is available, and keeps companion source as fallback. The skill wrapper `scripts/codewiki-helper.sh` prefers `CODEWIKI_COMPANION_BIN`, then the installed binary, then PATH/source fallback.
 
 ## Product Direction
 
