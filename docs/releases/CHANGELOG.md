@@ -33,3 +33,4 @@ All notable changes should be recorded here.
 - Standardized generated target-repo docs structure: `docs/codewiki/**` as knowledge surface and `.codewiki/**` as committed control plane.
 - Added CodeWiki bundled workflow references for docs structure, init, sync, Q&A, and deep research.
 - Added the first executor-agnostic SQLite migration for CodeWiki durable local state.
+- Added local state/cache path resolution and sqlite3-backed migration application.
