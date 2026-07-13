@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-REPO_URL="${CODEWIKI_REPO_URL:-git@github.com:dungxbuif/harness.git}"
+REPO_URL="${CODEWIKI_REPO_URL:-https://github.com/dungxbuif/codebase-wiki.git}"
 SKILL_NAME="${CODEWIKI_SKILL_NAME:-codewiki}"
 CODEX_HOME="${CODEX_HOME:-$HOME/.codex}"
 INSTALL_ROOT="$CODEX_HOME/skills"
@@ -15,12 +15,12 @@ Usage:
   scripts/install-codewiki-skill.sh
 
 Environment:
-  CODEWIKI_REPO_URL   Git URL to install from. Default: git@github.com:dungxbuif/harness.git
+  CODEWIKI_REPO_URL   Git URL to install from. Default: https://github.com/dungxbuif/codebase-wiki.git
   CODEX_HOME          Codex home. Default: ~/.codex
   CODEWIKI_SKILL_NAME Skill install folder. Default: codewiki
 
 One-command install after this repo is pushed:
-  curl -fsSL https://raw.githubusercontent.com/dungxbuif/harness/main/scripts/install-codewiki-skill.sh | bash
+  curl -fsSL https://raw.githubusercontent.com/dungxbuif/codebase-wiki/master/scripts/install-codewiki-skill.sh | bash
 USAGE
 }
 

@@ -62,7 +62,7 @@ AI fill:
 
 - [x] Given this repo, when an agent inspects it, then CodeWiki is documented as skill-first.
 - [x] Given the install script, when syntax is checked, then it is valid Bash.
-- [x] Given git remotes are listed, then `origin` points to `git@github.com:dungxbuif/harness.git`.
+- [x] Given git remotes are listed, then `origin` points to `git@github.com:dungxbuif/codebase-wiki.git`.
 - [x] Given future users, when they read README/API docs, then they can see the one-command install path.
 - [x] UAT requirement is clear: not_required because this is installation scaffolding and docs.
 
@@ -104,7 +104,7 @@ AI fill:
 
 - Command: `rtk git remote -v`
 - Result: pass
-- Notes: `origin` fetch/push points to `git@github.com:dungxbuif/harness.git`.
+- Notes: `origin` fetch/push points to `git@github.com:dungxbuif/codebase-wiki.git`; `harness` is retained only as a source/reference remote.
 
 - Command: `rtk cargo fmt --all --check`
 - Result: pass

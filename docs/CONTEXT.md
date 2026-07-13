@@ -145,7 +145,7 @@ Maintain CodeWiki as a complete repo-native Codex skill for semantic wiki genera
 - Scaffold the Rust workspace with separate CLI, core, detection, store, provider, and docs crates.
 - Verify the scaffold with `rtk cargo fmt --all --check`, `rtk cargo test`, and `rtk cargo run -p codewiki-cli -- status`.
 - Add a repository installer script that installs `skill/codewiki` into `$CODEX_HOME/skills/codewiki`.
-- Add `origin` remote: `git@github.com:dungxbuif/harness.git`.
+- Add `origin` remote: `git@github.com:dungxbuif/codebase-wiki.git`; keep `harness` only as a source/reference remote.
 - Use OpenWiki as the reference for evidence, write-boundary, docs-first, sync/no-op discipline, quickstart-first docs, section directories, and avoiding thin pages.
 - Use DeepWiki as the reference for generated wiki structure metadata, per-page relevant source files, related pages, importance, diagrams/tables/citations, structured RAG context packets, same-language answers, and focused deep research.
 - Do not copy either reference prompt wholesale; CodeWiki should use a small skill entry plus mode-specific prompt modules and copy the product patterns.

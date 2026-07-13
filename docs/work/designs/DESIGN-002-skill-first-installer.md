@@ -112,7 +112,7 @@ trace:
 ## 5. API & Data Model Design
 
 - Install command: `scripts/install-codewiki-skill.sh`
-- Remote default: `git@github.com:dungxbuif/harness.git`
+- Remote default: `https://github.com/dungxbuif/codebase-wiki.git`
 - Install target: `$CODEX_HOME/skills/codewiki`
 - Data model changes: none.
 
@@ -141,4 +141,3 @@ Filled in ticket after execution.
 - ERD docs: no change.
 - ADR: create ADR-0003 and supersede the relevant part of ADR-0002.
 - Context: update.
-
