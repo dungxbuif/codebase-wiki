@@ -1,7 +1,7 @@
 //! Core command orchestration for CodeWiki.
 
 use codewiki_detect::{DetectionCapabilities, detect_repository};
-use codewiki_docs::{WikiDocsLayout, render_initial_index};
+use codewiki_docs::{WikiDocsLayout, render_initial_pages};
 use codewiki_store::{
     CodeWikiConfig, DetectedStack, RepositoryIdentity, StatePaths, StoreLayout, WikiPlan,
     apply_migrations_with_sqlite, render_target_agents_md,
@@ -205,11 +205,9 @@ fn init_repo(repo_root: &Path, context: &RuntimeContext) -> Result<String, Strin
         .file_name()
         .and_then(|name| name.to_str())
         .unwrap_or("repository");
-    write_if_missing(
-        &repo_root.join("docs/codewiki/index.md"),
-        &render_initial_index_with_detection(repo_label, &detection.to_markdown()),
-        &mut actions,
-    )?;
+    for page in render_initial_pages(repo_label, &detection.to_markdown()) {
+        write_if_missing(&repo_root.join(page.path), &page.content, &mut actions)?;
+    }
 
     Ok(format!(
         "CodeWiki initialized\nrepo: {}\nstate_db: {}\nmigration_version: {}\n{}\n",
@@ -230,13 +228,6 @@ fn render_plan_with_detection(detection: &codewiki_detect::RepositoryDetection) 
         docs: detection.docs.clone(),
     })
     .to_yaml()
-}
-
-fn render_initial_index_with_detection(repo_label: &str, detection_markdown: &str) -> String {
-    let mut index = render_initial_index(repo_label);
-    index.push_str("## Detected Repository Signals\n\n");
-    index.push_str(detection_markdown);
-    index
 }
 
 fn write_if_missing(path: &Path, content: &str, actions: &mut Vec<String>) -> Result<(), String> {
@@ -363,6 +354,9 @@ mod tests {
         assert!(repo.join(".codewiki/plan.yml").exists());
         assert!(repo.join(".codewiki/AGENTS.md").exists());
         assert!(repo.join("docs/codewiki/index.md").exists());
+        assert!(repo.join("docs/codewiki/map.md").exists());
+        assert!(repo.join("docs/codewiki/architecture.md").exists());
+        assert!(repo.join("docs/codewiki/evidence/claims.md").exists());
         assert!(output.stdout.contains("migration_version: 1"));
         assert!(
             fs::read_to_string(repo.join(".codewiki/plan.yml"))

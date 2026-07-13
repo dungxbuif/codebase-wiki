@@ -92,6 +92,7 @@ Create the complete foundation for CodeWiki as a repo-native skill that can init
 | TICKET-006 | ticket | Init skeleton | done | `docs/work/tickets/TICKET-006-init-skeleton.md` |
 | TICKET-007 | ticket | Repository detection v1 | done | `docs/work/tickets/TICKET-007-repo-detection-v1.md` |
 | TICKET-008 | ticket | WikiPlan and evidence models | done | `docs/work/tickets/TICKET-008-wikiplan-evidence-models.md` |
+| TICKET-009 | ticket | Canonical docs generator | done | `docs/work/tickets/TICKET-009-canonical-docs-generator.md` |
 | TBD | ticket | Implement docs generation and sync loop | draft | TBD |
 
 ## Dependencies

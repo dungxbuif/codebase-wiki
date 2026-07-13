@@ -88,6 +88,8 @@ Build CodeWiki as a complete repo-native Codex skill for semantic wiki generatio
 - `docs/work/designs/DESIGN-007-repo-detection-v1.md`
 - `docs/work/tickets/TICKET-008-wikiplan-evidence-models.md`
 - `docs/work/designs/DESIGN-008-wikiplan-evidence-models.md`
+- `docs/work/tickets/TICKET-009-canonical-docs-generator.md`
+- `docs/work/designs/DESIGN-009-canonical-docs-generator.md`
 
 ## Recent Decisions
 
@@ -120,13 +122,14 @@ Build CodeWiki as a complete repo-native Codex skill for semantic wiki generatio
 - Add `codewiki init [path]` to create target `.codewiki/**`, `docs/codewiki/index.md`, and initialize local SQLite state.
 - Add repository detection v1 for languages, package managers, framework hints, entrypoints, tests, and docs signals.
 - Add typed WikiPlan v1, planned pages, confidence, evidence, and claim models.
+- Generate canonical starter docs for index, map, architecture, and evidence pages during init.
 
 ## Next Steps
 
 - Create execution tickets from `PHASE-001`.
 - Write detail design for config/storage and repository exploration before implementation.
 - Implement prompt module behavior in the actual CodeWiki init/sync/Q&A runtime.
-- Implement source-backed docs generation for canonical pages.
+- Implement sync impact/no-op skeleton.
 - Build the skill init/sync/Q&A workflows first; use Rust only where deterministic helper behavior is needed.
 - Design SQLite schema and migrations next.
 
