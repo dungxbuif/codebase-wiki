@@ -30,7 +30,7 @@ All notable changes should be recorded here.
 - Documented runtime provider selection policy: Octocode first when needed, codebase-memory-mcp for memory trigger, CocoIndex for indexing trigger.
 - Added Rust companion config/storage skeleton for `.codewiki/config.yml`, `.codewiki/plan.yml`, and `.codewiki/AGENTS.md`.
 - Added reference prompt analysis comparing OpenWiki and DeepWiki patterns for CodeWiki prompt architecture.
-- Standardized generated target-repo docs structure: `docs/codewiki/**` as knowledge surface and `.codewiki/**` as committed control plane.
+- Standardized generated target-repo docs structure: `docs/**` as knowledge surface and `.codewiki/**` as committed control plane.
 - Added CodeWiki bundled workflow references for docs structure, init, sync, Q&A, and deep research.
 - Added the first executor-agnostic SQLite migration for CodeWiki durable local state.
 - Added local state/cache path resolution and sqlite3-backed migration application.
@@ -47,5 +47,7 @@ All notable changes should be recorded here.
 - Added production fixture integration tests for TypeScript, Python, and Rust-shaped repositories.
 - Added generated-region markers so sync can preserve human-owned documentation edits.
 - Added canonical synthesis pages and area pages generated from semantic evidence.
+- Added an installed skill helper script plus copied Rust companion source so CodeWiki skills can invoke deterministic Rust support without making the companion the primary UX.
+- Changed the generated docs default from nested `docs/codewiki/**` to direct `docs/**` canonical pages.
 - Reconciled README, roadmap, traceability, validation, and release-readiness docs for the completed CodeWiki foundation baseline.
 - Added CodeWiki-specific standards and reconciled implemented requirement statuses.

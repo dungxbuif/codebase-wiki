@@ -42,9 +42,9 @@ Add a new Rust companion crate, `codewiki-explore`, with a deterministic `explor
 
 Integrate this snapshot into `codewiki-docs` so init/sync renders richer:
 
-- `docs/codewiki/map.md`: areas, important files, symbols, dependency hints.
-- `docs/codewiki/architecture.md`: evidence-backed structure summary.
-- `docs/codewiki/evidence/sources.md`: explored files and evidence IDs.
+- `docs/map.md`: areas, important files, symbols, dependency hints.
+- `docs/architecture.md`: evidence-backed structure summary.
+- `docs/evidence/sources.md`: explored files and evidence IDs.
 
 ## Brownfield Scope
 

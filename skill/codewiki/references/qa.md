@@ -4,7 +4,7 @@ Load this reference when the user asks questions about a repository that already
 
 ## Answer Order
 
-1. Read `docs/codewiki/**` first.
+1. Read `docs/**` first.
 2. Read `.codewiki/plan.yml`.
 3. Read `.codewiki/AGENTS.md`.
 4. Use local SQLite facts/evidence/claims if available.
@@ -36,7 +36,7 @@ Treat stale claims as warnings, not answer facts. If a stale claim is relevant, 
 
 Use concise references such as:
 
-- `docs/codewiki/architecture.md`
+- `docs/architecture.md`
 - `.codewiki/plan.yml`
 - `src/foo/bar.ts`
 - `symbol: PaymentService.authorize`

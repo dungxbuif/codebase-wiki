@@ -141,7 +141,29 @@ fn collect_files(
 }
 
 fn is_generated_codewiki_path(path: &Path) -> bool {
-    path.starts_with("docs/codewiki") || path.starts_with(".codewiki")
+    path.starts_with(".codewiki") || is_generated_docs_path(path)
+}
+
+fn is_generated_docs_path(path: &Path) -> bool {
+    path.starts_with("docs/evidence")
+        || path.starts_with("docs/areas")
+        || matches!(
+            path.to_str(),
+            Some(
+                "docs/index.md"
+                    | "docs/map.md"
+                    | "docs/architecture.md"
+                    | "docs/domains.md"
+                    | "docs/workflows.md"
+                    | "docs/data.md"
+                    | "docs/interfaces.md"
+                    | "docs/operations.md"
+                    | "docs/testing.md"
+                    | "docs/decisions.md"
+                    | "docs/glossary.md"
+                    | "docs/open-questions.md"
+            )
+        )
 }
 
 fn should_skip(name: &str) -> bool {
@@ -345,7 +367,7 @@ mod tests {
     #[test]
     fn ignores_generated_codewiki_files() {
         let root = temp_fixture("generated");
-        write_file(&root, "docs/codewiki/index.md", "# generated\n");
+        write_file(&root, "docs/index.md", "# generated\n");
         write_file(&root, ".codewiki/plan.yml", "schema_version: 1\n");
         write_file(&root, "README.md", "# source doc\n");
 

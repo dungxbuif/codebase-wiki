@@ -525,10 +525,10 @@ mod tests {
         assert!(repo.join(".codewiki/plan.yml").exists());
         assert!(repo.join(".codewiki/AGENTS.md").exists());
         assert!(repo.join(".codewiki/sources.yml").exists());
-        assert!(repo.join("docs/codewiki/index.md").exists());
-        assert!(repo.join("docs/codewiki/map.md").exists());
-        assert!(repo.join("docs/codewiki/architecture.md").exists());
-        assert!(repo.join("docs/codewiki/evidence/claims.md").exists());
+        assert!(repo.join("docs/index.md").exists());
+        assert!(repo.join("docs/map.md").exists());
+        assert!(repo.join("docs/architecture.md").exists());
+        assert!(repo.join("docs/evidence/claims.md").exists());
         assert!(output.stdout.contains("migration_version: 1"));
         assert!(output.stdout.contains("claims_persisted:"));
         assert!(
@@ -537,12 +537,12 @@ mod tests {
                 .contains("detected:")
         );
         assert!(
-            fs::read_to_string(repo.join("docs/codewiki/evidence/claims.md"))
+            fs::read_to_string(repo.join("docs/evidence/claims.md"))
                 .expect("read claims")
                 .contains("claim:")
         );
         assert!(
-            fs::read_to_string(repo.join("docs/codewiki/map.md"))
+            fs::read_to_string(repo.join("docs/map.md"))
                 .expect("read map")
                 .contains("Semantic Structure")
         );
@@ -611,9 +611,9 @@ mod tests {
         assert!(no_op.stdout.contains("no-op"));
         assert!(no_op.stdout.contains("claims_persisted:"));
 
-        let existing_map = fs::read_to_string(repo.join("docs/codewiki/map.md")).expect("map");
+        let existing_map = fs::read_to_string(repo.join("docs/map.md")).expect("map");
         fs::write(
-            repo.join("docs/codewiki/map.md"),
+            repo.join("docs/map.md"),
             format!("human preface\n{existing_map}\nhuman notes\n"),
         )
         .expect("edit map");
@@ -621,7 +621,7 @@ mod tests {
         let synced = run_with_context(["sync"], &context);
         assert_eq!(synced.exit_code, 0, "{}", synced.stderr);
         assert!(synced.stdout.contains("updated-generated-region:"));
-        let map = fs::read_to_string(repo.join("docs/codewiki/map.md")).expect("read map");
+        let map = fs::read_to_string(repo.join("docs/map.md")).expect("read map");
         assert!(map.contains("human preface"));
         assert!(map.contains("human notes"));
         assert!(map.contains("Repository Map"));
@@ -661,19 +661,19 @@ mod tests {
         assert!(output.contains("workspace:"));
         assert!(workspace.join(".codewiki/config.yml").exists());
         assert!(workspace.join(".codewiki/sources.yml").exists());
-        assert!(workspace.join("docs/codewiki/index.md").exists());
+        assert!(workspace.join("docs/index.md").exists());
         assert!(
-            fs::read_to_string(workspace.join("docs/codewiki/map.md"))
+            fs::read_to_string(workspace.join("docs/map.md"))
                 .expect("read map")
                 .contains("src/main.rs")
         );
         assert!(
-            fs::read_to_string(workspace.join("docs/codewiki/evidence/claims.md"))
+            fs::read_to_string(workspace.join("docs/evidence/claims.md"))
                 .expect("read claims")
                 .contains("claim:")
         );
         assert!(!source.join(".codewiki/config.yml").exists());
-        assert!(!source.join("docs/codewiki/index.md").exists());
+        assert!(!source.join("docs/index.md").exists());
         assert!(
             fs::read_to_string(workspace.join(".codewiki/sources.yml"))
                 .expect("read sources")

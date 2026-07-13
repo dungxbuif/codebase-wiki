@@ -12,35 +12,36 @@ Load this reference for every `init` and `sync` run, and when Q&A needs to expla
   sources.yml
 
 docs/
-  codewiki/
-    index.md
-    map.md
-    architecture.md
-    domains.md
-    workflows.md
-    data.md
-    interfaces.md
-    operations.md
-    testing.md
-    decisions.md
-    glossary.md
-    open-questions.md
-    evidence/
-      README.md
-      sources.md
-      commands.md
-      claims.md
-    areas/
-      <area-slug>.md
+  index.md
+  map.md
+  architecture.md
+  domains.md
+  workflows.md
+  data.md
+  interfaces.md
+  operations.md
+  testing.md
+  decisions.md
+  glossary.md
+  open-questions.md
+  evidence/
+    README.md
+    sources.md
+    commands.md
+    claims.md
+  areas/
+    <area-slug>.md
 ```
 
-`docs/codewiki/**` is the knowledge surface. `.codewiki/**` is the committed control plane. SQLite state and rebuildable cache live outside the repo/workspace.
+`docs/**` is the knowledge surface. `.codewiki/**` is the committed control plane. SQLite state and rebuildable cache live outside the repo/workspace.
+
+Because CodeWiki writes directly into `docs/`, existing unmarked human-authored files must be preserved. Generated content should be written only to canonical pages that are missing or contain CodeWiki generated-region markers.
 
 This structure may live either inside the source repository or inside a separate personal/external wiki workspace. When outside the source repository, `.codewiki/sources.yml` records the source repository and any additional evidence sources.
 
 ## Page Rules
 
-- Always create `docs/codewiki/index.md` after successful init.
+- Always create `docs/index.md` after successful init.
 - Generate canonical top-level synthesis pages during init/sync when semantic exploration has run.
 - If evidence is thin, keep the page explicit about gaps instead of pretending the section is complete.
 - Prefer canonical top-level pages before creating many `areas/<area-slug>.md` pages.

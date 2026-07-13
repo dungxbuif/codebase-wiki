@@ -34,7 +34,7 @@ Semantic exploration v1 produces useful source evidence, but the facts are only 
 - [x] Promote deterministic claims from semantic exploration snapshots.
 - [x] Persist repository, run, files, symbols, evidence items, claims, and claim/evidence links into the existing SQLite schema.
 - [x] Init and sync write durable state without changing the skill-first UX.
-- [x] Generated `docs/codewiki/evidence/claims.md` lists promoted claims with evidence IDs.
+- [x] Generated `docs/evidence/claims.md` lists promoted claims with evidence IDs.
 - [x] Tests prove claims and evidence persist into SQLite and docs remain enriched.
 
 ## Scope

@@ -23,7 +23,7 @@ Implemented foundation capabilities:
 - dynamic repository detection without core framework adapters;
 - semantic exploration snapshots for files, areas, symbols, imports, evidence, and claims;
 - SQLite durable state for files, symbols, evidence, claims, claim/evidence links, stale claims, and Q&A context;
-- generated `docs/codewiki/**` pages for canonical wiki slots and observed areas;
+- generated `docs/**` pages for canonical wiki slots and observed areas;
 - sync safety with generated-region markers that preserve human edits;
 - production fixture tests for TypeScript, Python, and Rust-shaped repositories.
 

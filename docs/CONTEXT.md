@@ -145,15 +145,15 @@ Maintain CodeWiki as a complete repo-native Codex skill for semantic wiki genera
 - Use OpenWiki as the reference for evidence, write-boundary, docs-first, and sync/no-op discipline.
 - Use DeepWiki as the reference for mode-separated prompts, structured RAG context packets, same-language answers, and focused deep research.
 - Do not copy either reference prompt wholesale; CodeWiki should use a small skill entry plus mode-specific prompt modules.
-- Standardize target-repo generated docs under `docs/codewiki/**`; keep `.codewiki/**` for committed control-plane files.
+- Standardize target-repo generated docs directly under `docs/`; keep `.codewiki/**` for committed control-plane files.
 - Keep `skill/codewiki/SKILL.md` as a compact router and put mode-specific workflow detail in `skill/codewiki/references/`.
 - Start SQLite durable state with an executor-agnostic migration registry in `codewiki-store`.
 - Resolve local state/cache paths from repository identity and apply migrations through the local `sqlite3` executable.
-- Add `codewiki init [path]` to create target `.codewiki/**`, `docs/codewiki/index.md`, and initialize local SQLite state.
+- Add `codewiki init [path]` to create target `.codewiki/**`, `docs/index.md`, and initialize local SQLite state.
 - Add repository detection v1 for languages, package managers, framework hints, entrypoints, tests, and docs signals.
 - Add typed WikiPlan v1, planned pages, confidence, evidence, and claim models.
 - Generate canonical starter docs for index, map, architecture, and evidence pages during init.
-- Add `codewiki sync [path]` compare/update/no-op skeleton and ignore generated CodeWiki files during detection.
+- Add `codewiki sync [path]` compare/update/no-op skeleton and ignore only generated CodeWiki canonical pages during detection, not all human-authored `docs/**`.
 - Support repo-local and external/personal wiki workspace placement; ask before writing when ambiguous.
 - Treat Git as the default source and support non-Git sources only through user-provided source extension skills.
 - Write `.codewiki/sources.yml` during initialization with Git as the primary source, including when docs are placed in an external/personal workspace.
@@ -166,6 +166,7 @@ Maintain CodeWiki as a complete repo-native Codex skill for semantic wiki genera
 - Generate canonical synthesis pages and area pages from semantic evidence while recording gaps explicitly.
 - Reconcile release-readiness docs, roadmap, traceability, README, installer syntax, companion status, and validation evidence.
 - Finalize CodeWiki-specific product/evidence/sync/tool standards and implemented requirement statuses.
+- Add `skill/codewiki/scripts/codewiki-helper.sh` and make the installer copy Rust companion source into the installed skill so agents can use deterministic helpers when available.
 
 ## Next Steps
 
@@ -176,6 +177,7 @@ Maintain CodeWiki as a complete repo-native Codex skill for semantic wiki genera
 - Optional next work: push to remote, tag/release, or add advanced provider-backed synthesis.
 - Build the skill init/sync/Q&A workflows first; use Rust only where deterministic helper behavior is needed.
 - Keep source integrations skill-based: no built-in non-Git providers unless a later design explicitly changes that boundary.
+- For target repos, generate CodeWiki pages as direct `docs/` pages such as `docs/index.md`, `docs/map.md`, and `docs/evidence/claims.md`; never create `docs/codewiki/` by default.
 
 ## Open Questions
 

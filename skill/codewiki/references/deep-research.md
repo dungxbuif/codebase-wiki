@@ -13,7 +13,7 @@ Perform focused, iterative repository research without drifting into a generic r
    - If the user asked about a file, feature, behavior, or risk, stay on that topic.
 
 2. Load current docs and plan.
-   - Start with `docs/codewiki/**` and `.codewiki/plan.yml`.
+   - Start with `docs/**` and `.codewiki/plan.yml`.
    - Identify what is known, stale, unknown, or contradicted.
 
 3. Create a research plan.
@@ -31,7 +31,7 @@ Perform focused, iterative repository research without drifting into a generic r
    - Identify docs/state updates needed.
 
 6. Reconcile if authorized by the user's request.
-   - For documentation/update requests, update `docs/codewiki/**` and `.codewiki/plan.yml`.
+   - For documentation/update requests, update `docs/**` and `.codewiki/plan.yml`.
    - For pure Q&A, answer and recommend sync if docs are stale.
 
 ## Research Output Shape

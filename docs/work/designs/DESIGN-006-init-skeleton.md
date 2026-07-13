@@ -31,7 +31,7 @@ Implement the first runnable `codewiki init [path]` companion command. This is a
 Scope:
 
 - Create committed CodeWiki control files.
-- Create `docs/codewiki/index.md`.
+- Create `docs/index.md`.
 - Apply local SQLite migrations.
 - Keep writes idempotent and non-overwriting.
 

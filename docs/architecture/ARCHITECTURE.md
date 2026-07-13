@@ -47,7 +47,7 @@ The core should not hard-code language/framework adapters. It should combine rep
 | Explorer | Select files/symbols/docs to inspect and record evidence | `crates/codewiki-explore` | Deterministic semantic snapshot v1; lexical hints are evidence, not final claims |
 | Evidence store | Persist facts, hypotheses, claims, source references, and claim/evidence links | `crates/codewiki-store` | SQLite local runtime state with migration and persistence helpers |
 | WikiPlan generator | Produce page plan, scope, confidence, open questions, and refresh strategy | TBD | Committed summary planned under `.codewiki/` |
-| Doc generator | Write human/agent-readable wiki docs | `crates/codewiki-docs` | Canonical generated docs root is `docs/codewiki/**` |
+| Doc generator | Write human/agent-readable wiki docs | `crates/codewiki-docs` | Canonical generated docs root is `docs/**` |
 | Sync engine | Detect stale docs and update safely | TBD | Must respect human-owned edits |
 | Q&A engine | Answer from docs first, then evidence/source when needed | TBD | Should cite evidence |
 | Provider boundary | Wrap optional code-intelligence providers | `crates/codewiki-provider` | Provider selection is target-repo specific |
@@ -78,16 +78,15 @@ CodeWiki uses three distinct wiki workspace layers. The workspace may be the sou
   sources.yml     # primary Git source and optional source skill declarations
 
 docs/
-  codewiki/
-    index.md      # required generated wiki entrypoint
-    ...           # canonical generated semantic docs
+  index.md        # required generated wiki entrypoint
+  ...             # canonical generated semantic docs
 ```
 
-`docs/codewiki/**` is the human/agent knowledge surface and the first source for Q&A. `.codewiki/**` is the committed control plane. SQLite state and rebuildable caches live outside the repository/workspace in platform app-data/cache directories.
+`docs/**` is the human/agent knowledge surface and the first source for Q&A. `.codewiki/**` is the committed control plane. SQLite state and rebuildable caches live outside the repository/workspace in platform app-data/cache directories.
 
 Semantic exploration v1 records bounded file, area, symbol, import/dependency-hint, and evidence-reference snapshots. These hints seed generated docs and future claim promotion, but they are not treated as fully resolved architecture without additional evidence.
 
-Claim persistence v1 promotes deterministic source-backed structure claims from semantic snapshots and writes repository, run, file, symbol, evidence, claim, and claim/evidence-link rows into local SQLite. Generated `docs/codewiki/evidence/claims.md` mirrors those promoted claims so docs-first Q&A and SQLite-backed Q&A can share the same evidence base.
+Claim persistence v1 promotes deterministic source-backed structure claims from semantic snapshots and writes repository, run, file, symbol, evidence, claim, and claim/evidence-link rows into local SQLite. Generated `docs/evidence/claims.md` mirrors those promoted claims so docs-first Q&A and SQLite-backed Q&A can share the same evidence base.
 
 Staleness v1 compares new semantic file content hashes against existing evidence hashes. When supporting file evidence changes, linked active claims are marked `stale` before new evidence is persisted. Q&A retrieval renders active and stale SQLite claims separately so agents can answer from fresh docs/state first and inspect stale source paths narrowly when needed.
 

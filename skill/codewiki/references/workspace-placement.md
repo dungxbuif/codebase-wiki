@@ -9,13 +9,13 @@ CodeWiki supports two output modes:
 1. Repo-local wiki
    - Source repo and wiki workspace are the same directory.
    - Write control files to `.codewiki/**`.
-   - Write generated docs to `docs/codewiki/**`.
+   - Write generated docs to `docs/**`.
    - Use when the user wants docs committed with the source repository.
 
 2. External/personal wiki workspace
    - Source repo is evidence input.
    - Wiki workspace is a separate directory chosen by the user.
-   - Write `.codewiki/**` and `docs/codewiki/**` inside the external workspace, not inside the source repo.
+   - Write `.codewiki/**` and `docs/**` inside the external workspace, not inside the source repo.
    - Use when the user wants personal docs, cross-repo knowledge, private notes, or docs outside source control.
 
 ## Confirmation Rule
@@ -40,10 +40,8 @@ Regardless of mode, the wiki workspace contains:
   AGENTS.md
   sources.yml
 docs/
-  codewiki/
-    index.md
-    ...
+  index.md
+  ...
 ```
 
 `sources.yml` records evidence sources. In repo-local mode, the primary Git source is the same directory as the workspace. In external mode, the primary Git source points to the source repository path or remote.
-

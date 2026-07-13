@@ -51,26 +51,25 @@ Use this default target-repository structure:
   AGENTS.md
 
 docs/
-  codewiki/
-    index.md
-    map.md
-    architecture.md
-    domains.md
-    workflows.md
-    data.md
-    interfaces.md
-    operations.md
-    testing.md
-    decisions.md
-    glossary.md
-    open-questions.md
-    evidence/
-      README.md
-      sources.md
-      commands.md
-      claims.md
-    areas/
-      <area-slug>.md
+  index.md
+  map.md
+  architecture.md
+  domains.md
+  workflows.md
+  data.md
+  interfaces.md
+  operations.md
+  testing.md
+  decisions.md
+  glossary.md
+  open-questions.md
+  evidence/
+    README.md
+    sources.md
+    commands.md
+    claims.md
+  areas/
+    <area-slug>.md
 ```
 
 Only create pages that have real content. `index.md` is always required. Other top-level pages are canonical slots: if a repository does not have a meaningful data model, public interface, operations story, or testing surface, the page may be omitted and the gap recorded in `open-questions.md` or `.codewiki/plan.yml`.
@@ -85,7 +84,7 @@ The role of each layer is:
 | Wiki plan | `.codewiki/plan.yml` | AI-generated, human-reviewable | Page plan, coverage, confidence, stale areas, refresh strategy. |
 | Agent guidance | `.codewiki/AGENTS.md` | AI-generated, human-reviewable | Local CodeWiki run rules and optional provider activation notes. |
 | Source registry | `.codewiki/sources.yml` | AI-generated, human-reviewable | Primary Git source and optional user-provided source skill declarations. |
-| Knowledge surface | `docs/codewiki/**` | AI-generated docs with human-owned override sections where needed | Human/agent readable semantic wiki and docs-first Q&A source. |
+| Knowledge surface | `docs/**` | AI-generated docs with human-owned override sections where needed | Human/agent readable semantic wiki and docs-first Q&A source. |
 | Durable local state | platform app data SQLite | AI/runtime-owned | Facts, evidence, claims, symbols, sync runs, provider snapshots. |
 | Rebuildable cache | platform cache directory | runtime-owned | Derived indexes, embeddings, parsed symbol cache, provider cache. |
 
@@ -111,29 +110,30 @@ The role of each layer is:
 
 ## Generation Rules
 
-- `docs/codewiki/index.md` must always exist after successful init.
+- `docs/index.md` must always exist after successful init.
 - Prefer canonical top-level pages before creating many area pages.
 - Do not create a page just because a page slot exists.
 - Do not split concepts into separate pages until there is enough evidence-backed content to justify the split.
 - Each durable claim must be connected to file, symbol, command, existing doc, Git evidence, provider evidence, or explicit hypothesis.
-- Human-authored docs outside `docs/codewiki/**` remain source evidence, not generated output.
+- Existing unmarked human-authored `docs/**` files remain source evidence and must not be overwritten by CodeWiki.
+- CodeWiki may write direct `docs/` pages only when a canonical page is missing or already contains CodeWiki generated-region markers.
 - Sync should preserve human-owned sections and avoid formatting-only rewrites.
-- Q&A must read `docs/codewiki/**` before falling back to `.codewiki/plan.yml`, `.codewiki/AGENTS.md`, local SQLite evidence, source/Git, or optional providers.
+- Q&A must read `docs/**` before falling back to `.codewiki/plan.yml`, `.codewiki/AGENTS.md`, local SQLite evidence, source/Git, or optional providers.
 - If source repo and wiki workspace differ, Q&A must treat `.codewiki/sources.yml` as the map from workspace to source evidence.
 
 ## Options Considered
 
 - Put all generated docs directly under `.codewiki/`: rejected because dotdir content reads like control/runtime state and is less natural as committed human documentation.
-- Use a single `docs/codewiki.md`: rejected because it becomes too large for medium/large repositories and weakens page-level sync.
+- Use a single `docs.md`: rejected because it becomes too large for medium/large repositories and weakens page-level sync.
 - Generate arbitrary pages from the LLM's first plan: rejected because sync and Q&A need stable canonical anchors across sessions.
 - Copy OpenWiki's `openwiki/` layout: rejected because CodeWiki is repo-native and should fit common `docs/` conventions.
 
 ## Consequences
 
-- `docs/codewiki/**` becomes the canonical generated documentation root.
+- `docs/**` becomes the canonical generated documentation root.
 - `.codewiki/**` becomes the committed control plane, not the primary reading surface.
-- The Rust companion defaults and skill prompt should keep `docs_root: docs/codewiki`.
+- The Rust companion defaults and skill prompt should keep `docs_root: docs`.
 - Future prompt modules must target this structure during init, sync, and Q&A.
 - Large repositories can add `areas/<area-slug>.md` pages, but only when the area is substantial.
-- Config may eventually allow custom docs roots, but the default and documented contract remain `docs/codewiki/**`.
+- Config may eventually allow custom docs roots, but the default and documented contract remain `docs/**`.
 - Workspace placement is governed by `docs/decisions/ADR-0006-workspace-placement-and-source-extension-skills.md`.

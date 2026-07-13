@@ -46,7 +46,7 @@ Do not build core language/framework adapters. CodeWiki should detect languages,
 
 Separate state into:
 
-- Committed project config and generated docs, such as `.codewiki/config.yml`, `.codewiki/plan.yml`, and `docs/codewiki/**`.
+- Committed project config and generated docs, such as `.codewiki/config.yml`, `.codewiki/plan.yml`, and `docs/**`.
 - Persistent local runtime state in platform app data, keyed by repository identity.
 - Rebuildable cache for embeddings, indexes, parsed symbols, and provider-specific derived data.
 

@@ -51,7 +51,7 @@ Runtime install policy:
 
 Docs-first activation policy:
 
-- After CodeWiki has generated docs, Q&A must use `docs/codewiki/**`, `.codewiki/plan.yml`, `.codewiki/AGENTS.md`, and local SQLite facts/evidence/claims before activating external tools.
+- After CodeWiki has generated docs, Q&A must use `docs/**`, `.codewiki/plan.yml`, `.codewiki/AGENTS.md`, and local SQLite facts/evidence/claims before activating external tools.
 - Source/Git inspection comes next when docs are missing, stale, or insufficient.
 - External tools activate only when docs/state/source cannot answer with enough evidence or when the question explicitly requires graph/index/memory capabilities.
 

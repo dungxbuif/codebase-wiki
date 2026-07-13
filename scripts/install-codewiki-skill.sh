@@ -45,5 +45,16 @@ fi
 mkdir -p "$INSTALL_ROOT"
 rm -rf "$INSTALL_DIR"
 cp -R "$tmpdir/repo/skill/codewiki" "$INSTALL_DIR"
+if [[ -f "$tmpdir/repo/Cargo.toml" && -d "$tmpdir/repo/crates/codewiki-cli" ]]; then
+  mkdir -p "$INSTALL_DIR/companion"
+  cp "$tmpdir/repo/Cargo.toml" "$INSTALL_DIR/companion/Cargo.toml"
+  if [[ -f "$tmpdir/repo/Cargo.lock" ]]; then
+    cp "$tmpdir/repo/Cargo.lock" "$INSTALL_DIR/companion/Cargo.lock"
+  fi
+  cp -R "$tmpdir/repo/crates" "$INSTALL_DIR/companion/crates"
+fi
+if compgen -G "$INSTALL_DIR/scripts/*.sh" >/dev/null; then
+  chmod +x "$INSTALL_DIR"/scripts/*.sh
+fi
 
 echo "Installed CodeWiki skill to $INSTALL_DIR"

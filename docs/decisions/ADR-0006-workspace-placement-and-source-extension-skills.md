@@ -40,7 +40,7 @@ CodeWiki is a skill-first product, not a CLI-first product. The user clarified t
 CodeWiki supports two wiki placement modes:
 
 1. Repo-local mode: source repository and wiki workspace are the same directory.
-2. External/personal workspace mode: source repository is evidence input, while `.codewiki/**` and `docs/codewiki/**` live in a separate user-confirmed workspace.
+2. External/personal workspace mode: source repository is evidence input, while `.codewiki/**` and `docs/**` live in a separate user-confirmed workspace.
 
 If placement is ambiguous, the skill must ask the user where to store the wiki before writing files.
 

@@ -40,4 +40,4 @@ trace:
 
 - Command: `rtk proxy env CODEWIKI_APP_DATA_DIR=/tmp/codewiki-docs-state CODEWIKI_CACHE_DIR=/tmp/codewiki-docs-cache cargo run -p codewiki-cli -- init /tmp/codewiki-docs-smoke`
 - Result: pass
-- Notes: created canonical docs pages under `docs/codewiki/**`.
+- Notes: created canonical docs pages under `docs/**`.

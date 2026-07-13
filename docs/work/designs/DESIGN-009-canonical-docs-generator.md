@@ -27,13 +27,13 @@ trace:
 
 Generate useful canonical starter docs during init:
 
-- `docs/codewiki/index.md`
-- `docs/codewiki/map.md`
-- `docs/codewiki/architecture.md`
-- `docs/codewiki/evidence/README.md`
-- `docs/codewiki/evidence/sources.md`
-- `docs/codewiki/evidence/claims.md`
-- `docs/codewiki/evidence/commands.md`
+- `docs/index.md`
+- `docs/map.md`
+- `docs/architecture.md`
+- `docs/evidence/README.md`
+- `docs/evidence/sources.md`
+- `docs/evidence/claims.md`
+- `docs/evidence/commands.md`
 
 These pages must be honest about coverage: detection is done, full semantic exploration is pending.
 

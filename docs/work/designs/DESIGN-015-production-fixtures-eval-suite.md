@@ -35,7 +35,7 @@ Fixture shapes:
 The suite verifies the full deterministic path:
 
 1. `run_with_context(["init"], context)`.
-2. Generated `.codewiki/**` and `docs/codewiki/**`.
+2. Generated `.codewiki/**` and `docs/**`.
 3. Semantic map and claims page content.
 4. SQLite Q&A context retrieval.
 5. Source mutation followed by `sync` marks stale claims.

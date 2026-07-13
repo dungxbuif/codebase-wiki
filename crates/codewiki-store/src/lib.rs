@@ -617,7 +617,7 @@ impl Default for CodeWikiConfig {
 
         Self {
             schema_version: CODEWIKI_SCHEMA_VERSION,
-            docs_root: "docs/codewiki",
+            docs_root: "docs",
             plan_path: layout.committed_plan_path,
             agents_path: layout.committed_agents_path,
             sources_path: layout.committed_sources_path,
@@ -898,18 +898,10 @@ impl PlannedPage {
     /// Return canonical default page plan.
     pub fn canonical_defaults() -> Vec<Self> {
         [
-            ("docs/codewiki/index.md", "CodeWiki Index", "index"),
-            ("docs/codewiki/map.md", "Repository Map", "map"),
-            (
-                "docs/codewiki/architecture.md",
-                "Architecture",
-                "architecture",
-            ),
-            (
-                "docs/codewiki/evidence/claims.md",
-                "Claims",
-                "evidence.claims",
-            ),
+            ("docs/index.md", "CodeWiki Index", "index"),
+            ("docs/map.md", "Repository Map", "map"),
+            ("docs/architecture.md", "Architecture", "architecture"),
+            ("docs/evidence/claims.md", "Claims", "evidence.claims"),
         ]
         .into_iter()
         .map(|(path, title, slot)| Self {
@@ -930,7 +922,7 @@ pub fn render_target_agents_md() -> String {
         "",
         "Use docs-first lazy activation:",
         "",
-        "1. Read `docs/codewiki/**`.",
+        "1. Read `docs/**`.",
         "2. Read `.codewiki/plan.yml`.",
         "3. Read `.codewiki/AGENTS.md`.",
         "4. Query local CodeWiki SQLite facts/evidence/claims when available.",
@@ -1008,7 +1000,7 @@ mod tests {
 
         assert!(yaml.contains("schema_version: 1"));
         assert!(yaml.contains("claims must cite files"));
-        assert!(yaml.contains("docs/codewiki/index.md"));
+        assert!(yaml.contains("docs/index.md"));
         assert!(yaml.contains("confidence_default: source-backed"));
     }
 

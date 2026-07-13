@@ -34,7 +34,7 @@ pub fn render_initial_index(repo_label: &str) -> String {
          - Full WikiPlan: pending\n\n\
          ## How To Use This Wiki\n\n\
          Start here, then follow links to generated pages as they are added. \
-         CodeWiki answers should use `docs/codewiki/**` first, then `.codewiki/plan.yml`, \
+         CodeWiki answers should use `docs/**` first, then `.codewiki/plan.yml`, \
          `.codewiki/AGENTS.md`, local SQLite evidence, source files, Git history, and optional providers only when needed.\n\n\
          ## Current Coverage\n\n\
          - Initial control files are present.\n\
@@ -71,7 +71,7 @@ fn render_initial_pages_with_exploration(
 
     let pages = vec![
         GeneratedPage {
-            path: "docs/codewiki/index.md".to_string(),
+            path: "docs/index.md".to_string(),
             content: render_initial_index_with_detection(
                 repo_label,
                 detection_markdown,
@@ -79,63 +79,63 @@ fn render_initial_pages_with_exploration(
             ),
         },
         GeneratedPage {
-            path: "docs/codewiki/map.md".to_string(),
+            path: "docs/map.md".to_string(),
             content: render_map_page(detection_markdown, semantic_markdown),
         },
         GeneratedPage {
-            path: "docs/codewiki/architecture.md".to_string(),
+            path: "docs/architecture.md".to_string(),
             content: render_architecture_page(semantic_markdown),
         },
         GeneratedPage {
-            path: "docs/codewiki/domains.md".to_string(),
+            path: "docs/domains.md".to_string(),
             content: render_domains_page(exploration),
         },
         GeneratedPage {
-            path: "docs/codewiki/workflows.md".to_string(),
+            path: "docs/workflows.md".to_string(),
             content: render_workflows_page(exploration),
         },
         GeneratedPage {
-            path: "docs/codewiki/data.md".to_string(),
+            path: "docs/data.md".to_string(),
             content: render_data_page(exploration),
         },
         GeneratedPage {
-            path: "docs/codewiki/interfaces.md".to_string(),
+            path: "docs/interfaces.md".to_string(),
             content: render_interfaces_page(exploration),
         },
         GeneratedPage {
-            path: "docs/codewiki/operations.md".to_string(),
+            path: "docs/operations.md".to_string(),
             content: render_operations_page(exploration),
         },
         GeneratedPage {
-            path: "docs/codewiki/testing.md".to_string(),
+            path: "docs/testing.md".to_string(),
             content: render_testing_page(exploration),
         },
         GeneratedPage {
-            path: "docs/codewiki/decisions.md".to_string(),
+            path: "docs/decisions.md".to_string(),
             content: render_decisions_page(exploration),
         },
         GeneratedPage {
-            path: "docs/codewiki/glossary.md".to_string(),
+            path: "docs/glossary.md".to_string(),
             content: render_glossary_page(exploration),
         },
         GeneratedPage {
-            path: "docs/codewiki/open-questions.md".to_string(),
+            path: "docs/open-questions.md".to_string(),
             content: render_open_questions_page(exploration),
         },
         GeneratedPage {
-            path: "docs/codewiki/evidence/README.md".to_string(),
+            path: "docs/evidence/README.md".to_string(),
             content: "# Evidence\n\nThis directory records how generated CodeWiki claims are supported.\n\n- `sources.md`: inspected source/docs/provider artifacts.\n- `claims.md`: durable claims and confidence.\n- `commands.md`: verification commands and summarized results.\n".to_string(),
         },
         GeneratedPage {
-            path: "docs/codewiki/evidence/sources.md".to_string(),
+            path: "docs/evidence/sources.md".to_string(),
             content: render_sources_page(detection_markdown, exploration),
         },
         GeneratedPage {
-            path: "docs/codewiki/evidence/claims.md".to_string(),
+            path: "docs/evidence/claims.md".to_string(),
             content: render_claims_page(exploration),
         },
         GeneratedPage {
-            path: "docs/codewiki/evidence/commands.md".to_string(),
+            path: "docs/evidence/commands.md".to_string(),
             content: "# Commands\n\nNo repository verification commands have been recorded yet.\n".to_string(),
         },
     ];
@@ -143,7 +143,7 @@ fn render_initial_pages_with_exploration(
     if let Some(snapshot) = exploration {
         for area in &snapshot.areas {
             pages.push(GeneratedPage {
-                path: format!("docs/codewiki/areas/{}.md", slugify(&area.name)),
+                path: format!("docs/areas/{}.md", slugify(&area.name)),
                 content: render_area_page(snapshot, &area.name),
             });
         }
@@ -528,7 +528,7 @@ mod tests {
         let index = render_initial_index("example");
 
         assert!(index.contains("# CodeWiki: example"));
-        assert!(index.contains("docs/codewiki/**"));
+        assert!(index.contains("docs/**"));
         assert!(index.contains("Semantic exploration: pending"));
     }
 
@@ -537,14 +537,14 @@ mod tests {
         let pages = render_initial_pages("example", "### Languages\n\n- Rust\n");
         let paths: Vec<_> = pages.iter().map(|page| page.path.as_str()).collect();
 
-        assert!(paths.contains(&"docs/codewiki/index.md"));
-        assert!(paths.contains(&"docs/codewiki/map.md"));
-        assert!(paths.contains(&"docs/codewiki/architecture.md"));
-        assert!(paths.contains(&"docs/codewiki/domains.md"));
-        assert!(paths.contains(&"docs/codewiki/workflows.md"));
-        assert!(paths.contains(&"docs/codewiki/interfaces.md"));
-        assert!(paths.contains(&"docs/codewiki/open-questions.md"));
-        assert!(paths.contains(&"docs/codewiki/evidence/claims.md"));
+        assert!(paths.contains(&"docs/index.md"));
+        assert!(paths.contains(&"docs/map.md"));
+        assert!(paths.contains(&"docs/architecture.md"));
+        assert!(paths.contains(&"docs/domains.md"));
+        assert!(paths.contains(&"docs/workflows.md"));
+        assert!(paths.contains(&"docs/interfaces.md"));
+        assert!(paths.contains(&"docs/open-questions.md"));
+        assert!(paths.contains(&"docs/evidence/claims.md"));
         assert!(pages.iter().any(|page| {
             page.content
                 .contains("Full semantic area mapping is pending")
@@ -597,29 +597,31 @@ mod tests {
         let pages = render_semantic_pages("example", "### Languages\n\n- Rust\n", &snapshot);
 
         assert!(pages.iter().any(|page| {
-            page.path == "docs/codewiki/map.md" && page.content.contains("Semantic Structure")
+            page.path == "docs/map.md" && page.content.contains("Semantic Structure")
         }));
         assert!(pages.iter().any(|page| {
-            page.path == "docs/codewiki/evidence/sources.md" && page.content.contains("file:test")
+            page.path == "docs/evidence/sources.md" && page.content.contains("file:test")
         }));
         assert!(pages.iter().any(|page| {
-            page.path == "docs/codewiki/evidence/claims.md"
+            page.path == "docs/evidence/claims.md"
                 && page.content.contains("claim:")
                 && page.content.contains("evidence: `file:test`")
         }));
         assert!(pages.iter().any(|page| {
-            page.path == "docs/codewiki/areas/src.md" && page.content.contains("src/lib.rs")
+            page.path == "docs/areas/src.md" && page.content.contains("src/lib.rs")
         }));
-        assert!(pages.iter().any(|page| {
-            page.path == "docs/codewiki/interfaces.md" && page.content.contains("build")
-        }));
+        assert!(
+            pages.iter().any(|page| {
+                page.path == "docs/interfaces.md" && page.content.contains("build")
+            })
+        );
     }
 }
 
 impl Default for WikiDocsLayout {
     fn default() -> Self {
         Self {
-            generated_docs_root: "docs/codewiki",
+            generated_docs_root: "docs",
         }
     }
 }

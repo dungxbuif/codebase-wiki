@@ -56,29 +56,28 @@ When initializing a target repository, prefer:
   AGENTS.md
   sources.yml
 docs/
-  codewiki/
-    index.md
-    map.md
-    architecture.md
-    domains.md
-    workflows.md
-    data.md
-    interfaces.md
-    operations.md
-    testing.md
-    decisions.md
-    glossary.md
-    open-questions.md
-    evidence/
-      README.md
-      sources.md
-      commands.md
-      claims.md
-    areas/
-      <area-slug>.md
+  index.md
+  map.md
+  architecture.md
+  domains.md
+  workflows.md
+  data.md
+  interfaces.md
+  operations.md
+  testing.md
+  decisions.md
+  glossary.md
+  open-questions.md
+  evidence/
+    README.md
+    sources.md
+    commands.md
+    claims.md
+  areas/
+    <area-slug>.md
 ```
 
-`docs/codewiki/index.md` is required after a successful init. Other pages are canonical slots, not mandatory stubs: create them only when the repository has enough evidence-backed content. Use `areas/<area-slug>.md` only for substantial areas that deserve deeper treatment.
+`docs/index.md` is required after a successful init. Other pages are canonical slots, not mandatory stubs: create them only when the repository has enough evidence-backed content. Use `areas/<area-slug>.md` only for substantial areas that deserve deeper treatment.
 
 In external/personal workspace mode, this same structure lives in the chosen workspace directory, while the source repository remains read-only evidence unless the user asks otherwise.
 
@@ -109,7 +108,7 @@ If no optional tool is available, continue with Git/filesystem exploration and m
 
 After CodeWiki has generated docs, answer questions in this order:
 
-1. `docs/codewiki/**`
+1. `docs/**`
 2. `.codewiki/plan.yml`
 3. `.codewiki/AGENTS.md`
 4. local SQLite facts/evidence/claims
@@ -125,7 +124,7 @@ This means ordinary Q&A about documented architecture should not activate Octoco
 3. Inspect existing docs before source where useful.
 4. Explore source semantically with bounded file, area, symbol, import/dependency-hint, and evidence snapshots.
 5. Build a WikiPlan with pages, scope, evidence needs, confidence, open questions, and refresh strategy.
-6. Generate `docs/codewiki/**` from evidence and mark uncertainty explicitly.
+6. Generate `docs/**` from evidence and mark uncertainty explicitly.
 7. Write `.codewiki/config.yml` and `.codewiki/plan.yml`.
 8. Write `.codewiki/AGENTS.md` with CodeWiki-local instructions, including optional runtime tool status.
 9. Record verification commands or skip reasons.
@@ -140,7 +139,7 @@ This means ordinary Q&A about documented architecture should not activate Octoco
 
 ## Q&A Workflow
 
-1. Answer from `docs/codewiki/**` first.
+1. Answer from `docs/**` first.
 2. If docs are insufficient, inspect evidence/source and say which docs are missing or stale.
 3. Cite files, symbols, commands, or generated wiki pages.
 4. Do not present hypotheses as facts.
@@ -148,3 +147,12 @@ This means ordinary Q&A about documented architecture should not activate Octoco
 ## Companion Tool
 
 If a `codewiki` Rust binary is available, use it for deterministic repo inspection, config/state operations, validation, or cache/index maintenance. Do not treat the binary as the product surface; it supports the skill.
+
+Installed skills include `scripts/codewiki-helper.sh`. Use that wrapper when available so the skill can locate the Rust companion through:
+
+1. `CODEWIKI_COMPANION_BIN`
+2. `codewiki` on `PATH`
+3. `CODEWIKI_REPO`
+4. the source checkout that contains this skill
+
+If the wrapper cannot locate the companion, continue with filesystem/Git reasoning and record the reduced deterministic-helper coverage.

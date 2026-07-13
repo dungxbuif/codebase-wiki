@@ -52,9 +52,9 @@ CodeWiki is a Codex skill that builds and maintains a semantic wiki for software
 - Rust helper tooling may support deterministic local operations for the skill.
 - Detection covers languages, libraries, frameworks, package managers, entrypoints, tests, build tools, service boundaries, and documentation sources where possible.
 - WikiPlan records pages, scope, evidence needs, open questions, confidence, and update strategy.
-- Generated docs live in committed project space under the canonical `docs/codewiki/**` structure.
+- Generated docs live in committed project space under the canonical `docs/**` structure.
 - Generated docs may live in the source repository or in an external/personal wiki workspace confirmed with the user.
-- `docs/codewiki/index.md` is the required generated entrypoint after successful init.
+- `docs/index.md` is the required generated entrypoint after successful init.
 - Canonical generated docs slots include map, architecture, domains, workflows, data, interfaces, operations, testing, decisions, glossary, open questions, evidence, and optional area pages.
 - Project config lives in committed `.codewiki/config.yml`.
 - Plan/state summaries that should travel with the repo live in committed `.codewiki/plan.yml` or equivalent.
@@ -87,7 +87,7 @@ CodeWiki is a Codex skill that builds and maintains a semantic wiki for software
 - Use CocoIndex only when repo size or repeated refresh/query workload justifies an indexing pipeline.
 - Provide install/activation guidance for runtime tools in the skill and target-repo CodeWiki agent instructions.
 - Keep committed config/docs separate from persistent local runtime state and rebuildable cache.
-- Treat `docs/codewiki/**` as the generated knowledge surface and `.codewiki/**` as the committed control plane.
+- Treat `docs/**` as the generated knowledge surface and `.codewiki/**` as the committed control plane.
 - Ask for/confirm output workspace placement before writing when repo-local versus external/personal storage is ambiguous.
 - Use OpenWiki and deepwiki-open as technical references only; do not inherit their runtime architecture wholesale.
 - Install command should copy/install `skill/codewiki` into `$CODEX_HOME/skills/codewiki`.

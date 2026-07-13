@@ -21,11 +21,12 @@ Document HTTP endpoints, RPC methods, events, CLI commands, or any other public 
 
 | Contract | Type | Auth | Status | Notes |
 | --- | --- | --- | --- | --- |
-| `curl -fsSL https://raw.githubusercontent.com/dungxbuif/harness/main/scripts/install-codewiki-skill.sh \| bash` | install command | GitHub/repo access | implemented | Installs `skill/codewiki` into `$CODEX_HOME/skills/codewiki`. |
+| `curl -fsSL https://raw.githubusercontent.com/dungxbuif/harness/main/scripts/install-codewiki-skill.sh \| bash` | install command | GitHub/repo access | implemented | Installs `skill/codewiki` into `$CODEX_HOME/skills/codewiki`, including `scripts/codewiki-helper.sh` and copied Rust companion source when present. |
+| `skill/codewiki/scripts/codewiki-helper.sh [args...]` | skill helper script | optional Rust binary/source | implemented | Resolves the Rust companion through `CODEWIKI_COMPANION_BIN`, `PATH`, `CODEWIKI_REPO`, installed companion source, or source checkout. |
 | `codewiki help` / `codewiki --help` | companion command | none | implemented | Prints scaffold usage and companion-tool status. |
 | `codewiki version` / `codewiki --version` | companion command | none | implemented | Prints current package version. |
 | `codewiki status` | companion command | none | implemented | Prints Rust companion scaffold status, command list, planned detection, config path, local state summary, and docs root. |
-| `codewiki init [path]` | companion command | local filesystem | implemented | Creates missing `.codewiki/config.yml`, `.codewiki/plan.yml`, `.codewiki/AGENTS.md`, `docs/codewiki/index.md`, and applies local SQLite migrations. Defaults to the current directory when `path` is omitted. |
+| `codewiki init [path]` | companion command | local filesystem | implemented | Creates missing `.codewiki/config.yml`, `.codewiki/plan.yml`, `.codewiki/AGENTS.md`, `docs/index.md`, and applies local SQLite migrations. Defaults to the current directory when `path` is omitted. |
 | `codewiki sync [path]` | companion command | local filesystem | implemented | Re-detects repository signals, compares generated plan/docs to desired output, updates changed/missing generated files, and no-ops when current. |
 | `codewiki doctor` | companion command | none | planned | Future deterministic environment/config diagnostic helper. |
 | `codewiki inspect` | companion command | none | planned | Future deterministic repository signal inspection helper. |

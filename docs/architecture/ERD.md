@@ -24,7 +24,7 @@ shared_fields: [status, trace]
 | `sync_runs` | Records init/sync/Q&A research runs that mutate or verify state | CodeWiki runtime | Links evidence and generated pages to a run |
 | `files` | Tracks source, docs, and generated files inspected or produced by CodeWiki | CodeWiki runtime | `is_generated` separates generated docs from source evidence |
 | `symbols` | Tracks discovered symbols and source locations | CodeWiki runtime | Provider-neutral symbol cache |
-| `pages` | Tracks generated `docs/codewiki/**` pages and status | CodeWiki runtime | Supports stale-page detection |
+| `pages` | Tracks generated `docs/**` pages and status | CodeWiki runtime | Supports stale-page detection |
 | `evidence_items` | Stores durable evidence summaries from files, symbols, commands, docs, Git, or providers | CodeWiki runtime | Must not store secrets |
 | `claims` | Stores durable wiki claims with status, confidence, and ownership | CodeWiki runtime | Claims can be active, stale, superseded, or hypothesis |
 | `claim_evidence` | Many-to-many support/contradiction links between claims and evidence | CodeWiki runtime | Enables evidence-first Q&A and sync |

@@ -24,7 +24,7 @@ Create the initial repo-native semantic wiki without approval gates. The output 
    - Never silently write docs into the source repo when the user asked for personal/external docs.
 
 3. Load existing context.
-   - Read existing `.codewiki/config.yml`, `.codewiki/plan.yml`, `.codewiki/AGENTS.md`, and `docs/codewiki/**` if present.
+   - Read existing `.codewiki/config.yml`, `.codewiki/plan.yml`, `.codewiki/AGENTS.md`, and `docs/**` if present.
    - Read existing human docs such as `README*`, `docs/**`, ADRs, runbooks, API docs, and contribution/setup docs.
    - Treat existing human docs as source evidence, not generated output.
 
@@ -47,7 +47,7 @@ Create the initial repo-native semantic wiki without approval gates. The output 
    - Add non-Git sources only as declarations or user-provided source skill refs.
    - Do not assume CodeWiki has a built-in provider for Jira, Figma, or other systems.
 
-8. Generate docs under `docs/codewiki/**`.
+8. Generate docs under `docs/**`.
    - Always write `index.md`.
    - Create only evidence-backed canonical pages.
    - Use `areas/<area-slug>.md` only for substantial areas.
@@ -64,7 +64,7 @@ Create the initial repo-native semantic wiki without approval gates. The output 
 
 ## Output Quality Bar
 
-- A new human can start at `docs/codewiki/index.md` and understand the repository.
+- A new human can start at `docs/index.md` and understand the repository.
 - A future agent can answer common architecture and change-safety questions from the docs first.
 - Every important claim has evidence or is marked as a hypothesis.
 - The wiki explains why important code exists, not just where files are.
