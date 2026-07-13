@@ -1,0 +1,7 @@
+/target/
+/.codewiki/cache/
+/.codewiki/tmp/
+*.db
+*.sqlite
+*.sqlite3
+

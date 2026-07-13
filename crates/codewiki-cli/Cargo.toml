@@ -1,0 +1,18 @@
+[package]
+name = "codewiki-cli"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[[bin]]
+name = "codewiki"
+path = "src/main.rs"
+
+[dependencies]
+codewiki-core = { path = "../codewiki-core" }
+
+[lints]
+workspace = true
+

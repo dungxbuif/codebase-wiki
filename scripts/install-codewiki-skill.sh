@@ -1,0 +1,49 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+REPO_URL="${CODEWIKI_REPO_URL:-git@github.com:dungxbuif/harness.git}"
+SKILL_NAME="${CODEWIKI_SKILL_NAME:-codewiki}"
+CODEX_HOME="${CODEX_HOME:-$HOME/.codex}"
+INSTALL_ROOT="$CODEX_HOME/skills"
+INSTALL_DIR="$INSTALL_ROOT/$SKILL_NAME"
+
+usage() {
+  cat <<'USAGE'
+Install the CodeWiki Codex skill from its repository.
+
+Usage:
+  scripts/install-codewiki-skill.sh
+
+Environment:
+  CODEWIKI_REPO_URL   Git URL to install from. Default: git@github.com:dungxbuif/harness.git
+  CODEX_HOME          Codex home. Default: ~/.codex
+  CODEWIKI_SKILL_NAME Skill install folder. Default: codewiki
+
+One-command install after this repo is pushed:
+  curl -fsSL https://raw.githubusercontent.com/dungxbuif/harness/main/scripts/install-codewiki-skill.sh | bash
+USAGE
+}
+
+if [[ "${1:-}" == "-h" || "${1:-}" == "--help" ]]; then
+  usage
+  exit 0
+fi
+
+tmpdir="$(mktemp -d)"
+cleanup() {
+  rm -rf "$tmpdir"
+}
+trap cleanup EXIT
+
+git clone --depth 1 "$REPO_URL" "$tmpdir/repo" >/dev/null
+
+if [[ ! -f "$tmpdir/repo/skill/codewiki/SKILL.md" ]]; then
+  echo "error: skill/codewiki/SKILL.md not found in $REPO_URL" >&2
+  exit 1
+fi
+
+mkdir -p "$INSTALL_ROOT"
+rm -rf "$INSTALL_DIR"
+cp -R "$tmpdir/repo/skill/codewiki" "$INSTALL_DIR"
+
+echo "Installed CodeWiki skill to $INSTALL_DIR"

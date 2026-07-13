@@ -1,0 +1,17 @@
+[package]
+name = "codewiki-core"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[dependencies]
+codewiki-detect = { path = "../codewiki-detect" }
+codewiki-docs = { path = "../codewiki-docs" }
+codewiki-provider = { path = "../codewiki-provider" }
+codewiki-store = { path = "../codewiki-store" }
+
+[lints]
+workspace = true
+

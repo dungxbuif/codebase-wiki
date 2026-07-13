@@ -1,0 +1,6 @@
+[submodule "references/openwiki"]
+	path = references/openwiki
+	url = https://github.com/langchain-ai/openwiki.git
+[submodule "references/deepwiki-open"]
+	path = references/deepwiki-open
+	url = https://github.com/AsyncFuncAI/deepwiki-open.git

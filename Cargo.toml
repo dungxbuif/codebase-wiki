@@ -1,0 +1,22 @@
+[workspace]
+resolver = "3"
+members = [
+    "crates/codewiki-cli",
+    "crates/codewiki-core",
+    "crates/codewiki-detect",
+    "crates/codewiki-store",
+    "crates/codewiki-provider",
+    "crates/codewiki-docs",
+]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.96"
+license = "MIT"
+repository = "https://github.com/dungxbuif/codebase-wiki"
+
+[workspace.lints.rust]
+unsafe_code = "forbid"
+missing_docs = "warn"
+

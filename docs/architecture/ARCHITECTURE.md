@@ -1,0 +1,126 @@
+---
+artifact_type: architecture_doc
+id: ARCH-MASTER
+status: draft
+owner: shared
+human_fields: [approved_boundaries, architectural_constraints, tradeoff_approval]
+ai_fields: [overview, modules, diagrams, flows, dependencies, risks]
+shared_fields: [status, linked_decisions]
+---
+
+# Architecture: CodeWiki
+
+## Field Ownership
+
+- Human owns approved boundaries, constraints, and tradeoff approvals.
+- AI maintains implementation-grounded overview, modules, diagrams, flows, dependencies, and risks.
+
+## Overview
+
+CodeWiki is planned as a repo-native Codex skill with a small core:
+
+```text
+Repository
+  -> detection and semantic exploration
+  -> evidence and fact model
+  -> WikiPlan
+  -> generated docs
+  -> sync and Q&A
+```
+
+The core should not hard-code language/framework adapters. It should combine repository signals, Git context, filesystem reads, LLM exploration, and a replaceable code-intelligence provider boundary. The skill is the product surface; Rust is companion tooling for deterministic local operations.
+
+## System Boundaries
+
+- In scope: repository detection, semantic exploration, evidence modeling, wiki planning, docs generation, sync, Q&A, config, and durable local state.
+- Out of scope for core: language/framework-specific adapters and broad mandatory external memory/indexing stacks.
+
+## Modules
+
+| Module | Responsibility | Key Files | Notes |
+| --- | --- | --- | --- |
+| CodeWiki skill | Own agent workflow for init, sync, Q&A, evidence, and docs | `skill/codewiki/SKILL.md` | Primary product surface |
+| Skill installer | Install the skill into Codex home from this repo | `scripts/install-codewiki-skill.sh` | One-command install path |
+| Rust companion tool | Provide deterministic helper commands for repo inspection/config/state when needed | `crates/codewiki-cli` | Companion surface, not the product |
+| Core engine | Parse commands and orchestrate internal boundaries | `crates/codewiki-core` | Owns current `help`, `version`, and `status` behavior |
+| Repo detector | Detect languages, frameworks, package managers, entrypoints, test/build tools, and docs | `crates/codewiki-detect` | Dynamic detection only; no core adapters |
+| Explorer | Select files/symbols/docs to inspect and record evidence | TBD | Must be evidence-bound and resumable |
+| Evidence store | Persist facts, hypotheses, claims, and source references | `crates/codewiki-store` | SQLite local runtime state planned |
+| WikiPlan generator | Produce page plan, scope, confidence, open questions, and refresh strategy | TBD | Committed summary planned under `.codewiki/` |
+| Doc generator | Write human/agent-readable wiki docs | `crates/codewiki-docs` | Canonical generated docs root is `docs/codewiki/**` |
+| Sync engine | Detect stale docs and update safely | TBD | Must respect human-owned edits |
+| Q&A engine | Answer from docs first, then evidence/source when needed | TBD | Should cite evidence |
+| Provider boundary | Wrap optional code-intelligence providers | `crates/codewiki-provider` | Provider selection is target-repo specific |
+
+## Data Flow
+
+```text
+Git repo + files + existing docs
+  -> stack detection
+  -> exploration tasks
+  -> evidence/fact/hypothesis records
+  -> WikiPlan
+  -> generated docs
+  -> sync checkpoints
+  -> docs-first Q&A
+```
+
+## Target Repository Documentation Structure
+
+CodeWiki uses three distinct target-repo layers:
+
+```text
+.codewiki/
+  config.yml      # committed control config
+  plan.yml        # committed semantic WikiPlan and sync plan
+  AGENTS.md       # committed local CodeWiki agent guidance
+
+docs/
+  codewiki/
+    index.md      # required generated wiki entrypoint
+    ...           # canonical generated semantic docs
+```
+
+`docs/codewiki/**` is the human/agent knowledge surface and the first source for Q&A. `.codewiki/**` is the committed control plane. SQLite state and rebuildable caches live outside the repository in platform app-data/cache directories.
+
+The canonical generated docs slots are defined by `docs/decisions/ADR-0005-codewiki-generated-docs-structure.md`: `index.md`, `map.md`, `architecture.md`, `domains.md`, `workflows.md`, `data.md`, `interfaces.md`, `operations.md`, `testing.md`, `decisions.md`, `glossary.md`, `open-questions.md`, `evidence/**`, and optional `areas/<area-slug>.md`.
+
+## Runtime Flow
+
+```text
+Skill workflow: CodeWiki init
+  -> resolve repository identity
+  -> load committed config if present
+  -> open or create local SQLite state
+  -> detect stack and repository shape
+  -> explore source/docs with evidence capture
+  -> create WikiPlan
+  -> generate docs
+  -> write checkpoints for future sync
+```
+
+## Dependencies
+
+- Git
+- Filesystem access
+- SQLite
+- Codex skill runtime
+- Rust toolchain and crates for companion tooling
+- Optional code-intelligence provider boundary
+
+## Risks And Tradeoffs
+
+- Automatic init needs strong evidence and confidence modeling because it intentionally does not pause for approval.
+- Provider lock-in is avoided by keeping the provider boundary narrow.
+- Human edits in generated docs need ownership rules before sync mutates them.
+- SQLite migrations must exist early because durable state is a product promise.
+- The reference submodules should inform design, but CodeWiki should not inherit their runtime architecture wholesale.
+- Rust companion tooling must not displace the skill as the primary UX.
+
+## Linked Decisions
+
+- `docs/decisions/ADR-0001-codewiki-core-tooling-and-state.md`
+- `docs/decisions/ADR-0002-rust-cli-and-reference-submodule-strategy.md`
+- `docs/decisions/ADR-0003-skill-first-product-and-rust-companion-tool.md`
+- `docs/decisions/ADR-0004-runtime-optional-code-intelligence-tools.md`
+- `docs/decisions/ADR-0005-codewiki-generated-docs-structure.md`
