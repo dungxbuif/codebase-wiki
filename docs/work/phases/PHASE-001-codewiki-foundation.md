@@ -94,6 +94,7 @@ Create the complete foundation for CodeWiki as a repo-native skill that can init
 | TICKET-008 | ticket | WikiPlan and evidence models | done | `docs/work/tickets/TICKET-008-wikiplan-evidence-models.md` |
 | TICKET-009 | ticket | Canonical docs generator | done | `docs/work/tickets/TICKET-009-canonical-docs-generator.md` |
 | TICKET-010 | ticket | Sync skeleton | done | `docs/work/tickets/TICKET-010-sync-skeleton.md` |
+| TICKET-011 | ticket | Workspace placement and source extension skills | done | `docs/work/tickets/TICKET-011-workspace-source-extensions.md` |
 | TBD | ticket | Implement docs generation and sync loop | draft | TBD |
 
 ## Dependencies

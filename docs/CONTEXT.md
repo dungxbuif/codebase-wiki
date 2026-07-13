@@ -92,6 +92,9 @@ Build CodeWiki as a complete repo-native Codex skill for semantic wiki generatio
 - `docs/work/designs/DESIGN-009-canonical-docs-generator.md`
 - `docs/work/tickets/TICKET-010-sync-skeleton.md`
 - `docs/work/designs/DESIGN-010-sync-skeleton.md`
+- `docs/decisions/ADR-0006-workspace-placement-and-source-extension-skills.md`
+- `skill/codewiki/references/workspace-placement.md`
+- `skill/codewiki/references/source-extensions.md`
 
 ## Recent Decisions
 
@@ -126,6 +129,8 @@ Build CodeWiki as a complete repo-native Codex skill for semantic wiki generatio
 - Add typed WikiPlan v1, planned pages, confidence, evidence, and claim models.
 - Generate canonical starter docs for index, map, architecture, and evidence pages during init.
 - Add `codewiki sync [path]` compare/update/no-op skeleton and ignore generated CodeWiki files during detection.
+- Support repo-local and external/personal wiki workspace placement; ask before writing when ambiguous.
+- Treat Git as the default source and support non-Git sources only through user-provided source extension skills.
 
 ## Next Steps
 
@@ -133,6 +138,7 @@ Build CodeWiki as a complete repo-native Codex skill for semantic wiki generatio
 - Write detail design for config/storage and repository exploration before implementation.
 - Implement prompt module behavior in the actual CodeWiki init/sync/Q&A runtime.
 - Add fixture repositories and production-readiness quality tests.
+- Finalize source extension templates and validate the updated skill package.
 - Build the skill init/sync/Q&A workflows first; use Rust only where deterministic helper behavior is needed.
 - Design SQLite schema and migrations next.
 

@@ -232,6 +232,8 @@ pub struct StoreLayout {
     pub committed_plan_path: &'static str,
     /// Repo-committed target-repository agent guidance path.
     pub committed_agents_path: &'static str,
+    /// Committed source registry path.
+    pub committed_sources_path: &'static str,
     /// Human-readable summary of local state storage.
     pub local_state_summary: &'static str,
     /// Human-readable summary of rebuildable cache storage.
@@ -244,6 +246,7 @@ impl Default for StoreLayout {
             committed_config_path: ".codewiki/config.yml",
             committed_plan_path: ".codewiki/plan.yml",
             committed_agents_path: ".codewiki/AGENTS.md",
+            committed_sources_path: ".codewiki/sources.yml",
             local_state_summary: "platform app data SQLite, keyed by repository identity",
             cache_summary: ".codewiki/cache is rebuildable and may be ignored",
         }
@@ -285,6 +288,8 @@ pub struct CodeWikiConfig {
     pub plan_path: &'static str,
     /// Preferred committed target-repo agent guidance path.
     pub agents_path: &'static str,
+    /// Preferred committed source registry path.
+    pub sources_path: &'static str,
     /// Runtime tool policy.
     pub tool_policy: ToolSelectionPolicy,
 }
@@ -298,6 +303,7 @@ impl Default for CodeWikiConfig {
             docs_root: "docs/codewiki",
             plan_path: layout.committed_plan_path,
             agents_path: layout.committed_agents_path,
+            sources_path: layout.committed_sources_path,
             tool_policy: ToolSelectionPolicy::default(),
         }
     }
@@ -307,17 +313,71 @@ impl CodeWikiConfig {
     /// Render the default config as stable YAML.
     pub fn to_yaml(&self) -> String {
         format!(
-            "schema_version: {}\ndocs_root: {}\nplan_path: {}\nagents_path: {}\ntool_policy:\n  lazy_activation: {}\n  code_intelligence_default: {}\n  codebase_memory_mcp_trigger: {}\n  cocoindex_trigger: {}\n",
+            "schema_version: {}\ndocs_root: {}\nplan_path: {}\nagents_path: {}\nsources_path: {}\ntool_policy:\n  lazy_activation: {}\n  code_intelligence_default: {}\n  codebase_memory_mcp_trigger: {}\n  cocoindex_trigger: {}\n",
             self.schema_version,
             self.docs_root,
             self.plan_path,
             self.agents_path,
+            self.sources_path,
             self.tool_policy.lazy_activation,
             self.tool_policy.code_intelligence_default,
             self.tool_policy.memory_trigger,
             self.tool_policy.indexing_trigger,
         )
     }
+}
+
+/// External or primary knowledge source tracked by a CodeWiki workspace.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct SourceRecord {
+    /// Source kind, e.g. `git`, `jira`, `figma`, `fix-note`, `local-docs`.
+    pub kind: String,
+    /// Stable human-readable source name.
+    pub name: String,
+    /// URL, path, issue key, or other source reference.
+    pub reference: String,
+}
+
+impl SourceRecord {
+    /// Create a source record.
+    pub fn new(
+        kind: impl Into<String>,
+        name: impl Into<String>,
+        reference: impl Into<String>,
+    ) -> Self {
+        Self {
+            kind: kind.into(),
+            name: name.into(),
+            reference: reference.into(),
+        }
+    }
+}
+
+/// Render a source registry YAML document.
+pub fn render_sources_yaml(primary: &SourceRecord, imports: &[SourceRecord]) -> String {
+    let mut yaml = "schema_version: 1\nsources:\n".to_string();
+    push_source(&mut yaml, primary, true);
+    for source in imports {
+        push_source(&mut yaml, source, false);
+    }
+    yaml
+}
+
+/// Render a single source item suitable for appending under `sources:`.
+pub fn render_source_item_yaml(source: &SourceRecord, primary: bool) -> String {
+    let mut yaml = String::new();
+    push_source(&mut yaml, source, primary);
+    yaml
+}
+
+fn push_source(yaml: &mut String, source: &SourceRecord, primary: bool) {
+    yaml.push_str(&format!(
+        "  - kind: {}\n    name: \"{}\"\n    ref: \"{}\"\n    primary: {}\n",
+        yaml_atom(&source.kind),
+        yaml_escape(&source.name),
+        yaml_escape(&source.reference),
+        primary,
+    ));
 }
 
 /// Initial committed WikiPlan skeleton.
@@ -588,6 +648,18 @@ fn yaml_escape(value: &str) -> String {
     value.replace('\\', "\\\\").replace('"', "\\\"")
 }
 
+fn yaml_atom(value: &str) -> String {
+    let escaped = yaml_escape(value);
+    if escaped
+        .chars()
+        .all(|ch| ch.is_ascii_alphanumeric() || ch == '-' || ch == '_')
+    {
+        escaped
+    } else {
+        format!("\"{escaped}\"")
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -599,6 +671,7 @@ mod tests {
         assert_eq!(layout.committed_config_path, ".codewiki/config.yml");
         assert_eq!(layout.committed_plan_path, ".codewiki/plan.yml");
         assert_eq!(layout.committed_agents_path, ".codewiki/AGENTS.md");
+        assert_eq!(layout.committed_sources_path, ".codewiki/sources.yml");
     }
 
     #[test]
@@ -606,6 +679,7 @@ mod tests {
         let yaml = CodeWikiConfig::default().to_yaml();
 
         assert!(yaml.contains("lazy_activation: true"));
+        assert!(yaml.contains("sources_path: .codewiki/sources.yml"));
         assert!(yaml.contains("code_intelligence_default: octocode"));
         assert!(yaml.contains("codebase_memory_mcp_trigger: shared cross-session memory"));
         assert!(yaml.contains("cocoindex_trigger: repo scale"));
@@ -761,6 +835,19 @@ mod tests {
         assert_eq!(claim.confidence.as_str(), "source-backed");
         assert_eq!(claim.evidence[0].kind.as_str(), "file");
         assert_eq!(claim.evidence[0].confidence.as_str(), "confirmed");
+    }
+
+    #[test]
+    fn sources_yaml_records_primary_and_imports() {
+        let primary = SourceRecord::new("git", "source", "/workspace/source");
+        let jira = SourceRecord::new("jira", "PROJ-123", "https://jira.example/browse/PROJ-123");
+
+        let yaml = render_sources_yaml(&primary, &[jira]);
+
+        assert!(yaml.contains("kind: git"));
+        assert!(yaml.contains("primary: true"));
+        assert!(yaml.contains("kind: jira"));
+        assert!(yaml.contains("primary: false"));
     }
 
     fn unique_test_suffix() -> String {

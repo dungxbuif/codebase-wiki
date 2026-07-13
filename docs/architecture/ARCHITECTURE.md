@@ -17,14 +17,14 @@ shared_fields: [status, linked_decisions]
 
 ## Overview
 
-CodeWiki is planned as a repo-native Codex skill with a small core:
+CodeWiki is planned as a skill-first Codex system with a small core:
 
 ```text
-Repository
+Repository or source workspace
   -> detection and semantic exploration
   -> evidence and fact model
   -> WikiPlan
-  -> generated docs
+  -> generated docs in repo-local or external wiki workspace
   -> sync and Q&A
 ```
 
@@ -32,8 +32,8 @@ The core should not hard-code language/framework adapters. It should combine rep
 
 ## System Boundaries
 
-- In scope: repository detection, semantic exploration, evidence modeling, wiki planning, docs generation, sync, Q&A, config, and durable local state.
-- Out of scope for core: language/framework-specific adapters and broad mandatory external memory/indexing stacks.
+- In scope: repository detection, semantic exploration, evidence modeling, wiki planning, docs generation, sync, Q&A, config, source registry, workspace placement, and durable local state.
+- Out of scope for core: language/framework-specific adapters, bundled Jira/Figma/etc. providers, and broad mandatory external memory/indexing stacks.
 
 ## Modules
 
@@ -51,11 +51,12 @@ The core should not hard-code language/framework adapters. It should combine rep
 | Sync engine | Detect stale docs and update safely | TBD | Must respect human-owned edits |
 | Q&A engine | Answer from docs first, then evidence/source when needed | TBD | Should cite evidence |
 | Provider boundary | Wrap optional code-intelligence providers | `crates/codewiki-provider` | Provider selection is target-repo specific |
+| Source extension skills | User-authored skills that emit bounded evidence packets for non-Git sources | skill references/templates | Not bundled providers |
 
 ## Data Flow
 
 ```text
-Git repo + files + existing docs
+Git repo + files + existing docs + optional source skill evidence
   -> stack detection
   -> exploration tasks
   -> evidence/fact/hypothesis records
@@ -65,15 +66,16 @@ Git repo + files + existing docs
   -> docs-first Q&A
 ```
 
-## Target Repository Documentation Structure
+## Wiki Workspace Documentation Structure
 
-CodeWiki uses three distinct target-repo layers:
+CodeWiki uses three distinct wiki workspace layers. The workspace may be the source repository or a separate external/personal directory:
 
 ```text
 .codewiki/
   config.yml      # committed control config
   plan.yml        # committed semantic WikiPlan and sync plan
   AGENTS.md       # committed local CodeWiki agent guidance
+  sources.yml     # primary Git source and optional source skill declarations
 
 docs/
   codewiki/
@@ -81,7 +83,7 @@ docs/
     ...           # canonical generated semantic docs
 ```
 
-`docs/codewiki/**` is the human/agent knowledge surface and the first source for Q&A. `.codewiki/**` is the committed control plane. SQLite state and rebuildable caches live outside the repository in platform app-data/cache directories.
+`docs/codewiki/**` is the human/agent knowledge surface and the first source for Q&A. `.codewiki/**` is the committed control plane. SQLite state and rebuildable caches live outside the repository/workspace in platform app-data/cache directories.
 
 The canonical generated docs slots are defined by `docs/decisions/ADR-0005-codewiki-generated-docs-structure.md`: `index.md`, `map.md`, `architecture.md`, `domains.md`, `workflows.md`, `data.md`, `interfaces.md`, `operations.md`, `testing.md`, `decisions.md`, `glossary.md`, `open-questions.md`, `evidence/**`, and optional `areas/<area-slug>.md`.
 
@@ -124,3 +126,4 @@ Skill workflow: CodeWiki init
 - `docs/decisions/ADR-0003-skill-first-product-and-rust-companion-tool.md`
 - `docs/decisions/ADR-0004-runtime-optional-code-intelligence-tools.md`
 - `docs/decisions/ADR-0005-codewiki-generated-docs-structure.md`
+- `docs/decisions/ADR-0006-workspace-placement-and-source-extension-skills.md`

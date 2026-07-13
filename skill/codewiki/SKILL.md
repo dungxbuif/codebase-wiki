@@ -1,6 +1,6 @@
 ---
 name: codewiki
-description: Use when a user wants to generate, sync, inspect, or query a repo-native semantic wiki for a software repository. CodeWiki explores source code, detects languages/frameworks/libraries dynamically, builds an evidence-backed WikiPlan, writes durable docs, preserves reusable state across sessions/models, and answers from docs/evidence first.
+description: Use when a user wants to generate, sync, inspect, or query a semantic wiki for a software repository or personal/external code knowledge workspace. CodeWiki explores source code, detects languages/frameworks/libraries dynamically, builds an evidence-backed WikiPlan, writes durable docs either inside the repo or in a user-confirmed external workspace, preserves reusable state across sessions/models, supports Git as the default source, and can route non-Git sources through user-provided source extension skills.
 ---
 
 # CodeWiki
@@ -10,9 +10,11 @@ CodeWiki is a repo-native skill for creating and maintaining a semantic wiki for
 Use this skill when the user asks to:
 
 - initialize or update a codebase wiki;
+- create personal or external docs for a repo without writing into the source repo;
 - understand a repository through generated docs;
 - generate a WikiPlan from source code;
 - sync docs after code changes;
+- incorporate non-Git change sources through user-provided source skills;
 - answer architecture/codebase questions from docs and evidence;
 - preserve repo understanding across sessions or model changes.
 
@@ -24,6 +26,9 @@ Use this skill when the user asks to:
 - Do not build core language/framework adapters. Detect repository stack signals dynamically.
 - Keep claims evidence-backed. Every durable claim should trace to files, symbols, commands, existing docs, or explicit hypotheses.
 - Keep committed project config/docs separate from local persistent state and rebuildable cache.
+- Git is the default source for code changes. Do not bundle Jira/Figma/etc. providers in CodeWiki core.
+- If the output location is ambiguous, confirm whether to write docs in the source repo or in an external/personal workspace before writing files.
+- Support non-Git sources through `.codewiki/sources.yml` and user-provided source extension skills.
 - Do not install every provider by default. Use Octocode as the first-choice code-intelligence provider when filesystem/Git exploration is insufficient; use codebase-memory-mcp and CocoIndex only under their specific triggers.
 
 ## Reference Loading
@@ -31,6 +36,8 @@ Use this skill when the user asks to:
 Keep this file as the compact router. Load bundled references only when needed:
 
 - `references/docs-structure.md`: load for every init/sync run and when repairing or explaining the wiki layout.
+- `references/workspace-placement.md`: load before writing files when repo-local vs external/personal wiki placement is not explicit.
+- `references/source-extensions.md`: load when adding or using non-Git evidence/change sources.
 - `references/init.md`: load when initializing or generating a new CodeWiki.
 - `references/sync.md`: load when updating, refreshing, or reconciling an existing CodeWiki.
 - `references/qa.md`: load when answering questions from existing CodeWiki docs/state.
@@ -45,6 +52,7 @@ When initializing a target repository, prefer:
   config.yml
   plan.yml
   AGENTS.md
+  sources.yml
 docs/
   codewiki/
     index.md
@@ -70,7 +78,9 @@ docs/
 
 `docs/codewiki/index.md` is required after a successful init. Other pages are canonical slots, not mandatory stubs: create them only when the repository has enough evidence-backed content. Use `areas/<area-slug>.md` only for substantial areas that deserve deeper treatment.
 
-Local runtime state should live outside the repo in platform app data and use SQLite, keyed by repository identity. Rebuildable cache should be separate from durable state.
+In external/personal workspace mode, this same structure lives in the chosen workspace directory, while the source repository remains read-only evidence unless the user asks otherwise.
+
+Local runtime state should live outside the repo in platform app data and use SQLite, keyed by repository/workspace identity. Rebuildable cache should be separate from durable state.
 
 ## Runtime Tool Selection
 

@@ -3,6 +3,8 @@
 Load this reference when the user asks to update, refresh, reconcile, or sync an existing CodeWiki after repository changes.
 
 Also load `docs-structure.md`.
+Also load `workspace-placement.md` when source repo and wiki workspace may differ.
+Also load `source-extensions.md` when `.codewiki/sources.yml` contains non-Git sources or the user asks to include them.
 
 ## Goal
 
@@ -11,11 +13,12 @@ Update only the wiki content affected by repository or documentation changes. Pr
 ## Procedure
 
 1. Load current CodeWiki state.
-   - Read `.codewiki/config.yml`, `.codewiki/plan.yml`, `.codewiki/AGENTS.md`, and `docs/codewiki/index.md`.
+   - Read `.codewiki/config.yml`, `.codewiki/plan.yml`, `.codewiki/AGENTS.md`, `.codewiki/sources.yml`, and `docs/codewiki/index.md`.
    - Inspect the relevant existing generated pages before editing.
 
 2. Determine change scope.
-   - Use Git status/diff/log when available.
+   - Use Git status/diff/log as the default source of code changes.
+   - Treat non-Git sources as optional source extension evidence from `.codewiki/sources.yml`.
    - Compare changed files to `.codewiki/plan.yml` coverage and page ownership.
    - Include human docs changes as source evidence changes.
 
@@ -25,6 +28,7 @@ Update only the wiki content affected by repository or documentation changes. Pr
 
 4. Refresh evidence narrowly.
    - Read only changed files, directly related dependencies, and affected existing docs.
+   - For relevant non-Git sources, invoke or ask for the user-provided source skill and consume its evidence packet.
    - Activate optional providers only when default Git/filesystem evidence is insufficient.
 
 5. Update docs surgically.
@@ -46,4 +50,3 @@ Update only the wiki content affected by repository or documentation changes. Pr
 - Small change set: update at most the directly affected page(s).
 - Broad architecture/runtime change: update the canonical top-level pages plus affected area pages.
 - If more than three pages need edits, re-check the impact plan before writing.
-

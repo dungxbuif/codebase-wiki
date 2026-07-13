@@ -17,11 +17,12 @@ shared_fields: [status, trace]
 
 ## Product Summary
 
-CodeWiki is a repo-native Codex skill that builds and maintains a semantic wiki for any software repository. It should autonomously explore source code, detect the repository's languages and frameworks, create an evidence-backed WikiPlan, generate docs, preserve durable state, and support docs-first Q&A and future sync runs. Rust code in this repository is companion tooling for deterministic local operations, not the primary product surface.
+CodeWiki is a Codex skill that builds and maintains a semantic wiki for software repositories and personal/external code knowledge workspaces. It should autonomously explore source code, detect the repository's languages and frameworks, create an evidence-backed WikiPlan, generate docs in a user-confirmed workspace, preserve durable state, and support docs-first Q&A and future sync runs. Rust code in this repository is companion tooling for deterministic local operations, not the primary product surface.
 
 ## Goals
 
 - Generate high-quality semantic wiki docs for arbitrary repositories.
+- Support repo-local docs and external/personal wiki workspaces.
 - Make `init` automatic: no approval gate should be required for the LLM to explore and create the first wiki plan.
 - Preserve useful config, storage, evidence, and checkpoints across sessions and LLM/model changes.
 - Keep generated documentation trustworthy by linking claims to evidence.
@@ -35,12 +36,14 @@ CodeWiki is a repo-native Codex skill that builds and maintains a semantic wiki 
 - Core language/framework-specific adapters.
 - A broad mandatory tool stack with overlapping code-intelligence systems.
 - Treating chat history or chain-of-thought as durable project memory.
+- Bundling Jira, Figma, or other non-Git source providers into CodeWiki core.
 
 ## Users And Stakeholders
 
 - Developers who want fast, accurate onboarding to an unfamiliar repository.
 - AI coding agents that need durable, repo-local context before changing code.
 - Maintainers who want generated docs that can be refreshed and audited.
+- Developers who want personal docs outside the source repository.
 
 ## Functional Requirements
 
@@ -50,11 +53,15 @@ CodeWiki is a repo-native Codex skill that builds and maintains a semantic wiki 
 - Detection covers languages, libraries, frameworks, package managers, entrypoints, tests, build tools, service boundaries, and documentation sources where possible.
 - WikiPlan records pages, scope, evidence needs, open questions, confidence, and update strategy.
 - Generated docs live in committed project space under the canonical `docs/codewiki/**` structure.
+- Generated docs may live in the source repository or in an external/personal wiki workspace confirmed with the user.
 - `docs/codewiki/index.md` is the required generated entrypoint after successful init.
 - Canonical generated docs slots include map, architecture, domains, workflows, data, interfaces, operations, testing, decisions, glossary, open questions, evidence, and optional area pages.
 - Project config lives in committed `.codewiki/config.yml`.
 - Plan/state summaries that should travel with the repo live in committed `.codewiki/plan.yml` or equivalent.
 - Target-repo CodeWiki agent guidance lives in committed `.codewiki/AGENTS.md`.
+- Source declarations live in `.codewiki/sources.yml`.
+- Git is the default source for code changes.
+- Non-Git sources are supported through user-provided source extension skills, not bundled providers.
 - Local runtime state lives outside the repo in SQLite and is keyed by repository identity.
 - Rebuildable cache is separated from durable runtime state.
 - Q&A should answer from generated docs first, then source evidence when docs are insufficient.
@@ -81,6 +88,7 @@ CodeWiki is a repo-native Codex skill that builds and maintains a semantic wiki 
 - Provide install/activation guidance for runtime tools in the skill and target-repo CodeWiki agent instructions.
 - Keep committed config/docs separate from persistent local runtime state and rebuildable cache.
 - Treat `docs/codewiki/**` as the generated knowledge surface and `.codewiki/**` as the committed control plane.
+- Ask for/confirm output workspace placement before writing when repo-local versus external/personal storage is ambiguous.
 - Use OpenWiki and deepwiki-open as technical references only; do not inherit their runtime architecture wholesale.
 - Install command should copy/install `skill/codewiki` into `$CODEX_HOME/skills/codewiki`.
 
@@ -99,3 +107,4 @@ CodeWiki is a repo-native Codex skill that builds and maintains a semantic wiki 
 - `docs/decisions/ADR-0003-skill-first-product-and-rust-companion-tool.md`
 - `docs/decisions/ADR-0004-runtime-optional-code-intelligence-tools.md`
 - `docs/decisions/ADR-0005-codewiki-generated-docs-structure.md`
+- `docs/decisions/ADR-0006-workspace-placement-and-source-extension-skills.md`

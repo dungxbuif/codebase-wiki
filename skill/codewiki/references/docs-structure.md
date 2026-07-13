@@ -9,6 +9,7 @@ Load this reference for every `init` and `sync` run, and when Q&A needs to expla
   config.yml
   plan.yml
   AGENTS.md
+  sources.yml
 
 docs/
   codewiki/
@@ -33,7 +34,9 @@ docs/
       <area-slug>.md
 ```
 
-`docs/codewiki/**` is the knowledge surface. `.codewiki/**` is the committed control plane. SQLite state and rebuildable cache live outside the repo.
+`docs/codewiki/**` is the knowledge surface. `.codewiki/**` is the committed control plane. SQLite state and rebuildable cache live outside the repo/workspace.
+
+This structure may live either inside the source repository or inside a separate personal/external wiki workspace. When outside the source repository, `.codewiki/sources.yml` records the source repository and any additional evidence sources.
 
 ## Page Rules
 
@@ -77,4 +80,3 @@ Each durable claim should point to at least one of:
 - explicit hypothesis marker with confidence and open question.
 
 Do not present hypotheses as facts.
-

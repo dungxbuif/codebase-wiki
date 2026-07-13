@@ -75,6 +75,8 @@ docs/
 
 Only create pages that have real content. `index.md` is always required. Other top-level pages are canonical slots: if a repository does not have a meaningful data model, public interface, operations story, or testing surface, the page may be omitted and the gap recorded in `open-questions.md` or `.codewiki/plan.yml`.
 
+The same structure may live inside the source repository or inside a separate external/personal wiki workspace. In external workspace mode, the source repository remains evidence input and the generated docs/control plane are written to the selected workspace.
+
 The role of each layer is:
 
 | Layer | Path | Ownership | Purpose |
@@ -82,6 +84,7 @@ The role of each layer is:
 | Control plane | `.codewiki/config.yml` | AI-generated, human-reviewable | Stable config, docs root, provider policy, sync settings. |
 | Wiki plan | `.codewiki/plan.yml` | AI-generated, human-reviewable | Page plan, coverage, confidence, stale areas, refresh strategy. |
 | Agent guidance | `.codewiki/AGENTS.md` | AI-generated, human-reviewable | Local CodeWiki run rules and optional provider activation notes. |
+| Source registry | `.codewiki/sources.yml` | AI-generated, human-reviewable | Primary Git source and optional user-provided source skill declarations. |
 | Knowledge surface | `docs/codewiki/**` | AI-generated docs with human-owned override sections where needed | Human/agent readable semantic wiki and docs-first Q&A source. |
 | Durable local state | platform app data SQLite | AI/runtime-owned | Facts, evidence, claims, symbols, sync runs, provider snapshots. |
 | Rebuildable cache | platform cache directory | runtime-owned | Derived indexes, embeddings, parsed symbol cache, provider cache. |
@@ -116,6 +119,7 @@ The role of each layer is:
 - Human-authored docs outside `docs/codewiki/**` remain source evidence, not generated output.
 - Sync should preserve human-owned sections and avoid formatting-only rewrites.
 - Q&A must read `docs/codewiki/**` before falling back to `.codewiki/plan.yml`, `.codewiki/AGENTS.md`, local SQLite evidence, source/Git, or optional providers.
+- If source repo and wiki workspace differ, Q&A must treat `.codewiki/sources.yml` as the map from workspace to source evidence.
 
 ## Options Considered
 
@@ -132,4 +136,4 @@ The role of each layer is:
 - Future prompt modules must target this structure during init, sync, and Q&A.
 - Large repositories can add `areas/<area-slug>.md` pages, but only when the area is substantial.
 - Config may eventually allow custom docs roots, but the default and documented contract remain `docs/codewiki/**`.
-
+- Workspace placement is governed by `docs/decisions/ADR-0006-workspace-placement-and-source-extension-skills.md`.
