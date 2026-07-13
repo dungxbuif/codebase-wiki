@@ -162,6 +162,7 @@ Maintain CodeWiki as a complete repo-native Codex skill for semantic wiki genera
 - Treat Git as the default source and support non-Git sources only through user-provided source extension skills.
 - Write `.codewiki/sources.yml` during initialization with Git as the primary source, including when docs are placed in an external/personal workspace.
 - Provide a copyable source-skill template so users can add Jira/Figma/fix-note style sources as separate skills instead of CodeWiki core providers.
+- Install CodeWiki project-locally by default under the target repository's `.codex/skills/codewiki`; use `CODEWIKI_INSTALL_SCOPE=global` only when global Codex installation is explicitly desired.
 - Add semantic exploration v1 as a deterministic companion boundary for bounded file, area, symbol, import/dependency-hint, and evidence-reference snapshots.
 - Persist semantic files, symbols, evidence items, promoted claims, and claim/evidence links into local SQLite during init/sync.
 - Mark claims stale when supporting file evidence changes and render SQLite-backed Q&A context with active/stale claim separation.

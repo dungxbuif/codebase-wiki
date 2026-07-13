@@ -30,16 +30,28 @@ Implemented foundation capabilities:
 
 ## Install Skill
 
-After this repository is pushed, install the skill with:
+From the target code repository, install the skill into that repository with:
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/dungxbuif/codebase-wiki/master/scripts/install-codewiki-skill.sh | bash
+```
+
+By default this writes to:
+
+```text
+<target-repo>/.codex/skills/codewiki
 ```
 
 From a local checkout, install with:
 
 ```bash
 scripts/install-codewiki-skill.sh
+```
+
+To install globally into `$CODEX_HOME/skills/codewiki`, opt in explicitly:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/dungxbuif/codebase-wiki/master/scripts/install-codewiki-skill.sh | CODEWIKI_INSTALL_SCOPE=global bash
 ```
 
 The installer copies `skill/codewiki`, builds `bin/codewiki` when compatible Cargo/Rust is available, and keeps companion source as fallback. The skill wrapper `scripts/codewiki-helper.sh` prefers `CODEWIKI_COMPANION_BIN`, then the installed binary, then PATH/source fallback.
