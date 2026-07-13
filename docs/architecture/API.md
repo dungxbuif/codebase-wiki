@@ -21,8 +21,8 @@ Document HTTP endpoints, RPC methods, events, CLI commands, or any other public 
 
 | Contract | Type | Auth | Status | Notes |
 | --- | --- | --- | --- | --- |
-| `curl -fsSL https://raw.githubusercontent.com/dungxbuif/harness/main/scripts/install-codewiki-skill.sh \| bash` | install command | GitHub/repo access | implemented | Installs `skill/codewiki` into `$CODEX_HOME/skills/codewiki`, including `scripts/codewiki-helper.sh` and copied Rust companion source when present. |
-| `skill/codewiki/scripts/codewiki-helper.sh [args...]` | skill helper script | optional Rust binary/source | implemented | Resolves the Rust companion through `CODEWIKI_COMPANION_BIN`, `PATH`, `CODEWIKI_REPO`, installed companion source, or source checkout. |
+| `curl -fsSL https://raw.githubusercontent.com/dungxbuif/harness/main/scripts/install-codewiki-skill.sh \| bash` | install command | GitHub/repo access plus optional Cargo build | implemented | Installs `skill/codewiki` into `$CODEX_HOME/skills/codewiki`, builds `bin/codewiki` when Cargo is available, and keeps copied Rust companion source as fallback. |
+| `skill/codewiki/scripts/codewiki-helper.sh [args...]` | skill helper script | optional Rust binary/source | implemented | Resolves the Rust companion through `CODEWIKI_COMPANION_BIN`, installed `bin/codewiki`, `PATH`, `CODEWIKI_REPO`, installed companion source, or source checkout. |
 | `codewiki help` / `codewiki --help` | companion command | none | implemented | Prints scaffold usage and companion-tool status. |
 | `codewiki version` / `codewiki --version` | companion command | none | implemented | Prints current package version. |
 | `codewiki status` | companion command | none | implemented | Prints Rust companion scaffold status, command list, planned detection, config path, local state summary, and docs root. |

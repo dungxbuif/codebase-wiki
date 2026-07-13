@@ -52,6 +52,15 @@ if [[ -f "$tmpdir/repo/Cargo.toml" && -d "$tmpdir/repo/crates/codewiki-cli" ]]; 
     cp "$tmpdir/repo/Cargo.lock" "$INSTALL_DIR/companion/Cargo.lock"
   fi
   cp -R "$tmpdir/repo/crates" "$INSTALL_DIR/companion/crates"
+
+  if command -v cargo >/dev/null 2>&1; then
+    cargo build --release --manifest-path "$tmpdir/repo/Cargo.toml" -p codewiki-cli >/dev/null
+    mkdir -p "$INSTALL_DIR/bin"
+    cp "$tmpdir/repo/target/release/codewiki" "$INSTALL_DIR/bin/codewiki"
+    chmod +x "$INSTALL_DIR/bin/codewiki"
+  else
+    echo "warning: cargo not found; installed companion source fallback but did not build bin/codewiki" >&2
+  fi
 fi
 if compgen -G "$INSTALL_DIR/scripts/*.sh" >/dev/null; then
   chmod +x "$INSTALL_DIR"/scripts/*.sh

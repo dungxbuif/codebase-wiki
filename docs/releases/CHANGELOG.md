@@ -48,6 +48,7 @@ All notable changes should be recorded here.
 - Added generated-region markers so sync can preserve human-owned documentation edits.
 - Added canonical synthesis pages and area pages generated from semantic evidence.
 - Added an installed skill helper script plus copied Rust companion source so CodeWiki skills can invoke deterministic Rust support without making the companion the primary UX.
+- Changed the skill installer/helper to prefer a prebuilt installed `bin/codewiki` companion binary, with companion source retained only as fallback.
 - Changed the generated docs default from nested `docs/codewiki/**` to direct `docs/**` canonical pages.
 - Reconciled README, roadmap, traceability, validation, and release-readiness docs for the completed CodeWiki foundation baseline.
 - Added CodeWiki-specific standards and reconciled implemented requirement statuses.

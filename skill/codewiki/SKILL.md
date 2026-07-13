@@ -151,8 +151,9 @@ If a `codewiki` Rust binary is available, use it for deterministic repo inspecti
 Installed skills include `scripts/codewiki-helper.sh`. Use that wrapper when available so the skill can locate the Rust companion through:
 
 1. `CODEWIKI_COMPANION_BIN`
-2. `codewiki` on `PATH`
-3. `CODEWIKI_REPO`
-4. the source checkout that contains this skill
+2. installed `bin/codewiki`
+3. `codewiki` on `PATH`
+4. `CODEWIKI_REPO`
+5. bundled companion source or the source checkout that contains this skill
 
-If the wrapper cannot locate the companion, continue with filesystem/Git reasoning and record the reduced deterministic-helper coverage.
+Prefer the prebuilt binary path. Use source/Cargo fallback only when the installed binary is missing or intentionally replaced. If the wrapper cannot locate the companion, continue with filesystem/Git reasoning and record the reduced deterministic-helper coverage.

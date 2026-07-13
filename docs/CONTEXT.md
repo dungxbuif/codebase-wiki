@@ -166,7 +166,7 @@ Maintain CodeWiki as a complete repo-native Codex skill for semantic wiki genera
 - Generate canonical synthesis pages and area pages from semantic evidence while recording gaps explicitly.
 - Reconcile release-readiness docs, roadmap, traceability, README, installer syntax, companion status, and validation evidence.
 - Finalize CodeWiki-specific product/evidence/sync/tool standards and implemented requirement statuses.
-- Add `skill/codewiki/scripts/codewiki-helper.sh` and make the installer copy Rust companion source into the installed skill so agents can use deterministic helpers when available.
+- Add `skill/codewiki/scripts/codewiki-helper.sh`; make the installer build `bin/codewiki` for binary-first companion usage and keep copied Rust companion source as fallback.
 
 ## Next Steps
 
