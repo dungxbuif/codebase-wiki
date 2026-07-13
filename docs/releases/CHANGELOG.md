@@ -48,3 +48,4 @@ All notable changes should be recorded here.
 - Added generated-region markers so sync can preserve human-owned documentation edits.
 - Added canonical synthesis pages and area pages generated from semantic evidence.
 - Reconciled README, roadmap, traceability, validation, and release-readiness docs for the completed CodeWiki foundation baseline.
+- Added CodeWiki-specific standards and reconciled implemented requirement statuses.

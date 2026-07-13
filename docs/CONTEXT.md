@@ -118,6 +118,8 @@ Maintain CodeWiki as a complete repo-native Codex skill for semantic wiki genera
 - `docs/work/ROADMAP.md`
 - `docs/work/TRACEABILITY.md`
 - `README.md`
+- `docs/work/tickets/TICKET-019-codewiki-standards-and-status.md`
+- `docs/standards/CODEWIKI.md`
 
 ## Recent Decisions
 
@@ -163,6 +165,7 @@ Maintain CodeWiki as a complete repo-native Codex skill for semantic wiki genera
 - Add generated-region markers and sync merge behavior so human-owned text around generated docs is preserved.
 - Generate canonical synthesis pages and area pages from semantic evidence while recording gaps explicitly.
 - Reconcile release-readiness docs, roadmap, traceability, README, installer syntax, companion status, and validation evidence.
+- Finalize CodeWiki-specific product/evidence/sync/tool standards and implemented requirement statuses.
 
 ## Next Steps
 

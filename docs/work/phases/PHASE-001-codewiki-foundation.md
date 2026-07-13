@@ -102,6 +102,7 @@ Create the complete foundation for CodeWiki as a repo-native skill that can init
 | TICKET-016 | ticket | Sync safety generated regions | done | `docs/work/tickets/TICKET-016-sync-safety-generated-regions.md` |
 | TICKET-017 | ticket | Synthesis pages v1 | done | `docs/work/tickets/TICKET-017-synthesis-pages-v1.md` |
 | TICKET-018 | ticket | Release readiness | done | `docs/work/tickets/TICKET-018-release-readiness.md` |
+| TICKET-019 | ticket | CodeWiki standards and status | done | `docs/work/tickets/TICKET-019-codewiki-standards-and-status.md` |
 
 ## Dependencies
 

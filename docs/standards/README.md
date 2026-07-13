@@ -24,5 +24,6 @@ If a conflict would bypass tests, docs reconciliation, or security rules, ask be
 - `QUALITY_BAR.md`: what good tickets, designs, bugs, ADRs, and diagrams must contain.
 - `VALIDATION.md`: proof policy for each kind of work.
 - `DEBUGGING.md`: root-cause-first bug and failure investigation.
+- `CODEWIKI.md`: CodeWiki-specific product, evidence, sync-safety, and tool-policy standards.
 
 Agents may propose standard updates but must not silently change them unless the task explicitly asks for standard changes.
