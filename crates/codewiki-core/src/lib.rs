@@ -1,7 +1,8 @@
 //! Core command orchestration for CodeWiki.
 
 use codewiki_detect::{DetectionCapabilities, detect_repository};
-use codewiki_docs::{WikiDocsLayout, render_initial_pages};
+use codewiki_docs::{WikiDocsLayout, render_semantic_pages};
+use codewiki_explore::explore_repository;
 use codewiki_store::{
     CodeWikiConfig, DetectedStack, RepositoryIdentity, SourceRecord, StatePaths, StoreLayout,
     WikiPlan, apply_migrations_with_sqlite, render_sources_yaml, render_target_agents_md,
@@ -181,6 +182,8 @@ fn sync_workspace(source_root: &Path, workspace_root: &Path) -> Result<String, S
     }
     let detection = detect_repository(source_root)
         .map_err(|error| format!("failed to detect repository signals: {error}"))?;
+    let exploration = explore_repository(source_root)
+        .map_err(|error| format!("failed to explore repository semantics: {error}"))?;
     let repo_label = source_root
         .file_name()
         .and_then(|name| name.to_str())
@@ -191,7 +194,7 @@ fn sync_workspace(source_root: &Path, workspace_root: &Path) -> Result<String, S
         &render_plan_with_detection(&detection),
         &mut actions,
     )?;
-    for page in render_initial_pages(repo_label, &detection.to_markdown()) {
+    for page in render_semantic_pages(repo_label, &detection.to_markdown(), &exploration) {
         write_if_changed(&workspace_root.join(page.path), &page.content, &mut actions)?;
     }
 
@@ -247,6 +250,8 @@ pub fn init_workspace(
     let identity = RepositoryIdentity::new(source_root, None);
     let detection = detect_repository(source_root)
         .map_err(|error| format!("failed to detect repository signals: {error}"))?;
+    let exploration = explore_repository(source_root)
+        .map_err(|error| format!("failed to explore repository semantics: {error}"))?;
     let state_paths = StatePaths::resolve(&context.app_data_base, &context.cache_base, &identity);
     state_paths
         .ensure_dirs()
@@ -284,7 +289,7 @@ pub fn init_workspace(
         .file_name()
         .and_then(|name| name.to_str())
         .unwrap_or("repository");
-    for page in render_initial_pages(repo_label, &detection.to_markdown()) {
+    for page in render_semantic_pages(repo_label, &detection.to_markdown(), &exploration) {
         write_if_missing(&workspace_root.join(page.path), &page.content, &mut actions)?;
     }
 
@@ -463,6 +468,11 @@ mod tests {
                 .expect("read plan")
                 .contains("detected:")
         );
+        assert!(
+            fs::read_to_string(repo.join("docs/codewiki/map.md"))
+                .expect("read map")
+                .contains("Semantic Structure")
+        );
 
         let _ = fs::remove_dir_all(base);
     }
@@ -529,6 +539,11 @@ mod tests {
                 .expect("read map")
                 .contains("Repository Map")
         );
+        assert!(
+            fs::read_to_string(repo.join("docs/codewiki/map.md"))
+                .expect("read map")
+                .contains("Dependency Hints")
+        );
 
         let _ = fs::remove_dir_all(base);
     }
@@ -558,6 +573,11 @@ mod tests {
         assert!(workspace.join(".codewiki/config.yml").exists());
         assert!(workspace.join(".codewiki/sources.yml").exists());
         assert!(workspace.join("docs/codewiki/index.md").exists());
+        assert!(
+            fs::read_to_string(workspace.join("docs/codewiki/map.md"))
+                .expect("read map")
+                .contains("src/main.rs")
+        );
         assert!(!source.join(".codewiki/config.yml").exists());
         assert!(!source.join("docs/codewiki/index.md").exists());
         assert!(

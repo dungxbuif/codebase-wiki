@@ -1,5 +1,7 @@
 //! Generated wiki document boundary.
 
+use codewiki_explore::ExplorationSnapshot;
+
 /// Planned generated docs layout.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct WikiDocsLayout {
@@ -42,20 +44,42 @@ pub fn render_initial_index(repo_label: &str) -> String {
 
 /// Render the canonical initial page set.
 pub fn render_initial_pages(repo_label: &str, detection_markdown: &str) -> Vec<GeneratedPage> {
+    render_initial_pages_with_exploration(repo_label, detection_markdown, None)
+}
+
+/// Render the canonical initial page set with semantic exploration evidence.
+pub fn render_semantic_pages(
+    repo_label: &str,
+    detection_markdown: &str,
+    exploration: &ExplorationSnapshot,
+) -> Vec<GeneratedPage> {
+    render_initial_pages_with_exploration(repo_label, detection_markdown, Some(exploration))
+}
+
+fn render_initial_pages_with_exploration(
+    repo_label: &str,
+    detection_markdown: &str,
+    exploration: Option<&ExplorationSnapshot>,
+) -> Vec<GeneratedPage> {
+    let semantic_markdown = exploration.map(ExplorationSnapshot::to_markdown);
+    let semantic_markdown = semantic_markdown.as_deref();
+
     vec![
         GeneratedPage {
             path: "docs/codewiki/index.md".to_string(),
-            content: render_initial_index_with_detection(repo_label, detection_markdown),
-        },
-        GeneratedPage {
-            path: "docs/codewiki/map.md".to_string(),
-            content: format!(
-                "# Repository Map\n\n## Detected Signals\n\n{detection_markdown}\n## Notes\n\nFull semantic area mapping is pending. This page is the canonical home for package, service, app, and bounded-context navigation.\n"
+            content: render_initial_index_with_detection(
+                repo_label,
+                detection_markdown,
+                semantic_markdown,
             ),
         },
         GeneratedPage {
+            path: "docs/codewiki/map.md".to_string(),
+            content: render_map_page(detection_markdown, semantic_markdown),
+        },
+        GeneratedPage {
             path: "docs/codewiki/architecture.md".to_string(),
-            content: "# Architecture\n\nArchitecture synthesis is pending. Future sync runs should record runtime components, dependency direction, constraints, and change risks here.\n\n## Current Evidence\n\nSee `evidence/sources.md` and `.codewiki/plan.yml` for detected repository signals.\n".to_string(),
+            content: render_architecture_page(semantic_markdown),
         },
         GeneratedPage {
             path: "docs/codewiki/evidence/README.md".to_string(),
@@ -63,9 +87,7 @@ pub fn render_initial_pages(repo_label: &str, detection_markdown: &str) -> Vec<G
         },
         GeneratedPage {
             path: "docs/codewiki/evidence/sources.md".to_string(),
-            content: format!(
-                "# Evidence Sources\n\n## Initial Detection\n\n{detection_markdown}\nAdditional source evidence will be recorded during semantic exploration and sync.\n"
-            ),
+            content: render_sources_page(detection_markdown, exploration),
         },
         GeneratedPage {
             path: "docs/codewiki/evidence/claims.md".to_string(),
@@ -78,11 +100,85 @@ pub fn render_initial_pages(repo_label: &str, detection_markdown: &str) -> Vec<G
     ]
 }
 
-fn render_initial_index_with_detection(repo_label: &str, detection_markdown: &str) -> String {
+fn render_initial_index_with_detection(
+    repo_label: &str,
+    detection_markdown: &str,
+    semantic_markdown: Option<&str>,
+) -> String {
     let mut index = render_initial_index(repo_label);
+    if semantic_markdown.is_some() {
+        index = index
+            .replace("- Semantic exploration: pending", "- Semantic exploration: initialized")
+            .replace(
+                "- Repository detection and semantic documentation are not complete yet.",
+                "- Repository detection and semantic snapshot are initialized; deeper synthesis remains evidence-gated.",
+            );
+    }
     index.push_str("## Detected Repository Signals\n\n");
     index.push_str(detection_markdown);
+    if let Some(semantic_markdown) = semantic_markdown {
+        index.push_str("\n## Semantic Snapshot\n\n");
+        index.push_str(semantic_markdown);
+    }
     index
+}
+
+fn render_map_page(detection_markdown: &str, semantic_markdown: Option<&str>) -> String {
+    let mut content = format!("# Repository Map\n\n## Detected Signals\n\n{detection_markdown}");
+    if let Some(semantic_markdown) = semantic_markdown {
+        content.push_str("\n## Semantic Structure\n\n");
+        content.push_str(semantic_markdown);
+        content.push_str("\n\n## Notes\n\nThis page is generated from bounded filesystem exploration. Treat dependency rows as hints until promoted into durable claims.\n");
+    } else {
+        content.push_str("\n## Notes\n\nFull semantic area mapping is pending. This page is the canonical home for package, service, app, and bounded-context navigation.\n");
+    }
+    content
+}
+
+fn render_architecture_page(semantic_markdown: Option<&str>) -> String {
+    let mut content = "# Architecture\n\n".to_string();
+    if let Some(semantic_markdown) = semantic_markdown {
+        content.push_str("Architecture synthesis starts from the semantic snapshot below. Future sync runs should promote stable structure into explicit claims with confidence and evidence.\n\n");
+        content.push_str("## Current Semantic Evidence\n\n");
+        content.push_str(semantic_markdown);
+        content.push_str("\n\n## Interpretation Status\n\n- Component boundaries: evidence-backed hints, not final claims.\n- Dependency direction: lexical import hints only.\n- Runtime behavior: pending deeper exploration and/or provider activation when needed.\n");
+    } else {
+        content.push_str("Architecture synthesis is pending. Future sync runs should record runtime components, dependency direction, constraints, and change risks here.\n\n## Current Evidence\n\nSee `evidence/sources.md` and `.codewiki/plan.yml` for detected repository signals.\n");
+    }
+    content
+}
+
+fn render_sources_page(
+    detection_markdown: &str,
+    exploration: Option<&ExplorationSnapshot>,
+) -> String {
+    let mut content = format!("# Evidence Sources\n\n## Initial Detection\n\n{detection_markdown}");
+    match exploration {
+        Some(snapshot) => {
+            content.push_str("\n## Explored Files\n\n");
+            for evidence in snapshot.evidence.iter().take(200) {
+                content.push_str(&format!(
+                    "- `{}`: `{}` ({})\n",
+                    evidence.id, evidence.path, evidence.kind
+                ));
+            }
+            if snapshot.evidence.is_empty() {
+                content.push_str("- none\n");
+            }
+            if snapshot.truncated {
+                content.push_str(&format!(
+                    "\nTraversal reached the configured file limit of {} files.\n",
+                    snapshot.file_limit
+                ));
+            }
+        }
+        None => {
+            content.push_str(
+                "Additional source evidence will be recorded during semantic exploration and sync.\n",
+            );
+        }
+    }
+    content
 }
 
 #[cfg(test)]
@@ -110,6 +206,53 @@ mod tests {
         assert!(pages.iter().any(|page| {
             page.content
                 .contains("Full semantic area mapping is pending")
+        }));
+    }
+
+    #[test]
+    fn semantic_pages_include_exploration_snapshot() {
+        let snapshot = ExplorationSnapshot {
+            schema_version: 1,
+            files: vec![codewiki_explore::ExploredFile {
+                path: "src/lib.rs".to_string(),
+                language: Some("Rust".to_string()),
+                role: codewiki_explore::FileRole::Source,
+                line_count: 10,
+                symbols: vec![codewiki_explore::ExploredSymbol {
+                    name: "build".to_string(),
+                    kind: "function".to_string(),
+                    line: 1,
+                }],
+                imports: vec!["std::fs".to_string()],
+                evidence_id: "file:test".to_string(),
+            }],
+            areas: vec![codewiki_explore::AreaSummary {
+                name: "src".to_string(),
+                file_count: 1,
+                symbol_count: 1,
+                roles: vec![codewiki_explore::FileRole::Source],
+            }],
+            dependency_hints: vec![codewiki_explore::DependencyHint {
+                from_path: "src/lib.rs".to_string(),
+                target: "std::fs".to_string(),
+                kind: "lexical-import".to_string(),
+            }],
+            evidence: vec![codewiki_explore::EvidenceRef {
+                id: "file:test".to_string(),
+                path: "src/lib.rs".to_string(),
+                kind: "file".to_string(),
+            }],
+            truncated: false,
+            file_limit: 3_000,
+        };
+
+        let pages = render_semantic_pages("example", "### Languages\n\n- Rust\n", &snapshot);
+
+        assert!(pages.iter().any(|page| {
+            page.path == "docs/codewiki/map.md" && page.content.contains("Semantic Structure")
+        }));
+        assert!(pages.iter().any(|page| {
+            page.path == "docs/codewiki/evidence/sources.md" && page.content.contains("file:test")
         }));
     }
 }

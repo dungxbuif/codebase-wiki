@@ -44,7 +44,7 @@ The core should not hard-code language/framework adapters. It should combine rep
 | Rust companion tool | Provide deterministic helper commands for repo inspection/config/state when needed | `crates/codewiki-cli` | Companion surface, not the product |
 | Core engine | Parse commands and orchestrate internal boundaries | `crates/codewiki-core` | Owns current `help`, `version`, and `status` behavior |
 | Repo detector | Detect languages, frameworks, package managers, entrypoints, test/build tools, and docs | `crates/codewiki-detect` | Dynamic detection only; no core adapters |
-| Explorer | Select files/symbols/docs to inspect and record evidence | TBD | Must be evidence-bound and resumable |
+| Explorer | Select files/symbols/docs to inspect and record evidence | `crates/codewiki-explore` | Deterministic semantic snapshot v1; lexical hints are evidence, not final claims |
 | Evidence store | Persist facts, hypotheses, claims, and source references | `crates/codewiki-store` | SQLite local runtime state planned |
 | WikiPlan generator | Produce page plan, scope, confidence, open questions, and refresh strategy | TBD | Committed summary planned under `.codewiki/` |
 | Doc generator | Write human/agent-readable wiki docs | `crates/codewiki-docs` | Canonical generated docs root is `docs/codewiki/**` |
@@ -58,7 +58,7 @@ The core should not hard-code language/framework adapters. It should combine rep
 ```text
 Git repo + files + existing docs + optional source skill evidence
   -> stack detection
-  -> exploration tasks
+  -> deterministic semantic exploration
   -> evidence/fact/hypothesis records
   -> WikiPlan
   -> generated docs
@@ -85,6 +85,8 @@ docs/
 
 `docs/codewiki/**` is the human/agent knowledge surface and the first source for Q&A. `.codewiki/**` is the committed control plane. SQLite state and rebuildable caches live outside the repository/workspace in platform app-data/cache directories.
 
+Semantic exploration v1 records bounded file, area, symbol, import/dependency-hint, and evidence-reference snapshots. These hints seed generated docs and future claim promotion, but they are not treated as fully resolved architecture without additional evidence.
+
 The canonical generated docs slots are defined by `docs/decisions/ADR-0005-codewiki-generated-docs-structure.md`: `index.md`, `map.md`, `architecture.md`, `domains.md`, `workflows.md`, `data.md`, `interfaces.md`, `operations.md`, `testing.md`, `decisions.md`, `glossary.md`, `open-questions.md`, `evidence/**`, and optional `areas/<area-slug>.md`.
 
 ## Runtime Flow
@@ -95,7 +97,7 @@ Skill workflow: CodeWiki init
   -> load committed config if present
   -> open or create local SQLite state
   -> detect stack and repository shape
-  -> explore source/docs with evidence capture
+  -> explore source/docs with bounded semantic snapshot
   -> create WikiPlan
   -> generate docs
   -> write checkpoints for future sync

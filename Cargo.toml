@@ -4,6 +4,7 @@ members = [
     "crates/codewiki-cli",
     "crates/codewiki-core",
     "crates/codewiki-detect",
+    "crates/codewiki-explore",
     "crates/codewiki-store",
     "crates/codewiki-provider",
     "crates/codewiki-docs",
@@ -19,4 +20,3 @@ repository = "https://github.com/dungxbuif/codebase-wiki"
 [workspace.lints.rust]
 unsafe_code = "forbid"
 missing_docs = "warn"
-

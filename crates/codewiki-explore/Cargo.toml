@@ -1,13 +1,10 @@
 [package]
-name = "codewiki-docs"
+name = "codewiki-explore"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
 license.workspace = true
 repository.workspace = true
-
-[dependencies]
-codewiki-explore = { path = "../codewiki-explore" }
 
 [lints]
 workspace = true

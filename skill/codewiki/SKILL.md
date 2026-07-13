@@ -39,6 +39,7 @@ Keep this file as the compact router. Load bundled references only when needed:
 - `references/workspace-placement.md`: load before writing files when repo-local vs external/personal wiki placement is not explicit.
 - `references/source-extensions.md`: load when adding or using non-Git evidence/change sources.
 - `references/source-skill-template.md`: load when the user wants to create a custom source skill.
+- `references/semantic-exploration.md`: load during init/sync before writing docs, and when Q&A requires source evidence beyond generated docs.
 - `references/init.md`: load when initializing or generating a new CodeWiki.
 - `references/sync.md`: load when updating, refreshing, or reconciling an existing CodeWiki.
 - `references/qa.md`: load when answering questions from existing CodeWiki docs/state.
@@ -122,7 +123,7 @@ This means ordinary Q&A about documented architecture should not activate Octoco
 1. Resolve repository identity from Git and filesystem context.
 2. Detect language, package manager, framework/library, entrypoint, test/build, and docs signals.
 3. Inspect existing docs before source where useful.
-4. Explore source selectively, expanding scope when evidence requires it.
+4. Explore source semantically with bounded file, area, symbol, import/dependency-hint, and evidence snapshots.
 5. Build a WikiPlan with pages, scope, evidence needs, confidence, open questions, and refresh strategy.
 6. Generate `docs/codewiki/**` from evidence and mark uncertainty explicitly.
 7. Write `.codewiki/config.yml` and `.codewiki/plan.yml`.

@@ -96,6 +96,10 @@ Build CodeWiki as a complete repo-native Codex skill for semantic wiki generatio
 - `skill/codewiki/references/workspace-placement.md`
 - `skill/codewiki/references/source-extensions.md`
 - `skill/codewiki/references/source-skill-template.md`
+- `skill/codewiki/references/semantic-exploration.md`
+- `crates/codewiki-explore`
+- `docs/work/tickets/TICKET-012-semantic-exploration-v1.md`
+- `docs/work/designs/DESIGN-012-semantic-exploration-v1.md`
 
 ## Recent Decisions
 
@@ -134,6 +138,7 @@ Build CodeWiki as a complete repo-native Codex skill for semantic wiki generatio
 - Treat Git as the default source and support non-Git sources only through user-provided source extension skills.
 - Write `.codewiki/sources.yml` during initialization with Git as the primary source, including when docs are placed in an external/personal workspace.
 - Provide a copyable source-skill template so users can add Jira/Figma/fix-note style sources as separate skills instead of CodeWiki core providers.
+- Add semantic exploration v1 as a deterministic companion boundary for bounded file, area, symbol, import/dependency-hint, and evidence-reference snapshots.
 
 ## Next Steps
 
@@ -141,7 +146,7 @@ Build CodeWiki as a complete repo-native Codex skill for semantic wiki generatio
 - Write detail design for config/storage and repository exploration before implementation.
 - Implement prompt module behavior in the actual CodeWiki init/sync/Q&A runtime.
 - Add fixture repositories and production-readiness quality tests.
-- Build deeper semantic exploration and claim persistence on top of the current detection/WikiPlan/docs skeleton.
+- Build durable claim persistence and deeper synthesis on top of semantic exploration v1.
 - Build the skill init/sync/Q&A workflows first; use Rust only where deterministic helper behavior is needed.
 - Keep source integrations skill-based: no built-in non-Git providers unless a later design explicitly changes that boundary.
 

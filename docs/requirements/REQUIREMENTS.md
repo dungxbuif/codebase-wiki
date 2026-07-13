@@ -20,9 +20,9 @@ shared_fields: [functional_requirements, non_functional_requirements]
 | ID | Requirement | Priority | Source | Status |
 | --- | --- | --- | --- | --- |
 | REQ-001 | CodeWiki init must automatically explore a repository and generate an evidence-backed WikiPlan without approval gates. | high | User direction | draft |
-| REQ-002 | CodeWiki must dynamically detect languages, libraries, frameworks, package managers, entrypoints, tests, and architecture signals. | high | User direction | draft |
+| REQ-002 | CodeWiki must dynamically detect languages, libraries, frameworks, package managers, entrypoints, tests, and architecture signals. | high | User direction | in_progress |
 | REQ-003 | CodeWiki must preserve reusable config and runtime state across sessions and LLM/model changes. | high | User direction | in_progress |
-| REQ-004 | CodeWiki generated docs must trace claims to source evidence, command evidence, or explicit hypotheses. | high | User direction | draft |
+| REQ-004 | CodeWiki generated docs must trace claims to source evidence, command evidence, or explicit hypotheses. | high | User direction | in_progress |
 | REQ-005 | CodeWiki should start with a minimal tool surface and keep code-intelligence providers optional and replaceable. | medium | User direction | draft |
 | REQ-006 | CodeWiki's Rust helper tooling must remain companion tooling while OpenWiki and deepwiki-open are used as references. | high | User direction | in_progress |
 | REQ-007 | CodeWiki must be installable as a Codex skill from this repository with a single install command. | high | User direction | implemented |

@@ -9,9 +9,9 @@ repository.workspace = true
 [dependencies]
 codewiki-detect = { path = "../codewiki-detect" }
 codewiki-docs = { path = "../codewiki-docs" }
+codewiki-explore = { path = "../codewiki-explore" }
 codewiki-provider = { path = "../codewiki-provider" }
 codewiki-store = { path = "../codewiki-store" }
 
 [lints]
 workspace = true
-
