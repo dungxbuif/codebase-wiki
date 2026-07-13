@@ -21,6 +21,8 @@ trace:
     - docs/work/research/REFERENCE-PROMPTS.md
     - docs/decisions/ADR-0001-codewiki-core-tooling-and-state.md
     - docs/decisions/ADR-0004-runtime-optional-code-intelligence-tools.md
+    - docs/decisions/ADR-0007-uppercase-generated-markdown-filenames.md
+    - docs/decisions/ADR-0008-code-conventions-documentation.md
 ---
 
 # ADR-0005: CodeWiki Generated Docs Structure
@@ -51,36 +53,38 @@ Use this default target-repository structure:
   AGENTS.md
 
 docs/
-  quickstart.md
-  source-map.md
+  QUICKSTART.md
+  SOURCE-MAP.md
   architecture/
-    overview.md
-    decisions.md
+    OVERVIEW.md
+    DECISIONS.md
   domain/
-    overview.md
+    OVERVIEW.md
   workflows/
-    overview.md
+    OVERVIEW.md
   data-models/
-    overview.md
+    OVERVIEW.md
   api/
-    overview.md
+    OVERVIEW.md
   operations/
-    runbook.md
+    RUNBOOK.md
   testing/
-    strategy.md
-  glossary.md
-  open-questions.md
+    STRATEGY.md
+  conventions/
+    OVERVIEW.md
+  GLOSSARY.md
+  OPEN-QUESTIONS.md
   evidence/
     README.md
-    sources.md
-    commands.md
-    claims.md
+    SOURCES.md
+    COMMANDS.md
+    CLAIMS.md
   areas/
     <area-slug>/
-      overview.md
+      OVERVIEW.md
 ```
 
-Only create pages that have real content. `quickstart.md` is always required. Other section pages are canonical slots: if a repository does not have a meaningful data model, public interface, operations story, or testing surface, the page may be omitted and the gap recorded in `quickstart.md` backlog, `open-questions.md`, or `.agents/skills/codewiki/project/plan.yml`.
+ADR-0007 refines this structure by requiring uppercase generated Markdown basenames while directories remain lowercase. ADR-0008 adds the required conventions page. Only create pages that have real content. `QUICKSTART.md` and `conventions/OVERVIEW.md` are always required. Other section pages are canonical slots: if a repository does not have a meaningful data model, public interface, operations story, or testing surface, the page may be omitted and the gap recorded in `QUICKSTART.md` backlog, `OPEN-QUESTIONS.md`, or `.agents/skills/codewiki/project/plan.yml`.
 
 The same structure may live inside the source repository or inside a separate external/personal wiki workspace. In external workspace mode, the source repository remains evidence input and the generated docs/control plane are written to the selected workspace.
 
@@ -98,28 +102,30 @@ The role of each layer is:
 
 ## Canonical Page Semantics
 
-- `quickstart.md`: entrypoint, repository overview, how to use the wiki, major sections, freshness, key source files, future-agent notes, and backlog.
-- `source-map.md`: semantic navigation map: systems, packages, services, apps, bounded contexts, and where to start.
-- `architecture/overview.md`: runtime architecture, major components, dependency direction, architectural constraints, and change risks.
-- `architecture/decisions.md`: durable architectural/product decisions inferred from docs, code, and Git history; link to existing ADRs when present.
-- `domain/overview.md`: product/business/domain concepts and invariants, when the repository has meaningful domain logic.
-- `workflows/overview.md`: important user/system flows, jobs, event flows, lifecycle transitions, and operational sequences.
-- `data-models/overview.md`: persistence, schemas, migrations, models, storage boundaries, and data ownership.
-- `api/overview.md`: public APIs, CLIs, events, RPC, package/library interfaces, integration contracts.
-- `operations/runbook.md`: setup, build/run/deploy, environment, observability, troubleshooting, and runtime risks.
-- `testing/strategy.md`: test strategy, verification commands, fixtures, coverage gaps, and safe-change checks.
-- `glossary.md`: project-specific terms, acronyms, domain language, and aliases.
-- `open-questions.md`: real uncertainties that affect future understanding, sync quality, or safe changes.
+- `QUICKSTART.md`: entrypoint, repository overview, how to use the wiki, major sections, freshness, key source files, future-agent notes, and backlog.
+- `SOURCE-MAP.md`: semantic navigation map: systems, packages, services, apps, bounded contexts, and where to start.
+- `architecture/OVERVIEW.md`: runtime architecture, major components, dependency direction, architectural constraints, and change risks.
+- `architecture/DECISIONS.md`: durable architectural/product decisions inferred from docs, code, and Git history; link to existing ADRs when present.
+- `domain/OVERVIEW.md`: product/business/domain concepts and invariants, when the repository has meaningful domain logic.
+- `workflows/OVERVIEW.md`: important user/system flows, jobs, event flows, lifecycle transitions, and operational sequences.
+- `data-models/OVERVIEW.md`: persistence, schemas, migrations, models, storage boundaries, and data ownership.
+- `api/OVERVIEW.md`: public APIs, CLIs, events, RPC, package/library interfaces, integration contracts.
+- `operations/RUNBOOK.md`: setup, build/run/deploy, environment, observability, troubleshooting, and runtime risks.
+- `testing/STRATEGY.md`: test strategy, verification commands, fixtures, coverage gaps, and safe-change checks.
+- `conventions/OVERVIEW.md`: explicit and inferred project, language, framework/library, and area conventions with scope, evidence, confidence, exceptions, and change impact.
+- `GLOSSARY.md`: project-specific terms, acronyms, domain language, and aliases.
+- `OPEN-QUESTIONS.md`: real uncertainties that affect future understanding, sync quality, or safe changes.
 - `evidence/README.md`: how evidence is recorded and how to verify claims.
-- `evidence/sources.md`: source files, docs, Git history, provider outputs, and inspected artifacts.
-- `evidence/commands.md`: commands run or recommended for verification, with result summaries when available.
-- `evidence/claims.md`: durable claims with evidence links, confidence, status, and owning page.
-- `areas/<area-slug>/overview.md`: optional deeper pages for substantial areas. Do not create stub area pages.
+- `evidence/SOURCES.md`: source files, docs, Git history, provider outputs, and inspected artifacts.
+- `evidence/COMMANDS.md`: commands run or recommended for verification, with result summaries when available.
+- `evidence/CLAIMS.md`: durable claims with evidence links, confidence, status, and owning page.
+- `areas/<area-slug>/OVERVIEW.md`: optional deeper pages for substantial areas. Do not create stub area pages.
 
 ## Generation Rules
 
-- `docs/quickstart.md` must always exist after successful init.
-- Prefer `quickstart.md` sections and broad section overview pages before creating many area pages.
+- `docs/QUICKSTART.md` must always exist after successful init.
+- `docs/conventions/OVERVIEW.md` must always exist after successful init and must describe repository evidence rather than generic ecosystem guidance.
+- Prefer `QUICKSTART.md` sections and broad section overview pages before creating many area pages.
 - Do not create a page just because a page slot exists.
 - Do not split concepts into separate pages until there is enough evidence-backed content to justify the split.
 - Do not create low-value one-file section directories unless the boundary is substantial and likely to grow.
@@ -144,6 +150,6 @@ The role of each layer is:
 - `.agents/skills/codewiki/project/**` becomes the committed control plane, not the primary reading surface.
 - The Rust companion defaults and skill prompt should keep `docs_root: docs`.
 - Future prompt modules must target this structure during init, sync, and Q&A.
-- Large repositories can add `areas/<area-slug>/overview.md` pages, but only when the area is substantial.
+- Large repositories can add `areas/<area-slug>/OVERVIEW.md` pages, but only when the area is substantial.
 - Config may eventually allow custom docs roots, but the default and documented contract remain `docs/**`.
 - Workspace placement is governed by `docs/decisions/ADR-0006-workspace-placement-and-source-extension-skills.md`.

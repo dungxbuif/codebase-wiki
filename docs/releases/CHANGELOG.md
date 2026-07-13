@@ -19,8 +19,13 @@ All notable changes should be recorded here.
 
 ## [Unreleased]
 
+### Changed
+
+- Standardized every CodeWiki-generated Markdown basename as uppercase while keeping wiki directories lowercase, made `docs/QUICKSTART.md` the sole entrypoint, and added marker-aware migration for legacy lowercase generated pages.
+
 ### Added
 
+- Added evidence-derived project/language/framework convention discovery and canonical `docs/conventions/OVERVIEW.md` generation.
 - Initialized repository control harness for CodeWiki.
 - Added OpenWiki and deepwiki-open as reference submodules.
 - Seeded CodeWiki product requirements, roadmap, foundation phase, validation matrix, and first ADR.

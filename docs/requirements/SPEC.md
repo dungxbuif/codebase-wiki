@@ -54,8 +54,11 @@ CodeWiki is a Codex skill that builds and maintains a semantic wiki for software
 - WikiPlan records pages, scope, evidence needs, open questions, confidence, and update strategy.
 - Generated docs live in committed project space under the canonical `docs/**` structure.
 - Generated docs may live in the source repository or in an external/personal wiki workspace confirmed with the user.
-- `docs/quickstart.md` is the required generated entrypoint after successful init.
+- `docs/QUICKSTART.md` is the required generated entrypoint after successful init.
+- Generated Markdown filenames are uppercase while generated wiki directories remain lowercase.
 - Canonical generated docs slots include quickstart, source map, architecture, domain, workflows, data models, API/interfaces, operations, testing, decisions, glossary, open questions, evidence, and optional area pages.
+- Canonical generated docs include `docs/conventions/OVERVIEW.md`, where the LLM discovers project, language, framework/library, and area conventions from explicit configuration plus repeated source evidence.
+- Convention claims distinguish explicit rules, inferred patterns, hypotheses, and exceptions; inferred conventions require multiple independent examples or remain hypotheses.
 - Project config lives in committed `.agents/skills/codewiki/project/config.yml`.
 - Plan/state summaries that should travel with the repo live in committed `.agents/skills/codewiki/project/plan.yml` or equivalent.
 - Target-repo CodeWiki agent guidance lives in committed `.agents/skills/codewiki/project/AGENTS.md`.
@@ -75,6 +78,7 @@ CodeWiki is a Codex skill that builds and maintains a semantic wiki for software
 - Provider boundaries are replaceable.
 - Durable state has migrations from the start.
 - Outputs are evidence-first and auditable.
+- Convention documentation must describe the repository's actual practices rather than generic ecosystem best practices.
 - The tool remains usable after session reset or model change.
 - The generated wiki should be readable by humans and useful to agents.
 
@@ -108,3 +112,4 @@ CodeWiki is a Codex skill that builds and maintains a semantic wiki for software
 - `docs/decisions/ADR-0004-runtime-optional-code-intelligence-tools.md`
 - `docs/decisions/ADR-0005-codewiki-generated-docs-structure.md`
 - `docs/decisions/ADR-0006-workspace-placement-and-source-extension-skills.md`
+- `docs/decisions/ADR-0007-uppercase-generated-markdown-filenames.md`

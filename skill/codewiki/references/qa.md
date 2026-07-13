@@ -36,7 +36,8 @@ Treat stale claims as warnings, not answer facts. If a stale claim is relevant, 
 
 Use concise references such as:
 
-- `docs/architecture/overview.md`
+- `docs/architecture/OVERVIEW.md`
+- `docs/conventions/OVERVIEW.md`
 - `.agents/skills/codewiki/project/plan.yml`
 - `src/foo/bar.ts`
 - `symbol: PaymentService.authorize`

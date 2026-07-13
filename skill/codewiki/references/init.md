@@ -3,6 +3,7 @@
 Load this reference when the user asks to initialize, generate, bootstrap, or create a CodeWiki for a repository.
 
 Also load `docs-structure.md`.
+Also load `conventions.md`.
 Also load `workspace-placement.md` when the output location is not explicit.
 Also load `source-extensions.md` when the user mentions non-Git sources.
 
@@ -35,6 +36,7 @@ Create the initial repo-native semantic wiki without approval gates. The output 
 
 5. Explore source evidence.
    - Start with entrypoints, package/build config, routing/API/schema files, tests/evals, and representative domain files.
+   - Discover project, language, framework/library, and area conventions from explicit config plus repeated code evidence.
    - Expand scope only when evidence requires it.
    - Avoid secrets and generated/vendor/cache directories.
 
@@ -48,10 +50,12 @@ Create the initial repo-native semantic wiki without approval gates. The output 
    - Do not assume CodeWiki has a built-in provider for Jira, Figma, or other systems.
 
 8. Generate docs under `docs/**`.
-   - Always write `index.md`.
+   - Always write `QUICKSTART.md`; do not create `index.md` as a competing entrypoint.
+   - Keep every generated Markdown filename uppercase while keeping directories lowercase.
    - Create only evidence-backed canonical pages.
-   - Use `areas/<area-slug>/overview.md` only for substantial areas.
-   - Mark uncertainties in `open-questions.md` and/or `.agents/skills/codewiki/project/plan.yml`.
+   - Use `areas/<area-slug>/OVERVIEW.md` only for substantial areas.
+   - Always write `conventions/OVERVIEW.md` from the convention discovery contract; record hypotheses and conflicts when evidence is incomplete.
+   - Mark uncertainties in `OPEN-QUESTIONS.md` and/or `.agents/skills/codewiki/project/plan.yml`.
 
 9. Write `.agents/skills/codewiki/project/AGENTS.md`.
    - Explain docs-first Q&A order.
@@ -64,7 +68,7 @@ Create the initial repo-native semantic wiki without approval gates. The output 
 
 ## Output Quality Bar
 
-- A new human can start at `docs/quickstart.md` and understand the repository.
+- A new human can start at `docs/QUICKSTART.md` and understand the repository.
 - A future agent can answer common architecture and change-safety questions from the docs first.
 - Every important claim has evidence or is marked as a hypothesis.
 - The wiki explains why important code exists, not just where files are.

@@ -898,14 +898,19 @@ impl PlannedPage {
     /// Return canonical default page plan.
     pub fn canonical_defaults() -> Vec<Self> {
         [
-            ("docs/quickstart.md", "CodeWiki Quickstart", "quickstart"),
-            ("docs/source-map.md", "Source Map", "source-map"),
+            ("docs/QUICKSTART.md", "CodeWiki Quickstart", "quickstart"),
+            ("docs/SOURCE-MAP.md", "Source Map", "source-map"),
             (
-                "docs/architecture/overview.md",
+                "docs/architecture/OVERVIEW.md",
                 "Architecture",
                 "architecture",
             ),
-            ("docs/evidence/claims.md", "Claims", "evidence.claims"),
+            (
+                "docs/conventions/OVERVIEW.md",
+                "Code Conventions",
+                "conventions",
+            ),
+            ("docs/evidence/CLAIMS.md", "Claims", "evidence.claims"),
         ]
         .into_iter()
         .map(|(path, title, slot)| Self {
@@ -932,6 +937,8 @@ pub fn render_target_agents_md() -> String {
         "4. Query local CodeWiki SQLite facts/evidence/claims when available.",
         "5. Inspect source files and Git history when docs are missing or stale.",
         "6. Activate external runtime tools only when evidence quality requires it.",
+        "",
+        "Before changing code, read `docs/conventions/OVERVIEW.md` and verify that cited convention evidence is current for the affected area.",
         "",
         "Runtime tool policy:",
         "",
@@ -1016,7 +1023,9 @@ mod tests {
 
         assert!(yaml.contains("schema_version: 1"));
         assert!(yaml.contains("claims must cite files"));
-        assert!(yaml.contains("docs/quickstart.md"));
+        assert!(yaml.contains("docs/QUICKSTART.md"));
+        assert!(yaml.contains("docs/conventions/OVERVIEW.md"));
+        assert!(!yaml.contains("docs/quickstart.md"));
         assert!(yaml.contains("confidence_default: source-backed"));
     }
 

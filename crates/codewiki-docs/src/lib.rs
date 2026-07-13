@@ -1,6 +1,7 @@
 //! Generated wiki document boundary.
 
 use codewiki_explore::{ExplorationSnapshot, promote_claims_from_snapshot};
+use std::collections::BTreeMap;
 
 /// Start marker for generated page regions.
 pub const GENERATED_REGION_START: &str = "<!-- codewiki:generated:start -->";
@@ -36,14 +37,15 @@ pub fn render_initial_index(repo_label: &str) -> String {
          ## Start Here\n\n\
          CodeWiki answers should use `docs/**` first, then `.agents/skills/codewiki/project/plan.yml`, \
          `.agents/skills/codewiki/project/AGENTS.md`, local SQLite evidence, source files, Git history, and optional providers only when needed.\n\n\
-         - [Source map](./source-map.md)\n\
-         - [Architecture overview](./architecture/overview.md)\n\
-         - [Domain overview](./domain/overview.md)\n\
-         - [Workflows](./workflows/overview.md)\n\
-         - [Data models](./data-models/overview.md)\n\
-         - [API and interfaces](./api/overview.md)\n\
-         - [Operations runbook](./operations/runbook.md)\n\
-         - [Testing strategy](./testing/strategy.md)\n\n\
+         - [Source map](./SOURCE-MAP.md)\n\
+         - [Architecture overview](./architecture/OVERVIEW.md)\n\
+         - [Domain overview](./domain/OVERVIEW.md)\n\
+         - [Workflows](./workflows/OVERVIEW.md)\n\
+         - [Data models](./data-models/OVERVIEW.md)\n\
+         - [API and interfaces](./api/OVERVIEW.md)\n\
+         - [Operations runbook](./operations/RUNBOOK.md)\n\
+         - [Testing strategy](./testing/STRATEGY.md)\n\n\
+         - [Code conventions](./conventions/OVERVIEW.md)\n\n\
          ## Current Coverage\n\n\
          - Initial control files are present.\n\
          - Durable local SQLite state is initialized.\n\
@@ -82,7 +84,7 @@ fn render_initial_pages_with_exploration(
 
     let pages = vec![
         GeneratedPage {
-            path: "docs/quickstart.md".to_string(),
+            path: "docs/QUICKSTART.md".to_string(),
             content: render_initial_index_with_detection(
                 repo_label,
                 detection_markdown,
@@ -90,63 +92,67 @@ fn render_initial_pages_with_exploration(
             ),
         },
         GeneratedPage {
-            path: "docs/source-map.md".to_string(),
+            path: "docs/SOURCE-MAP.md".to_string(),
             content: render_map_page(detection_markdown, semantic_markdown),
         },
         GeneratedPage {
-            path: "docs/architecture/overview.md".to_string(),
+            path: "docs/architecture/OVERVIEW.md".to_string(),
             content: render_architecture_page(semantic_markdown),
         },
         GeneratedPage {
-            path: "docs/domain/overview.md".to_string(),
+            path: "docs/domain/OVERVIEW.md".to_string(),
             content: render_domains_page(exploration),
         },
         GeneratedPage {
-            path: "docs/workflows/overview.md".to_string(),
+            path: "docs/workflows/OVERVIEW.md".to_string(),
             content: render_workflows_page(exploration),
         },
         GeneratedPage {
-            path: "docs/data-models/overview.md".to_string(),
+            path: "docs/data-models/OVERVIEW.md".to_string(),
             content: render_data_page(exploration),
         },
         GeneratedPage {
-            path: "docs/api/overview.md".to_string(),
+            path: "docs/api/OVERVIEW.md".to_string(),
             content: render_interfaces_page(exploration),
         },
         GeneratedPage {
-            path: "docs/operations/runbook.md".to_string(),
+            path: "docs/operations/RUNBOOK.md".to_string(),
             content: render_operations_page(exploration),
         },
         GeneratedPage {
-            path: "docs/testing/strategy.md".to_string(),
+            path: "docs/testing/STRATEGY.md".to_string(),
             content: render_testing_page(exploration),
         },
         GeneratedPage {
-            path: "docs/architecture/decisions.md".to_string(),
+            path: "docs/conventions/OVERVIEW.md".to_string(),
+            content: render_conventions_page(exploration),
+        },
+        GeneratedPage {
+            path: "docs/architecture/DECISIONS.md".to_string(),
             content: render_decisions_page(exploration),
         },
         GeneratedPage {
-            path: "docs/glossary.md".to_string(),
+            path: "docs/GLOSSARY.md".to_string(),
             content: render_glossary_page(exploration),
         },
         GeneratedPage {
-            path: "docs/open-questions.md".to_string(),
+            path: "docs/OPEN-QUESTIONS.md".to_string(),
             content: render_open_questions_page(exploration),
         },
         GeneratedPage {
             path: "docs/evidence/README.md".to_string(),
-            content: "# Evidence\n\nThis directory records how generated CodeWiki claims are supported.\n\n- `sources.md`: inspected source/docs/provider artifacts.\n- `claims.md`: durable claims and confidence.\n- `commands.md`: verification commands and summarized results.\n".to_string(),
+            content: "# Evidence\n\nThis directory records how generated CodeWiki claims are supported.\n\n- `SOURCES.md`: inspected source/docs/provider artifacts.\n- `CLAIMS.md`: durable claims and confidence.\n- `COMMANDS.md`: verification commands and summarized results.\n".to_string(),
         },
         GeneratedPage {
-            path: "docs/evidence/sources.md".to_string(),
+            path: "docs/evidence/SOURCES.md".to_string(),
             content: render_sources_page(detection_markdown, exploration),
         },
         GeneratedPage {
-            path: "docs/evidence/claims.md".to_string(),
+            path: "docs/evidence/CLAIMS.md".to_string(),
             content: render_claims_page(exploration),
         },
         GeneratedPage {
-            path: "docs/evidence/commands.md".to_string(),
+            path: "docs/evidence/COMMANDS.md".to_string(),
             content: "# Commands\n\nNo repository verification commands have been recorded yet.\n".to_string(),
         },
     ];
@@ -154,7 +160,7 @@ fn render_initial_pages_with_exploration(
     if let Some(snapshot) = exploration {
         for area in &snapshot.areas {
             pages.push(GeneratedPage {
-                path: format!("docs/areas/{}/overview.md", slugify(&area.name)),
+                path: format!("docs/areas/{}/OVERVIEW.md", slugify(&area.name)),
                 content: render_area_page(snapshot, &area.name),
             });
         }
@@ -226,14 +232,14 @@ fn relevant_paths_for_page(page_path: &str, snapshot: &ExplorationSnapshot) -> V
 fn matches_page_focus(page_path: &str, file: &codewiki_explore::ExploredFile) -> bool {
     let lower = file.path.to_lowercase();
     match page_path {
-        "docs/quickstart.md" | "docs/source-map.md" => true,
-        "docs/architecture/overview.md" => {
+        "docs/QUICKSTART.md" | "docs/SOURCE-MAP.md" => true,
+        "docs/architecture/OVERVIEW.md" => {
             file.role.as_str() == "source" || file.role.as_str() == "config"
         }
-        "docs/domain/overview.md" => {
+        "docs/domain/OVERVIEW.md" => {
             lower.contains("domain") || lower.contains("model") || lower.contains("service")
         }
-        "docs/workflows/overview.md" => {
+        "docs/workflows/OVERVIEW.md" => {
             lower.contains("workflow")
                 || lower.contains("job")
                 || lower.contains("event")
@@ -241,28 +247,29 @@ fn matches_page_focus(page_path: &str, file: &codewiki_explore::ExploredFile) ->
                 || lower.contains("app")
                 || lower.contains("index")
         }
-        "docs/data-models/overview.md" => {
+        "docs/data-models/OVERVIEW.md" => {
             lower.contains("schema")
                 || lower.contains("model")
                 || lower.contains("migration")
                 || lower.ends_with(".sql")
                 || lower.contains("data")
         }
-        "docs/api/overview.md" => {
+        "docs/api/OVERVIEW.md" => {
             !file.symbols.is_empty() || lower.contains("api") || lower.contains("route")
         }
-        "docs/operations/runbook.md" => {
+        "docs/operations/RUNBOOK.md" => {
             file.role.as_str() == "config" || file.role.as_str() == "documentation"
         }
-        "docs/testing/strategy.md" => file.role.as_str() == "test",
-        "docs/architecture/decisions.md" => {
+        "docs/testing/STRATEGY.md" => file.role.as_str() == "test",
+        "docs/conventions/OVERVIEW.md" => is_convention_source(file),
+        "docs/architecture/DECISIONS.md" => {
             file.role.as_str() == "documentation" || lower.contains("adr")
         }
-        "docs/glossary.md" | "docs/open-questions.md" => true,
+        "docs/GLOSSARY.md" | "docs/OPEN-QUESTIONS.md" => true,
         path if path.starts_with("docs/areas/") => {
             let area = path
                 .trim_start_matches("docs/areas/")
-                .trim_end_matches("/overview.md");
+                .trim_end_matches("/OVERVIEW.md");
             slugify(file.path.split('/').next().unwrap_or_default()) == area
         }
         _ => true,
@@ -317,7 +324,7 @@ fn render_architecture_page(semantic_markdown: Option<&str>) -> String {
         content.push_str(semantic_markdown);
         content.push_str("\n\n## Interpretation Status\n\n- Component boundaries: evidence-backed hints, not final claims.\n- Dependency direction: lexical import hints only.\n- Runtime behavior: pending deeper exploration and/or provider activation when needed.\n");
     } else {
-        content.push_str("Architecture synthesis is pending. Future sync runs should record runtime components, dependency direction, constraints, and change risks here.\n\n## Current Evidence\n\nSee `evidence/sources.md` and `.agents/skills/codewiki/project/plan.yml` for detected repository signals.\n");
+        content.push_str("Architecture synthesis is pending. Future sync runs should record runtime components, dependency direction, constraints, and change risks here.\n\n## Current Evidence\n\nSee `evidence/SOURCES.md` and `.agents/skills/codewiki/project/plan.yml` for detected repository signals.\n");
     }
     content
 }
@@ -546,6 +553,83 @@ fn render_testing_page(exploration: Option<&ExplorationSnapshot>) -> String {
     out
 }
 
+fn render_conventions_page(exploration: Option<&ExplorationSnapshot>) -> String {
+    let mut out = "# Code Conventions\n\n".to_string();
+    out.push_str("This page records repository-specific conventions discovered from configuration, documentation, repeated code patterns, tests, and explicit exceptions. Ecosystem defaults are not project conventions unless repository evidence shows adoption.\n\n");
+    out.push_str("## Evidence Standard\n\n- `explicit`: enforced or stated by authoritative repository configuration or documentation.\n- `inferred`: supported by at least two independent examples in the inspected scope.\n- `hypothesis`: plausible but supported by one example or incomplete coverage.\n- `exception`: a deliberate or legacy deviation from a supported convention.\n\n");
+
+    let Some(snapshot) = exploration else {
+        out.push_str("## Convention Discovery Status\n\nSemantic exploration has not run yet. Inspect explicit convention sources and representative code before promoting repository conventions.\n");
+        return out;
+    };
+
+    out.push_str("## Explicit Convention Sources\n\n");
+    let explicit_sources: Vec<_> = snapshot
+        .files
+        .iter()
+        .filter(|file| is_convention_source(file))
+        .take(50)
+        .collect();
+    if explicit_sources.is_empty() {
+        out.push_str("- No explicit convention source was detected in the bounded snapshot.\n");
+    } else {
+        for file in explicit_sources {
+            out.push_str(&format!(
+                "- `{}`: {} candidate; evidence `{}`\n",
+                file.path,
+                file.role.as_str(),
+                file.evidence_id
+            ));
+        }
+    }
+
+    out.push_str("\n## Repeated Pattern Candidates\n\nThese candidates require LLM source inspection, counterexample search, scope classification, and confidence before they become conventions.\n\n");
+    let mut dependency_counts: BTreeMap<&str, usize> = BTreeMap::new();
+    for hint in &snapshot.dependency_hints {
+        *dependency_counts.entry(hint.target.as_str()).or_default() += 1;
+    }
+    let repeated_dependencies: Vec<_> = dependency_counts
+        .into_iter()
+        .filter(|(_, count)| *count >= 2)
+        .take(20)
+        .collect();
+    if repeated_dependencies.is_empty() {
+        out.push_str("- No repeated dependency hint reached the two-file candidate threshold.\n");
+    } else {
+        for (target, count) in repeated_dependencies {
+            out.push_str(&format!(
+                "- `{target}` appears in {count} inspected files; verify whether its usage pattern forms a scoped convention.\n"
+            ));
+        }
+    }
+    for area in snapshot.areas.iter().filter(|area| area.file_count >= 2) {
+        out.push_str(&format!(
+            "- Area `{}` contains {} inspected files and may have area-specific conventions requiring representative sampling.\n",
+            area.name, area.file_count
+        ));
+    }
+
+    out.push_str("\n## Required LLM Synthesis\n\nFor each confirmed convention, record scope, classification, evidence paths/symbols or commands, confidence, exceptions, and change impact. Cover project structure, language and framework usage, naming, errors, async/state/data, dependencies, APIs, tests, configuration, security, and documentation only where evidence exists. Do not convert a single example or generic best practice into a repository rule.\n");
+    out
+}
+
+fn is_convention_source(file: &codewiki_explore::ExploredFile) -> bool {
+    let path = file.path.to_lowercase();
+    file.role.as_str() == "config"
+        || file.role.as_str() == "documentation"
+        || file.role.as_str() == "test"
+        || path.contains("lint")
+        || path.contains("format")
+        || path.contains("style")
+        || path.contains("convention")
+        || path.contains("contributing")
+        || path.contains("editorconfig")
+        || path.contains("clippy")
+        || path.contains("eslint")
+        || path.contains("prettier")
+        || path.contains("biome")
+}
+
 fn render_decisions_page(_exploration: Option<&ExplorationSnapshot>) -> String {
     "# Decisions\n\nNo repository-specific architecture decisions have been promoted yet. Record future decisions here only when they are backed by source evidence, existing docs, or explicit human input.\n".to_string()
 }
@@ -649,14 +733,16 @@ mod tests {
         let pages = render_initial_pages("example", "### Languages\n\n- Rust\n");
         let paths: Vec<_> = pages.iter().map(|page| page.path.as_str()).collect();
 
-        assert!(paths.contains(&"docs/quickstart.md"));
-        assert!(paths.contains(&"docs/source-map.md"));
-        assert!(paths.contains(&"docs/architecture/overview.md"));
-        assert!(paths.contains(&"docs/domain/overview.md"));
-        assert!(paths.contains(&"docs/workflows/overview.md"));
-        assert!(paths.contains(&"docs/api/overview.md"));
-        assert!(paths.contains(&"docs/open-questions.md"));
-        assert!(paths.contains(&"docs/evidence/claims.md"));
+        assert!(paths.contains(&"docs/QUICKSTART.md"));
+        assert!(paths.contains(&"docs/SOURCE-MAP.md"));
+        assert!(paths.contains(&"docs/architecture/OVERVIEW.md"));
+        assert!(paths.contains(&"docs/domain/OVERVIEW.md"));
+        assert!(paths.contains(&"docs/workflows/OVERVIEW.md"));
+        assert!(paths.contains(&"docs/api/OVERVIEW.md"));
+        assert!(paths.contains(&"docs/conventions/OVERVIEW.md"));
+        assert!(paths.contains(&"docs/OPEN-QUESTIONS.md"));
+        assert!(paths.contains(&"docs/evidence/CLAIMS.md"));
+        assert!(!paths.iter().any(|path| path.ends_with("quickstart.md")));
         assert!(pages.iter().any(|page| {
             page.content
                 .contains("Full semantic area mapping is pending")
@@ -709,28 +795,33 @@ mod tests {
         let pages = render_semantic_pages("example", "### Languages\n\n- Rust\n", &snapshot);
 
         assert!(pages.iter().any(|page| {
-            page.path == "docs/source-map.md" && page.content.contains("Semantic Structure")
+            page.path == "docs/SOURCE-MAP.md" && page.content.contains("Semantic Structure")
         }));
         assert!(pages.iter().any(|page| {
-            page.path == "docs/evidence/sources.md" && page.content.contains("file:test")
+            page.path == "docs/evidence/SOURCES.md" && page.content.contains("file:test")
         }));
         assert!(pages.iter().any(|page| {
-            page.path == "docs/evidence/claims.md"
+            page.path == "docs/evidence/CLAIMS.md"
                 && page.content.contains("claim:")
                 && page.content.contains("evidence: `file:test`")
         }));
         assert!(pages.iter().any(|page| {
-            page.path == "docs/areas/src/overview.md" && page.content.contains("src/lib.rs")
+            page.path == "docs/areas/src/OVERVIEW.md" && page.content.contains("src/lib.rs")
         }));
         assert!(pages.iter().any(|page| {
-            page.path == "docs/api/overview.md"
+            page.path == "docs/api/OVERVIEW.md"
                 && page
                     .content
                     .contains("<summary>Relevant source files</summary>")
         }));
+        assert!(pages.iter().any(|page| {
+            page.path == "docs/conventions/OVERVIEW.md"
+                && page.content.contains("## Evidence Standard")
+                && page.content.contains("Required LLM Synthesis")
+        }));
         assert!(
             pages.iter().any(|page| {
-                page.path == "docs/api/overview.md" && page.content.contains("build")
+                page.path == "docs/api/OVERVIEW.md" && page.content.contains("build")
             })
         );
     }

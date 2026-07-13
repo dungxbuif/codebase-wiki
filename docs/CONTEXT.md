@@ -19,7 +19,7 @@ shared_fields:
   - active_phase
   - active_ticket
   - active_bug
-updated: 2026-07-13
+updated: 2026-07-14
 ---
 
 # Project Context
@@ -34,9 +34,9 @@ updated: 2026-07-13
 
 - Status: CodeWiki foundation production baseline is complete and verified.
 - Active backlog: `docs/work/BACKLOG.md`
-- Current queue focus: foundation baseline closed; no active implementation queue remains.
+- Current queue focus: no active implementation item; await the next user priority.
 - Active phase: None; `docs/work/phases/PHASE-001-codewiki-foundation.md` is done.
-- Active ticket: None.
+- Active ticket: None; `docs/work/tickets/TICKET-027-code-conventions-documentation.md` is done.
 - Active bug: None.
 
 ## Current Focus
@@ -153,10 +153,10 @@ Maintain CodeWiki as a complete repo-native Codex skill for semantic wiki genera
 - Keep `skill/codewiki/SKILL.md` as a compact router and put mode-specific workflow detail in `skill/codewiki/references/`.
 - Start SQLite durable state with an executor-agnostic migration registry in `codewiki-store`.
 - Resolve local state/cache paths from repository identity and apply migrations through the local `sqlite3` executable.
-- Add `codewiki init [path]` to create target `.agents/skills/codewiki/project/**`, `docs/quickstart.md`, and initialize local SQLite state.
+- Add `codewiki init [path]` to create target `.agents/skills/codewiki/project/**`, `docs/QUICKSTART.md`, and initialize local SQLite state.
 - Add repository detection v1 for languages, package managers, framework hints, entrypoints, tests, and docs signals.
 - Add typed WikiPlan v1, planned pages, confidence, evidence, and claim models.
-- Generate canonical starter docs for `quickstart.md`, `source-map.md`, OpenWiki-style section directories, and evidence pages during init.
+- Generate canonical starter docs for `QUICKSTART.md`, `SOURCE-MAP.md`, OpenWiki-style section directories, and evidence pages during init.
 - Add `codewiki sync [path]` compare/update/no-op skeleton and ignore only generated CodeWiki canonical pages during detection, not all human-authored `docs/**`.
 - Support repo-local and external/personal wiki workspace placement; ask before writing when ambiguous.
 - Treat Git as the default source and support non-Git sources only through user-provided source extension skills.
@@ -172,14 +172,16 @@ Maintain CodeWiki as a complete repo-native Codex skill for semantic wiki genera
 - Reconcile release-readiness docs, roadmap, traceability, README, installer syntax, companion status, and validation evidence.
 - Finalize CodeWiki-specific product/evidence/sync/tool standards and implemented requirement statuses.
 - Add `skill/codewiki/scripts/codewiki-helper.sh`; make the installer build `bin/codewiki` for binary-first companion usage and keep copied Rust companion source as fallback.
-- Copy OpenWiki/DeepWiki docs quality patterns into CodeWiki: `quickstart.md` entrypoint, section directories only for real areas, `## Backlog` instead of stubs, and DeepWiki-style relevant-source-files blocks.
+- Copy OpenWiki/DeepWiki docs quality patterns into CodeWiki: `QUICKSTART.md` entrypoint, section directories only for real areas, `## Backlog` instead of stubs, and DeepWiki-style relevant-source-files blocks.
+- Keep generated wiki directories lowercase and every generated Markdown basename uppercase; safely migrate only marker-owned legacy lowercase pages.
 - Record reference baselines for future updates: OpenWiki `2fb44a876db8cca461ad1c0767931d95495763a3`; deepwiki-open `16f35a0fc0284e99b7963bbf4e8585e9957e2fe1`.
 - Source/change providers currently follow a registry + source-skill contract: Git is default, `.agents/skills/codewiki/project/sources.yml` records sources, and non-Git systems are user-provided source skills that emit evidence packets. CodeWiki core does not bundle OpenWiki-style connectors.
 - CodeWiki no longer creates a root `.codewiki/` directory. The only project-local control plane is `.agents/skills/codewiki/project/`, and the installer preserves that `project/` directory when updating the skill package.
+- Require `docs/conventions/OVERVIEW.md` after init and discover actual repository conventions from explicit configuration plus repeated source evidence, with explicit/inferred/hypothesis/exception classification and documented counterexamples.
 
 ## Next Steps
 
-- No required foundation work remains.
+- Complete TICKET-027 and verify the conventions page, exploration contract, WikiPlan registration, and generated-source exclusion.
 - Optional future work requires a new phase/ticket: publish/push release, marketplace packaging, or advanced provider-backed synthesis.
 - Keep source integrations skill-based unless a later ADR explicitly changes that boundary.
 

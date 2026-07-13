@@ -40,7 +40,7 @@ Regardless of mode, the wiki workspace contains:
   AGENTS.md
   sources.yml
 docs/
-  index.md
+  QUICKSTART.md
   ...
 ```
 

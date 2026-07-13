@@ -16,6 +16,14 @@ These standards apply to CodeWiki product work in addition to the general Harnes
 - Lexical dependency hints are hints until verified by deeper source analysis or provider evidence.
 - Stale claims must not be used as facts without narrow source re-check.
 
+## Convention Quality
+
+- Discover project, language, framework/library, and area conventions from repository configuration, docs, repeated source patterns, tests, commands, or Git evidence.
+- Do not present generic ecosystem best practices as repository conventions without adoption evidence.
+- Label conventions as explicit, inferred, hypothesis, or exception.
+- Require at least two independent examples for an inferred convention; otherwise keep it as a hypothesis.
+- Record scope, evidence, confidence, counterexamples/exceptions, and change impact in `docs/conventions/OVERVIEW.md`.
+
 ## Sync Safety
 
 - Generated docs must use CodeWiki generated-region markers.

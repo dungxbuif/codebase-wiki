@@ -3,6 +3,7 @@
 Load this reference when the user asks to update, refresh, reconcile, or sync an existing CodeWiki after repository changes.
 
 Also load `docs-structure.md`.
+Also load `conventions.md`.
 Also load `workspace-placement.md` when source repo and wiki workspace may differ.
 Also load `source-extensions.md` when `.agents/skills/codewiki/project/sources.yml` contains non-Git sources or the user asks to include them.
 
@@ -13,7 +14,7 @@ Update only the wiki content affected by repository or documentation changes. Pr
 ## Procedure
 
 1. Load current CodeWiki state.
-   - Read `.agents/skills/codewiki/project/config.yml`, `.agents/skills/codewiki/project/plan.yml`, `.agents/skills/codewiki/project/AGENTS.md`, `.agents/skills/codewiki/project/sources.yml`, and `docs/quickstart.md`.
+   - Read `.agents/skills/codewiki/project/config.yml`, `.agents/skills/codewiki/project/plan.yml`, `.agents/skills/codewiki/project/AGENTS.md`, `.agents/skills/codewiki/project/sources.yml`, and `docs/QUICKSTART.md`.
    - Inspect the relevant existing generated pages before editing.
 
 2. Determine change scope.
@@ -30,6 +31,7 @@ Update only the wiki content affected by repository or documentation changes. Pr
    - Read only changed files, directly related dependencies, and affected existing docs.
    - For relevant non-Git sources, invoke or ask for the user-provided source skill and consume its evidence packet.
    - Activate optional providers only when default Git/filesystem evidence is insufficient.
+   - Refresh `conventions/OVERVIEW.md` when formatter/linter/build/test config, framework usage, representative patterns, or documented exceptions change.
 
 5. Update docs surgically.
    - Prefer replacing stale claims over rewriting whole pages.

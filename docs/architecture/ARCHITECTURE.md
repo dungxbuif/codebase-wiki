@@ -23,6 +23,7 @@ CodeWiki is a skill-first Codex system with a small core:
 Repository or source workspace
   -> detection and semantic exploration
   -> evidence and fact model
+  -> repository convention discovery
   -> WikiPlan
   -> generated docs in repo-local or external wiki workspace
   -> sync and Q&A
@@ -78,7 +79,7 @@ CodeWiki uses three distinct wiki workspace layers. The workspace may be the sou
   sources.yml     # primary Git source and optional source skill declarations
 
 docs/
-  quickstart.md   # required generated wiki entrypoint
+  QUICKSTART.md   # required generated wiki entrypoint
   ...             # canonical generated semantic docs
 ```
 
@@ -86,7 +87,7 @@ docs/
 
 Semantic exploration v1 records bounded file, area, symbol, import/dependency-hint, and evidence-reference snapshots. These hints seed generated docs and future claim promotion, but they are not treated as fully resolved architecture without additional evidence.
 
-Claim persistence v1 promotes deterministic source-backed structure claims from semantic snapshots and writes repository, run, file, symbol, evidence, claim, and claim/evidence-link rows into local SQLite. Generated `docs/evidence/claims.md` mirrors those promoted claims so docs-first Q&A and SQLite-backed Q&A can share the same evidence base.
+Claim persistence v1 promotes deterministic source-backed structure claims from semantic snapshots and writes repository, run, file, symbol, evidence, claim, and claim/evidence-link rows into local SQLite. Generated `docs/evidence/CLAIMS.md` mirrors those promoted claims so docs-first Q&A and SQLite-backed Q&A can share the same evidence base.
 
 Staleness v1 compares new semantic file content hashes against existing evidence hashes. When supporting file evidence changes, linked active claims are marked `stale` before new evidence is persisted. Q&A retrieval renders active and stale SQLite claims separately so agents can answer from fresh docs/state first and inspect stale source paths narrowly when needed.
 
@@ -94,9 +95,9 @@ Production fixture coverage now exercises TypeScript app, Python service, and Ru
 
 Generated docs use explicit `<!-- codewiki:generated:start -->` / `<!-- codewiki:generated:end -->` regions. Sync updates only those regions and preserves human-owned text outside them. If an existing changed page has no generated markers, sync preserves it instead of overwriting it.
 
-Synthesis pages are generated for canonical wiki slots including domains, workflows, data, interfaces, operations, testing, decisions, glossary, open questions, and observed areas. These pages are deterministic evidence summaries: when evidence is thin, they record gaps rather than claiming complete understanding.
+Synthesis pages are generated for canonical wiki slots including domains, workflows, data, interfaces, operations, testing, conventions, decisions, glossary, open questions, and observed areas. These pages are deterministic evidence summaries: when evidence is thin, they record gaps rather than claiming complete understanding.
 
-The canonical generated docs slots are defined by `docs/decisions/ADR-0005-codewiki-generated-docs-structure.md`: `quickstart.md`, `source-map.md`, section directories such as `architecture/`, `domain/`, `workflows/`, `data-models/`, `api/`, `operations/`, `testing/`, top-level `glossary.md` and `open-questions.md`, `evidence/**`, and optional `areas/<area-slug>/overview.md`.
+The canonical generated docs slots are defined by ADR-0005 with filename casing refined by ADR-0007 and conventions added by ADR-0008: `QUICKSTART.md`, `SOURCE-MAP.md`, lowercase section directories such as `architecture/`, `domain/`, `workflows/`, `data-models/`, `api/`, `operations/`, `testing/`, and `conventions/`, uppercase Markdown basenames such as `OVERVIEW.md`, top-level `GLOSSARY.md` and `OPEN-QUESTIONS.md`, `evidence/**`, and optional `areas/<area-slug>/OVERVIEW.md`.
 
 ## Runtime Flow
 
@@ -107,6 +108,7 @@ Skill workflow: CodeWiki init
   -> open or create local SQLite state
   -> detect stack and repository shape
   -> explore source/docs with bounded semantic snapshot
+  -> discover explicit and inferred repository conventions with scope and exceptions
   -> persist files, symbols, evidence, and promoted claims in SQLite
   -> mark claims stale when supporting evidence changes
   -> create WikiPlan
@@ -140,3 +142,5 @@ Skill workflow: CodeWiki init
 - `docs/decisions/ADR-0004-runtime-optional-code-intelligence-tools.md`
 - `docs/decisions/ADR-0005-codewiki-generated-docs-structure.md`
 - `docs/decisions/ADR-0006-workspace-placement-and-source-extension-skills.md`
+- `docs/decisions/ADR-0007-uppercase-generated-markdown-filenames.md`
+- `docs/decisions/ADR-0008-code-conventions-documentation.md`

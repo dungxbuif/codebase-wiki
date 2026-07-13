@@ -23,7 +23,7 @@ These are hints until promoted into durable claims. Do not present lexical impor
 5. Write generated docs only from evidence-backed statements or explicit hypotheses.
 6. Promote deterministic claims only when they cite evidence IDs.
 7. Persist reusable evidence/claims in local SQLite when the companion helper is available.
-8. Record gaps in `docs/open-questions.md` or `.agents/skills/codewiki/project/plan.yml`.
+8. Record gaps in `docs/OPEN-QUESTIONS.md` or `.agents/skills/codewiki/project/plan.yml`.
 
 ## Evidence Rules
 
@@ -31,7 +31,7 @@ These are hints until promoted into durable claims. Do not present lexical impor
 - Dependency rows from lexical imports are dependency hints, not resolved runtime behavior.
 - If a file or area was not inspected, say so rather than implying coverage.
 - If optional providers are used, record why default exploration was insufficient.
-- Generated `docs/evidence/claims.md` and SQLite claim/evidence rows should describe the same promoted evidence base.
+- Generated `docs/evidence/CLAIMS.md` and SQLite claim/evidence rows should describe the same promoted evidence base.
 
 ## Provider Escalation
 

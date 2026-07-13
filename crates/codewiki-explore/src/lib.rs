@@ -378,10 +378,15 @@ fn is_generated_docs_path(path: &Path) -> bool {
         || path.starts_with("docs/api")
         || path.starts_with("docs/operations")
         || path.starts_with("docs/testing")
+        || path.starts_with("docs/conventions")
         || matches!(
             path.to_str(),
             Some(
-                "docs/quickstart.md"
+                "docs/QUICKSTART.md"
+                    | "docs/SOURCE-MAP.md"
+                    | "docs/GLOSSARY.md"
+                    | "docs/OPEN-QUESTIONS.md"
+                    | "docs/quickstart.md"
                     | "docs/source-map.md"
                     | "docs/glossary.md"
                     | "docs/open-questions.md"
@@ -733,6 +738,27 @@ mod tests {
         }));
         assert!(claims.iter().all(|claim| claim.id.starts_with("claim:")));
 
+        let _ = fs::remove_dir_all(root);
+    }
+
+    #[test]
+    fn ignores_generated_conventions_page() {
+        let root = temp_path("codewiki-explore-generated-conventions");
+        fs::create_dir_all(root.join("docs/conventions")).expect("mkdir docs");
+        fs::create_dir_all(root.join("src")).expect("mkdir src");
+        fs::write(root.join("docs/conventions/OVERVIEW.md"), "# generated\n")
+            .expect("write generated docs");
+        fs::write(root.join("src/lib.rs"), "pub fn build() {}\n").expect("write source");
+
+        let snapshot = explore_repository(&root).expect("explore");
+
+        assert!(snapshot.files.iter().any(|file| file.path == "src/lib.rs"));
+        assert!(
+            snapshot
+                .files
+                .iter()
+                .all(|file| file.path != "docs/conventions/OVERVIEW.md")
+        );
         let _ = fs::remove_dir_all(root);
     }
 

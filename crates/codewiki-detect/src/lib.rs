@@ -154,10 +154,15 @@ fn is_generated_docs_path(path: &Path) -> bool {
         || path.starts_with("docs/api")
         || path.starts_with("docs/operations")
         || path.starts_with("docs/testing")
+        || path.starts_with("docs/conventions")
         || matches!(
             path.to_str(),
             Some(
-                "docs/quickstart.md"
+                "docs/QUICKSTART.md"
+                    | "docs/SOURCE-MAP.md"
+                    | "docs/GLOSSARY.md"
+                    | "docs/OPEN-QUESTIONS.md"
+                    | "docs/quickstart.md"
                     | "docs/source-map.md"
                     | "docs/glossary.md"
                     | "docs/open-questions.md"
@@ -366,7 +371,8 @@ mod tests {
     #[test]
     fn ignores_generated_codewiki_files() {
         let root = temp_fixture("generated");
-        write_file(&root, "docs/quickstart.md", "# generated\n");
+        write_file(&root, "docs/QUICKSTART.md", "# generated\n");
+        write_file(&root, "docs/conventions/OVERVIEW.md", "# generated\n");
         write_file(
             &root,
             ".agents/skills/codewiki/project/plan.yml",

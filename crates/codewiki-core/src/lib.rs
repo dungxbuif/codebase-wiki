@@ -213,6 +213,7 @@ fn sync_workspace(
         .and_then(|name| name.to_str())
         .unwrap_or("repository");
     let mut actions = Vec::new();
+    migrate_legacy_generated_docs(workspace_root, &mut actions)?;
     write_if_changed(
         &workspace_root.join(".agents/skills/codewiki/project/plan.yml"),
         &render_plan_with_detection(&detection),
@@ -299,6 +300,7 @@ pub fn init_workspace(
     )?;
 
     let mut actions = Vec::new();
+    migrate_legacy_generated_docs(workspace_root, &mut actions)?;
     write_if_missing(
         &workspace_root.join(".agents/skills/codewiki/project/config.yml"),
         &CodeWikiConfig::default().to_yaml(),
@@ -415,6 +417,156 @@ fn merge_generated_region(existing: &str, generated: &str) -> Option<String> {
     merged.push('\n');
     merged.push_str(&existing[end..]);
     Some(merged)
+}
+
+const LEGACY_GENERATED_DOC_PATHS: &[(&str, &str)] = &[
+    ("docs/quickstart.md", "docs/QUICKSTART.md"),
+    ("docs/source-map.md", "docs/SOURCE-MAP.md"),
+    (
+        "docs/architecture/overview.md",
+        "docs/architecture/OVERVIEW.md",
+    ),
+    (
+        "docs/architecture/decisions.md",
+        "docs/architecture/DECISIONS.md",
+    ),
+    ("docs/domain/overview.md", "docs/domain/OVERVIEW.md"),
+    ("docs/workflows/overview.md", "docs/workflows/OVERVIEW.md"),
+    (
+        "docs/data-models/overview.md",
+        "docs/data-models/OVERVIEW.md",
+    ),
+    ("docs/api/overview.md", "docs/api/OVERVIEW.md"),
+    ("docs/operations/runbook.md", "docs/operations/RUNBOOK.md"),
+    ("docs/testing/strategy.md", "docs/testing/STRATEGY.md"),
+    ("docs/glossary.md", "docs/GLOSSARY.md"),
+    ("docs/open-questions.md", "docs/OPEN-QUESTIONS.md"),
+    ("docs/evidence/sources.md", "docs/evidence/SOURCES.md"),
+    ("docs/evidence/commands.md", "docs/evidence/COMMANDS.md"),
+    ("docs/evidence/claims.md", "docs/evidence/CLAIMS.md"),
+];
+
+fn migrate_legacy_generated_docs(
+    workspace_root: &Path,
+    actions: &mut Vec<String>,
+) -> Result<(), String> {
+    for (legacy_relative, canonical_relative) in LEGACY_GENERATED_DOC_PATHS {
+        let legacy = workspace_root.join(legacy_relative);
+        let canonical = workspace_root.join(canonical_relative);
+        migrate_legacy_generated_page(&legacy, &canonical, actions)?;
+    }
+
+    let areas_root = workspace_root.join("docs/areas");
+    if areas_root.exists() {
+        let entries = fs::read_dir(&areas_root)
+            .map_err(|error| format!("failed to inspect `{}`: {error}", areas_root.display()))?;
+        for entry in entries {
+            let entry = entry.map_err(|error| {
+                format!("failed to inspect `{}`: {error}", areas_root.display())
+            })?;
+            if entry
+                .file_type()
+                .map_err(|error| {
+                    format!("failed to inspect `{}`: {error}", entry.path().display())
+                })?
+                .is_dir()
+            {
+                migrate_legacy_generated_page(
+                    &entry.path().join("overview.md"),
+                    &entry.path().join("OVERVIEW.md"),
+                    actions,
+                )?;
+            }
+        }
+    }
+    Ok(())
+}
+
+fn migrate_legacy_generated_page(
+    legacy: &Path,
+    canonical: &Path,
+    actions: &mut Vec<String>,
+) -> Result<(), String> {
+    if !has_exact_file_name(legacy)? || has_exact_file_name(canonical)? {
+        return Ok(());
+    }
+
+    let content = fs::read_to_string(legacy)
+        .map_err(|error| format!("failed to read `{}`: {error}", legacy.display()))?;
+    if !content.contains(GENERATED_REGION_START) || !content.contains(GENERATED_REGION_END) {
+        actions.push(format!(
+            "preserved-human-owned-legacy-name: {}",
+            legacy.display()
+        ));
+        return Ok(());
+    }
+
+    if let Some(parent) = canonical.parent() {
+        fs::create_dir_all(parent)
+            .map_err(|error| format!("failed to create `{}`: {error}", parent.display()))?;
+    }
+    rename_case_safely(legacy, canonical)?;
+    actions.push(format!(
+        "migrated-generated-page: {} -> {}",
+        legacy.display(),
+        canonical.display()
+    ));
+    Ok(())
+}
+
+fn has_exact_file_name(path: &Path) -> Result<bool, String> {
+    let Some(parent) = path.parent() else {
+        return Ok(false);
+    };
+    let Some(expected) = path.file_name() else {
+        return Ok(false);
+    };
+    if !parent.exists() {
+        return Ok(false);
+    }
+    let entries = fs::read_dir(parent)
+        .map_err(|error| format!("failed to inspect `{}`: {error}", parent.display()))?;
+    for entry in entries {
+        let entry =
+            entry.map_err(|error| format!("failed to inspect `{}`: {error}", parent.display()))?;
+        if entry.file_name() == expected {
+            return Ok(true);
+        }
+    }
+    Ok(false)
+}
+
+fn rename_case_safely(source: &Path, target: &Path) -> Result<(), String> {
+    let parent = source
+        .parent()
+        .ok_or_else(|| format!("legacy page has no parent: {}", source.display()))?;
+    let file_name = source
+        .file_name()
+        .and_then(|name| name.to_str())
+        .unwrap_or("page.md");
+    let temporary = parent.join(format!(".codewiki-case-migration-{file_name}"));
+    if has_exact_file_name(&temporary)? {
+        return Err(format!(
+            "cannot migrate `{}` because temporary path already exists: {}",
+            source.display(),
+            temporary.display()
+        ));
+    }
+    fs::rename(source, &temporary).map_err(|error| {
+        format!(
+            "failed to stage legacy page `{}` for migration: {error}",
+            source.display()
+        )
+    })?;
+    if let Err(error) = fs::rename(&temporary, target) {
+        let _ = fs::rename(&temporary, source);
+        return Err(format!(
+            "failed to migrate legacy page `{}` to `{}`: {error}",
+            source.display(),
+            target.display()
+        ));
+    }
+    Ok(())
 }
 
 fn resolve_repo_path(cwd: &Path, path: &str) -> PathBuf {
@@ -548,10 +700,12 @@ mod tests {
             repo.join(".agents/skills/codewiki/project/sources.yml")
                 .exists()
         );
-        assert!(repo.join("docs/quickstart.md").exists());
-        assert!(repo.join("docs/source-map.md").exists());
-        assert!(repo.join("docs/architecture/overview.md").exists());
-        assert!(repo.join("docs/evidence/claims.md").exists());
+        assert!(repo.join("docs/QUICKSTART.md").exists());
+        assert!(repo.join("docs/SOURCE-MAP.md").exists());
+        assert!(repo.join("docs/architecture/OVERVIEW.md").exists());
+        assert!(repo.join("docs/conventions/OVERVIEW.md").exists());
+        assert!(repo.join("docs/evidence/CLAIMS.md").exists());
+        assert!(!has_exact_file_name(&repo.join("docs/quickstart.md")).expect("inspect legacy"));
         assert!(output.stdout.contains("migration_version: 1"));
         assert!(output.stdout.contains("claims_persisted:"));
         assert!(
@@ -560,12 +714,12 @@ mod tests {
                 .contains("detected:")
         );
         assert!(
-            fs::read_to_string(repo.join("docs/evidence/claims.md"))
+            fs::read_to_string(repo.join("docs/evidence/CLAIMS.md"))
                 .expect("read claims")
                 .contains("claim:")
         );
         assert!(
-            fs::read_to_string(repo.join("docs/source-map.md"))
+            fs::read_to_string(repo.join("docs/SOURCE-MAP.md"))
                 .expect("read map")
                 .contains("Semantic Structure")
         );
@@ -640,9 +794,9 @@ mod tests {
         assert!(no_op.stdout.contains("no-op"));
         assert!(no_op.stdout.contains("claims_persisted:"));
 
-        let existing_map = fs::read_to_string(repo.join("docs/source-map.md")).expect("map");
+        let existing_map = fs::read_to_string(repo.join("docs/SOURCE-MAP.md")).expect("map");
         fs::write(
-            repo.join("docs/source-map.md"),
+            repo.join("docs/SOURCE-MAP.md"),
             format!("human preface\n{existing_map}\nhuman notes\n"),
         )
         .expect("edit map");
@@ -650,7 +804,7 @@ mod tests {
         let synced = run_with_context(["sync"], &context);
         assert_eq!(synced.exit_code, 0, "{}", synced.stderr);
         assert!(synced.stdout.contains("updated-generated-region:"));
-        let map = fs::read_to_string(repo.join("docs/source-map.md")).expect("read map");
+        let map = fs::read_to_string(repo.join("docs/SOURCE-MAP.md")).expect("read map");
         assert!(map.contains("human preface"));
         assert!(map.contains("human notes"));
         assert!(map.contains("Repository Map"));
@@ -698,14 +852,15 @@ mod tests {
                 .join(".agents/skills/codewiki/project/sources.yml")
                 .exists()
         );
-        assert!(workspace.join("docs/quickstart.md").exists());
+        assert!(workspace.join("docs/QUICKSTART.md").exists());
+        assert!(workspace.join("docs/conventions/OVERVIEW.md").exists());
         assert!(
-            fs::read_to_string(workspace.join("docs/source-map.md"))
+            fs::read_to_string(workspace.join("docs/SOURCE-MAP.md"))
                 .expect("read map")
                 .contains("src/main.rs")
         );
         assert!(
-            fs::read_to_string(workspace.join("docs/evidence/claims.md"))
+            fs::read_to_string(workspace.join("docs/evidence/CLAIMS.md"))
                 .expect("read claims")
                 .contains("claim:")
         );
@@ -714,7 +869,7 @@ mod tests {
                 .join(".agents/skills/codewiki/project/config.yml")
                 .exists()
         );
-        assert!(!source.join("docs/quickstart.md").exists());
+        assert!(!source.join("docs/QUICKSTART.md").exists());
         assert!(
             fs::read_to_string(workspace.join(".agents/skills/codewiki/project/sources.yml"))
                 .expect("read sources")
@@ -722,6 +877,40 @@ mod tests {
         );
 
         let _ = fs::remove_dir_all(base);
+    }
+
+    #[test]
+    fn migrates_only_marker_owned_lowercase_generated_pages() {
+        let root = temp_path("codewiki-core-uppercase-migration");
+        fs::create_dir_all(root.join("docs/areas/client")).expect("mkdir docs");
+        let generated =
+            format!("{GENERATED_REGION_START}\n# Legacy generated\n{GENERATED_REGION_END}\n");
+        fs::write(root.join("docs/quickstart.md"), &generated).expect("write legacy quickstart");
+        fs::write(root.join("docs/areas/client/overview.md"), &generated)
+            .expect("write legacy area");
+        fs::write(root.join("docs/glossary.md"), "# Human glossary\n")
+            .expect("write human legacy page");
+        let mut actions = Vec::new();
+
+        migrate_legacy_generated_docs(&root, &mut actions).expect("migrate pages");
+
+        assert!(root.join("docs/QUICKSTART.md").exists());
+        assert!(!has_exact_file_name(&root.join("docs/quickstart.md")).expect("inspect legacy"));
+        assert!(root.join("docs/areas/client/OVERVIEW.md").exists());
+        assert!(root.join("docs/glossary.md").exists());
+        assert!(!has_exact_file_name(&root.join("docs/GLOSSARY.md")).expect("inspect canonical"));
+        assert!(
+            actions
+                .iter()
+                .any(|action| action.starts_with("migrated-generated-page:"))
+        );
+        assert!(
+            actions
+                .iter()
+                .any(|action| action.starts_with("preserved-human-owned-legacy-name:"))
+        );
+
+        let _ = fs::remove_dir_all(root);
     }
 
     fn find_state_db(context: &RuntimeContext) -> PathBuf {
