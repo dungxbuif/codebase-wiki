@@ -101,7 +101,7 @@ Create the complete foundation for CodeWiki as a repo-native skill that can init
 | TICKET-015 | ticket | Production fixtures eval suite | done | `docs/work/tickets/TICKET-015-production-fixtures-eval-suite.md` |
 | TICKET-016 | ticket | Sync safety generated regions | done | `docs/work/tickets/TICKET-016-sync-safety-generated-regions.md` |
 | TICKET-017 | ticket | Synthesis pages v1 | done | `docs/work/tickets/TICKET-017-synthesis-pages-v1.md` |
-| TBD | ticket | Implement docs generation and sync loop | draft | TBD |
+| TICKET-018 | ticket | Release readiness | done | `docs/work/tickets/TICKET-018-release-readiness.md` |
 
 ## Dependencies
 
@@ -148,4 +148,4 @@ Create the complete foundation for CodeWiki as a repo-native skill that can init
 
 ## Completion Summary
 
-Not complete. Foundation planning is ready for ticket creation and implementation.
+Foundation scope is complete for the current production baseline: skill packaging, installer, workspace placement, source registry, dynamic detection, semantic exploration, docs generation, durable SQLite state, claim/evidence persistence, staleness, Q&A context, sync safety, production fixtures, synthesis pages, and release-readiness reconciliation are implemented and verified.

@@ -1,6 +1,6 @@
 //! Durable state and cache boundary for CodeWiki.
 
-use codewiki_explore::{ExplorationSnapshot, FileRole, promote_claims_from_snapshot};
+use codewiki_explore::{ExplorationSnapshot, promote_claims_from_snapshot};
 use std::fs;
 use std::io::Write as _;
 use std::path::{Path, PathBuf};
@@ -1279,7 +1279,7 @@ mod tests {
             files: vec![codewiki_explore::ExploredFile {
                 path: "src/lib.rs".to_string(),
                 language: Some("Rust".to_string()),
-                role: FileRole::Source,
+                role: codewiki_explore::FileRole::Source,
                 line_count,
                 content_hash: content_hash.to_string(),
                 symbols,
@@ -1290,7 +1290,7 @@ mod tests {
                 name: "src".to_string(),
                 file_count: 1,
                 symbol_count,
-                roles: vec![FileRole::Source],
+                roles: vec![codewiki_explore::FileRole::Source],
             }],
             dependency_hints: Vec::new(),
             evidence: vec![codewiki_explore::EvidenceRef {

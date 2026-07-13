@@ -32,16 +32,16 @@ updated: 2026-07-13
 
 ## Current Status
 
-- Status: CodeWiki repository initialized with Harness control docs, reference submodules, a verified Rust companion-tool scaffold, and a skill package installer.
+- Status: CodeWiki foundation production baseline is complete and verified.
 - Active backlog: `docs/work/BACKLOG.md`
-- Current queue focus: `BL-001` through `BL-005`; `BL-007` and `BL-008` completed
+- Current queue focus: foundation baseline complete; future work is release distribution or advanced provider-backed synthesis.
 - Active phase: `docs/work/phases/PHASE-001-codewiki-foundation.md`
 - Active ticket: None.
 - Active bug: None.
 
 ## Current Focus
 
-Build CodeWiki as a complete repo-native Codex skill for semantic wiki generation, sync, and docs-first Q&A across arbitrary repositories.
+Maintain CodeWiki as a complete repo-native Codex skill for semantic wiki generation, sync, and docs-first Q&A across arbitrary repositories.
 
 ## Recently Touched Areas
 
@@ -114,6 +114,10 @@ Build CodeWiki as a complete repo-native Codex skill for semantic wiki generatio
 - `docs/work/tickets/TICKET-017-synthesis-pages-v1.md`
 - `docs/work/designs/DESIGN-017-synthesis-pages-v1.md`
 - `skill/codewiki/references/docs-structure.md`
+- `docs/work/tickets/TICKET-018-release-readiness.md`
+- `docs/work/ROADMAP.md`
+- `docs/work/TRACEABILITY.md`
+- `README.md`
 
 ## Recent Decisions
 
@@ -158,6 +162,7 @@ Build CodeWiki as a complete repo-native Codex skill for semantic wiki generatio
 - Verify init, docs, semantic claims, SQLite Q&A context, and stale sync across TypeScript, Python, and Rust-shaped production fixtures.
 - Add generated-region markers and sync merge behavior so human-owned text around generated docs is preserved.
 - Generate canonical synthesis pages and area pages from semantic evidence while recording gaps explicitly.
+- Reconcile release-readiness docs, roadmap, traceability, README, installer syntax, companion status, and validation evidence.
 
 ## Next Steps
 
@@ -165,7 +170,7 @@ Build CodeWiki as a complete repo-native Codex skill for semantic wiki generatio
 - Write detail design for config/storage and repository exploration before implementation.
 - Implement prompt module behavior in the actual CodeWiki init/sync/Q&A runtime.
 - Add fixture repositories and production-readiness quality tests.
-- Finalize skill runtime polish and release readiness checks.
+- Optional next work: push to remote, tag/release, or add advanced provider-backed synthesis.
 - Build the skill init/sync/Q&A workflows first; use Rust only where deterministic helper behavior is needed.
 - Keep source integrations skill-based: no built-in non-Git providers unless a later design explicitly changes that boundary.
 

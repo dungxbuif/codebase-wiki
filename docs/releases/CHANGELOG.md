@@ -47,3 +47,4 @@ All notable changes should be recorded here.
 - Added production fixture integration tests for TypeScript, Python, and Rust-shaped repositories.
 - Added generated-region markers so sync can preserve human-owned documentation edits.
 - Added canonical synthesis pages and area pages generated from semantic evidence.
+- Reconciled README, roadmap, traceability, validation, and release-readiness docs for the completed CodeWiki foundation baseline.

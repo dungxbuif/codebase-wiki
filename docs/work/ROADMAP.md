@@ -34,7 +34,7 @@ Use this file to group work into milestones or major phases.
 
 | Milestone | Goal | Status | Phase Files |
 | --- | --- | --- | --- |
-| M0 | Establish repository control harness and reference submodules | active | [PHASE-001-codewiki-foundation.md](phases/PHASE-001-codewiki-foundation.md) |
-| M1 | Implement CodeWiki foundation: config, storage, detection, WikiPlan, and docs generation | planned | TBD |
-| M2 | Implement sync, stale evidence detection, and docs-first Q&A | planned | TBD |
-| M3 | Package CodeWiki as a reusable Codex skill for arbitrary repositories | planned | TBD |
+| M0 | Establish repository control harness and reference submodules | done | [PHASE-001-codewiki-foundation.md](phases/PHASE-001-codewiki-foundation.md) |
+| M1 | Implement CodeWiki foundation: config, storage, detection, WikiPlan, and docs generation | done | [PHASE-001-codewiki-foundation.md](phases/PHASE-001-codewiki-foundation.md) |
+| M2 | Implement sync, stale evidence detection, and docs-first Q&A context | done | [PHASE-001-codewiki-foundation.md](phases/PHASE-001-codewiki-foundation.md) |
+| M3 | Package CodeWiki as a reusable Codex skill for arbitrary repositories | done | [PHASE-001-codewiki-foundation.md](phases/PHASE-001-codewiki-foundation.md) |

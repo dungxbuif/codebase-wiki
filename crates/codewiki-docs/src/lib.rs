@@ -271,8 +271,7 @@ fn render_claims_page(exploration: Option<&ExplorationSnapshot>) -> String {
 }
 
 fn render_domains_page(exploration: Option<&ExplorationSnapshot>) -> String {
-    let mut content = "# Domains\n\n";
-    let mut out = content.to_string();
+    let mut out = "# Domains\n\n".to_string();
     match exploration {
         Some(snapshot) if !snapshot.areas.is_empty() => {
             out.push_str("Top-level repository areas are treated as initial domain or subsystem candidates. These are structural hints until promoted by deeper analysis.\n\n");

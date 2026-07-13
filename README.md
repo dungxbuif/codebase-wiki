@@ -1,12 +1,12 @@
 # CodeWiki
 
-CodeWiki is planned as a repo-native Codex skill for generating, syncing, and querying a high-quality semantic wiki for any software repository.
+CodeWiki is a repo-native Codex skill for generating, syncing, and querying a high-quality semantic wiki for any software repository.
 
 The intended shape is not a thin documentation generator. CodeWiki should explore a repository, detect languages/frameworks/libraries dynamically, build an evidence-backed wiki plan, generate durable docs, and preserve reusable local state across sessions, model changes, and future updates.
 
 ## Current Repository State
 
-This repository currently contains the project control harness and upstream reference submodules:
+This repository contains the project control harness, installable CodeWiki skill, upstream reference submodules, and Rust companion helpers:
 
 - `references/openwiki`: LangChain OpenWiki reference implementation.
 - `references/deepwiki-open`: AsyncFuncAI DeepWiki Open reference implementation.
@@ -14,6 +14,18 @@ This repository currently contains the project control harness and upstream refe
 - `scripts/install-codewiki-skill.sh`: repository-based skill installer.
 - `docs/`: Harness-based SDLC control surface for requirements, phases, decisions, validation, and durable project context.
 - `crates/`: Rust companion tooling for deterministic local operations.
+
+Implemented foundation capabilities:
+
+- skill-first workflow and repository installer;
+- repo-local or external/personal wiki workspace placement;
+- Git as the default source plus user-authored source skill extension template;
+- dynamic repository detection without core framework adapters;
+- semantic exploration snapshots for files, areas, symbols, imports, evidence, and claims;
+- SQLite durable state for files, symbols, evidence, claims, claim/evidence links, stale claims, and Q&A context;
+- generated `docs/codewiki/**` pages for canonical wiki slots and observed areas;
+- sync safety with generated-region markers that preserve human edits;
+- production fixture tests for TypeScript, Python, and Rust-shaped repositories.
 
 ## Install Skill
 
