@@ -33,7 +33,7 @@ Implemented foundation capabilities:
 After this repository is pushed, install the skill with:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/dungxbuif/harness/main/scripts/install-codewiki-skill.sh | bash
+curl -fsSL https://raw.githubusercontent.com/dungxbuif/codebase-wiki/master/scripts/install-codewiki-skill.sh | bash
 ```
 
 From a local checkout, install with:
