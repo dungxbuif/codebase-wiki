@@ -44,7 +44,8 @@ cleanup() {
 trap cleanup EXIT
 
 SOURCE_DIR=""
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd || true)"
+SCRIPT_PATH="${BASH_SOURCE[0]:-$0}"
+SCRIPT_DIR="$(cd "$(dirname "$SCRIPT_PATH")" >/dev/null 2>&1 && pwd || true)"
 if [[ -n "${CODEWIKI_SOURCE_DIR:-}" ]]; then
   SOURCE_DIR="$CODEWIKI_SOURCE_DIR"
 elif [[ -f "$SCRIPT_DIR/../skill/codewiki/SKILL.md" ]]; then
