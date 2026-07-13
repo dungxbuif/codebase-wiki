@@ -1,6 +1,6 @@
 //! Generated wiki document boundary.
 
-use codewiki_explore::ExplorationSnapshot;
+use codewiki_explore::{ExplorationSnapshot, promote_claims_from_snapshot};
 
 /// Planned generated docs layout.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -91,7 +91,7 @@ fn render_initial_pages_with_exploration(
         },
         GeneratedPage {
             path: "docs/codewiki/evidence/claims.md".to_string(),
-            content: "# Claims\n\nNo durable semantic claims have been promoted yet beyond initial repository detection. Future claims must include evidence and confidence.\n".to_string(),
+            content: render_claims_page(exploration),
         },
         GeneratedPage {
             path: "docs/codewiki/evidence/commands.md".to_string(),
@@ -181,6 +181,33 @@ fn render_sources_page(
     content
 }
 
+fn render_claims_page(exploration: Option<&ExplorationSnapshot>) -> String {
+    let mut content = "# Claims\n\n".to_string();
+    match exploration {
+        Some(snapshot) => {
+            let claims = promote_claims_from_snapshot(snapshot);
+            content.push_str("These deterministic claims were promoted from semantic exploration evidence. They are source-backed structure claims, not complete architecture conclusions.\n\n");
+            if claims.is_empty() {
+                content.push_str("No durable semantic claims have been promoted yet.\n");
+                return content;
+            }
+            for claim in claims {
+                content.push_str(&format!(
+                    "- `{}` [{}]: {}\n",
+                    claim.id, claim.confidence, claim.statement
+                ));
+                for evidence_id in claim.evidence_ids {
+                    content.push_str(&format!("  - evidence: `{evidence_id}`\n"));
+                }
+            }
+        }
+        None => {
+            content.push_str("No durable semantic claims have been promoted yet beyond initial repository detection. Future claims must include evidence and confidence.\n");
+        }
+    }
+    content
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -253,6 +280,11 @@ mod tests {
         }));
         assert!(pages.iter().any(|page| {
             page.path == "docs/codewiki/evidence/sources.md" && page.content.contains("file:test")
+        }));
+        assert!(pages.iter().any(|page| {
+            page.path == "docs/codewiki/evidence/claims.md"
+                && page.content.contains("claim:")
+                && page.content.contains("evidence: `file:test`")
         }));
     }
 }

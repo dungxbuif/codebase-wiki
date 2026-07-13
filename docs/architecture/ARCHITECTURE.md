@@ -45,7 +45,7 @@ The core should not hard-code language/framework adapters. It should combine rep
 | Core engine | Parse commands and orchestrate internal boundaries | `crates/codewiki-core` | Owns current `help`, `version`, and `status` behavior |
 | Repo detector | Detect languages, frameworks, package managers, entrypoints, test/build tools, and docs | `crates/codewiki-detect` | Dynamic detection only; no core adapters |
 | Explorer | Select files/symbols/docs to inspect and record evidence | `crates/codewiki-explore` | Deterministic semantic snapshot v1; lexical hints are evidence, not final claims |
-| Evidence store | Persist facts, hypotheses, claims, and source references | `crates/codewiki-store` | SQLite local runtime state planned |
+| Evidence store | Persist facts, hypotheses, claims, source references, and claim/evidence links | `crates/codewiki-store` | SQLite local runtime state with migration and persistence helpers |
 | WikiPlan generator | Produce page plan, scope, confidence, open questions, and refresh strategy | TBD | Committed summary planned under `.codewiki/` |
 | Doc generator | Write human/agent-readable wiki docs | `crates/codewiki-docs` | Canonical generated docs root is `docs/codewiki/**` |
 | Sync engine | Detect stale docs and update safely | TBD | Must respect human-owned edits |
@@ -87,6 +87,8 @@ docs/
 
 Semantic exploration v1 records bounded file, area, symbol, import/dependency-hint, and evidence-reference snapshots. These hints seed generated docs and future claim promotion, but they are not treated as fully resolved architecture without additional evidence.
 
+Claim persistence v1 promotes deterministic source-backed structure claims from semantic snapshots and writes repository, run, file, symbol, evidence, claim, and claim/evidence-link rows into local SQLite. Generated `docs/codewiki/evidence/claims.md` mirrors those promoted claims so docs-first Q&A and SQLite-backed Q&A can share the same evidence base.
+
 The canonical generated docs slots are defined by `docs/decisions/ADR-0005-codewiki-generated-docs-structure.md`: `index.md`, `map.md`, `architecture.md`, `domains.md`, `workflows.md`, `data.md`, `interfaces.md`, `operations.md`, `testing.md`, `decisions.md`, `glossary.md`, `open-questions.md`, `evidence/**`, and optional `areas/<area-slug>.md`.
 
 ## Runtime Flow
@@ -98,6 +100,7 @@ Skill workflow: CodeWiki init
   -> open or create local SQLite state
   -> detect stack and repository shape
   -> explore source/docs with bounded semantic snapshot
+  -> persist files, symbols, evidence, and promoted claims in SQLite
   -> create WikiPlan
   -> generate docs
   -> write checkpoints for future sync

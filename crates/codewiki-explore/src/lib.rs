@@ -88,6 +88,65 @@ impl ExplorationSnapshot {
     }
 }
 
+/// Deterministic claim promoted from a semantic snapshot.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct PromotedClaim {
+    /// Stable claim id.
+    pub id: String,
+    /// Human-readable claim statement.
+    pub statement: String,
+    /// Confidence label.
+    pub confidence: String,
+    /// Evidence ids supporting the claim.
+    pub evidence_ids: Vec<String>,
+}
+
+/// Promote deterministic source-backed claims from a semantic snapshot.
+pub fn promote_claims_from_snapshot(snapshot: &ExplorationSnapshot) -> Vec<PromotedClaim> {
+    let mut claims = Vec::new();
+
+    for area in &snapshot.areas {
+        let evidence_ids: Vec<_> = snapshot
+            .files
+            .iter()
+            .filter(|file| file.path.split('/').next() == Some(area.name.as_str()))
+            .take(10)
+            .map(|file| file.evidence_id.clone())
+            .collect();
+        if evidence_ids.is_empty() {
+            continue;
+        }
+        let statement = format!(
+            "Area `{}` contains {} inspected files and {} discovered symbols.",
+            area.name, area.file_count, area.symbol_count
+        );
+        claims.push(PromotedClaim {
+            id: stable_claim_id(&statement),
+            statement,
+            confidence: "source-backed".to_string(),
+            evidence_ids,
+        });
+    }
+
+    for file in snapshot.files.iter().take(100) {
+        let statement = format!(
+            "File `{}` is a {} file with {} discovered symbols and {} import/dependency hints.",
+            file.path,
+            file.role.as_str(),
+            file.symbols.len(),
+            file.imports.len(),
+        );
+        claims.push(PromotedClaim {
+            id: stable_claim_id(&statement),
+            statement,
+            confidence: "source-backed".to_string(),
+            evidence_ids: vec![file.evidence_id.clone()],
+        });
+    }
+
+    claims
+}
+
 /// A file inspected during semantic exploration.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ExploredFile {
@@ -549,6 +608,10 @@ fn evidence_id_for_path(path: &str) -> String {
     format!("file:{:016x}", fnv1a64(path.as_bytes()))
 }
 
+fn stable_claim_id(statement: &str) -> String {
+    format!("claim:{:016x}", fnv1a64(statement.as_bytes()))
+}
+
 fn normalize_path(path: &Path) -> String {
     path.components()
         .map(|component| component.as_os_str().to_string_lossy())
@@ -618,6 +681,28 @@ mod tests {
                 && file.symbols.iter().any(|symbol| symbol.name == "AppConfig")
         }));
         assert!(snapshot.to_markdown().contains("Dependency Hints"));
+
+        let _ = fs::remove_dir_all(root);
+    }
+
+    #[test]
+    fn promotes_deterministic_claims_from_snapshot() {
+        let root = temp_path("codewiki-explore-claims");
+        fs::create_dir_all(root.join("src")).expect("mkdir");
+        fs::write(root.join("src/lib.rs"), "pub fn build() {}\n").expect("write");
+
+        let snapshot = explore_repository(&root).expect("explore");
+        let claims = promote_claims_from_snapshot(&snapshot);
+
+        assert!(
+            claims
+                .iter()
+                .any(|claim| claim.statement.contains("Area `src`"))
+        );
+        assert!(claims.iter().any(|claim| {
+            claim.statement.contains("File `src/lib.rs`") && !claim.evidence_ids.is_empty()
+        }));
+        assert!(claims.iter().all(|claim| claim.id.starts_with("claim:")));
 
         let _ = fs::remove_dir_all(root);
     }

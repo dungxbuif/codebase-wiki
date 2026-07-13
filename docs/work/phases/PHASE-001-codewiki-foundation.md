@@ -96,6 +96,7 @@ Create the complete foundation for CodeWiki as a repo-native skill that can init
 | TICKET-010 | ticket | Sync skeleton | done | `docs/work/tickets/TICKET-010-sync-skeleton.md` |
 | TICKET-011 | ticket | Workspace placement and source extension skills | done | `docs/work/tickets/TICKET-011-workspace-source-extensions.md` |
 | TICKET-012 | ticket | Semantic exploration v1 | done | `docs/work/tickets/TICKET-012-semantic-exploration-v1.md` |
+| TICKET-013 | ticket | Claim persistence v1 | done | `docs/work/tickets/TICKET-013-claim-persistence-v1.md` |
 | TBD | ticket | Implement docs generation and sync loop | draft | TBD |
 
 ## Dependencies

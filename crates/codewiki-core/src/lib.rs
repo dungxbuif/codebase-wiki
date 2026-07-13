@@ -5,7 +5,8 @@ use codewiki_docs::{WikiDocsLayout, render_semantic_pages};
 use codewiki_explore::explore_repository;
 use codewiki_store::{
     CodeWikiConfig, DetectedStack, RepositoryIdentity, SourceRecord, StatePaths, StoreLayout,
-    WikiPlan, apply_migrations_with_sqlite, render_sources_yaml, render_target_agents_md,
+    WikiPlan, apply_migrations_with_sqlite, persist_exploration_with_sqlite, render_sources_yaml,
+    render_target_agents_md,
 };
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -102,7 +103,7 @@ where
             Ok(summary) => CliOutput::ok(summary),
             Err(message) => CliOutput::error(1, format!("error: {message}\n")),
         },
-        Ok(Command::Sync { repo_root }) => match sync_repo(&repo_root) {
+        Ok(Command::Sync { repo_root }) => match sync_repo(&repo_root, context) {
             Ok(summary) => CliOutput::ok(summary),
             Err(message) => CliOutput::error(1, format!("error: {message}\n")),
         },
@@ -172,11 +173,15 @@ fn help_text() -> String {
     .join("\n")
 }
 
-fn sync_repo(repo_root: &Path) -> Result<String, String> {
-    sync_workspace(repo_root, repo_root)
+fn sync_repo(repo_root: &Path, context: &RuntimeContext) -> Result<String, String> {
+    sync_workspace(repo_root, repo_root, context)
 }
 
-fn sync_workspace(source_root: &Path, workspace_root: &Path) -> Result<String, String> {
+fn sync_workspace(
+    source_root: &Path,
+    workspace_root: &Path,
+    context: &RuntimeContext,
+) -> Result<String, String> {
     if !workspace_root.join(".codewiki").exists() {
         return Err("CodeWiki is not initialized; run `codewiki init` first".to_string());
     }
@@ -184,6 +189,20 @@ fn sync_workspace(source_root: &Path, workspace_root: &Path) -> Result<String, S
         .map_err(|error| format!("failed to detect repository signals: {error}"))?;
     let exploration = explore_repository(source_root)
         .map_err(|error| format!("failed to explore repository semantics: {error}"))?;
+    let identity = RepositoryIdentity::new(source_root, None);
+    let state_paths = StatePaths::resolve(&context.app_data_base, &context.cache_base, &identity);
+    state_paths
+        .ensure_dirs()
+        .map_err(|error| format!("failed to create CodeWiki state directories: {error}"))?;
+    let migration_report =
+        apply_migrations_with_sqlite(&context.sqlite_executable, &state_paths.sqlite_path)?;
+    let persistence_report = persist_exploration_with_sqlite(
+        &context.sqlite_executable,
+        &state_paths.sqlite_path,
+        &identity,
+        "sync",
+        &exploration,
+    )?;
     let repo_label = source_root
         .file_name()
         .and_then(|name| name.to_str())
@@ -200,15 +219,21 @@ fn sync_workspace(source_root: &Path, workspace_root: &Path) -> Result<String, S
 
     if actions.is_empty() {
         Ok(format!(
-            "CodeWiki sync no-op\nsource: {}\nworkspace: {}\n",
+            "CodeWiki sync no-op\nsource: {}\nworkspace: {}\nstate_db: {}\nmigration_version: {}\nclaims_persisted: {}\n",
             source_root.display(),
             workspace_root.display(),
+            migration_report.sqlite_path.display(),
+            migration_report.latest_version,
+            persistence_report.claims_seen,
         ))
     } else {
         Ok(format!(
-            "CodeWiki synced\nsource: {}\nworkspace: {}\n{}\n",
+            "CodeWiki synced\nsource: {}\nworkspace: {}\nstate_db: {}\nmigration_version: {}\nclaims_persisted: {}\n{}\n",
             source_root.display(),
             workspace_root.display(),
+            migration_report.sqlite_path.display(),
+            migration_report.latest_version,
+            persistence_report.claims_seen,
             actions.join("\n")
         ))
     }
@@ -258,6 +283,13 @@ pub fn init_workspace(
         .map_err(|error| format!("failed to create CodeWiki state directories: {error}"))?;
     let migration_report =
         apply_migrations_with_sqlite(&context.sqlite_executable, &state_paths.sqlite_path)?;
+    let persistence_report = persist_exploration_with_sqlite(
+        &context.sqlite_executable,
+        &state_paths.sqlite_path,
+        &identity,
+        "init",
+        &exploration,
+    )?;
 
     let mut actions = Vec::new();
     write_if_missing(
@@ -294,11 +326,12 @@ pub fn init_workspace(
     }
 
     Ok(format!(
-        "CodeWiki initialized\nsource: {}\nworkspace: {}\nstate_db: {}\nmigration_version: {}\n{}\n",
+        "CodeWiki initialized\nsource: {}\nworkspace: {}\nstate_db: {}\nmigration_version: {}\nclaims_persisted: {}\n{}\n",
         source_root.display(),
         workspace_root.display(),
         migration_report.sqlite_path.display(),
         migration_report.latest_version,
+        persistence_report.claims_seen,
         actions.join("\n"),
     ))
 }
@@ -450,6 +483,8 @@ mod tests {
             cache_base: base.join("cache"),
             sqlite_executable: sqlite,
         };
+        fs::create_dir_all(repo.join("src")).expect("mkdir src");
+        fs::write(repo.join("src/lib.rs"), "pub fn build() {}\n").expect("write source");
 
         let output = run_with_context(["init"], &context);
 
@@ -463,15 +498,28 @@ mod tests {
         assert!(repo.join("docs/codewiki/architecture.md").exists());
         assert!(repo.join("docs/codewiki/evidence/claims.md").exists());
         assert!(output.stdout.contains("migration_version: 1"));
+        assert!(output.stdout.contains("claims_persisted:"));
         assert!(
             fs::read_to_string(repo.join(".codewiki/plan.yml"))
                 .expect("read plan")
                 .contains("detected:")
         );
         assert!(
+            fs::read_to_string(repo.join("docs/codewiki/evidence/claims.md"))
+                .expect("read claims")
+                .contains("claim:")
+        );
+        assert!(
             fs::read_to_string(repo.join("docs/codewiki/map.md"))
                 .expect("read map")
                 .contains("Semantic Structure")
+        );
+        assert!(
+            sqlite_count(
+                &context.sqlite_executable,
+                &find_state_db(&context),
+                "claims"
+            ) >= 1
         );
 
         let _ = fs::remove_dir_all(base);
@@ -529,6 +577,7 @@ mod tests {
         let no_op = run_with_context(["sync"], &context);
         assert_eq!(no_op.exit_code, 0, "{}", no_op.stderr);
         assert!(no_op.stdout.contains("no-op"));
+        assert!(no_op.stdout.contains("claims_persisted:"));
 
         fs::write(repo.join("docs/codewiki/map.md"), "stale\n").expect("stale map");
         let synced = run_with_context(["sync"], &context);
@@ -543,6 +592,13 @@ mod tests {
             fs::read_to_string(repo.join("docs/codewiki/map.md"))
                 .expect("read map")
                 .contains("Dependency Hints")
+        );
+        assert!(
+            sqlite_count(
+                &context.sqlite_executable,
+                &find_state_db(&context),
+                "sync_runs"
+            ) >= 2
         );
 
         let _ = fs::remove_dir_all(base);
@@ -578,6 +634,11 @@ mod tests {
                 .expect("read map")
                 .contains("src/main.rs")
         );
+        assert!(
+            fs::read_to_string(workspace.join("docs/codewiki/evidence/claims.md"))
+                .expect("read claims")
+                .contains("claim:")
+        );
         assert!(!source.join(".codewiki/config.yml").exists());
         assert!(!source.join("docs/codewiki/index.md").exists());
         assert!(
@@ -587,6 +648,34 @@ mod tests {
         );
 
         let _ = fs::remove_dir_all(base);
+    }
+
+    fn find_state_db(context: &RuntimeContext) -> PathBuf {
+        let codewiki_dir = context.app_data_base.join("codewiki");
+        let repo_dir = fs::read_dir(codewiki_dir)
+            .expect("read codewiki state dir")
+            .next()
+            .expect("state dir exists")
+            .expect("state dir entry")
+            .path();
+        repo_dir.join("state.sqlite3")
+    }
+
+    fn sqlite_count(sqlite: &Path, db: &Path, table: &str) -> usize {
+        let output = std::process::Command::new(sqlite)
+            .arg(db)
+            .arg(format!("SELECT COUNT(*) FROM {table};"))
+            .output()
+            .expect("query sqlite count");
+        assert!(
+            output.status.success(),
+            "{}",
+            String::from_utf8_lossy(&output.stderr)
+        );
+        String::from_utf8_lossy(&output.stdout)
+            .trim()
+            .parse()
+            .expect("count")
     }
 
     fn temp_path(prefix: &str) -> PathBuf {

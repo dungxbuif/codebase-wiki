@@ -42,3 +42,6 @@ version = "0.1.0"
 [[package]]
 name = "codewiki-store"
 version = "0.1.0"
+dependencies = [
+ "codewiki-explore",
+]

@@ -42,3 +42,4 @@ All notable changes should be recorded here.
 - Added skill-first support design for external/personal wiki workspaces and user-provided non-Git source extension skills.
 - Added `.codewiki/sources.yml` generation, external workspace initialization support, and a source-skill template for custom non-Git evidence sources.
 - Added semantic exploration v1 for bounded file, area, symbol, import/dependency-hint, and evidence-reference snapshots used by generated wiki docs.
+- Added durable claim persistence v1 for semantic files, symbols, evidence items, claims, and claim/evidence links in local SQLite.

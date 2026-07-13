@@ -1,5 +1,6 @@
 //! Durable state and cache boundary for CodeWiki.
 
+use codewiki_explore::{ExplorationSnapshot, FileRole, promote_claims_from_snapshot};
 use std::fs;
 use std::io::Write as _;
 use std::path::{Path, PathBuf};
@@ -116,6 +117,23 @@ pub struct MigrationReport {
     pub migrations_seen: usize,
 }
 
+/// Result of persisting semantic exploration state.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct PersistenceReport {
+    /// Repository id used in SQLite.
+    pub repository_id: String,
+    /// Sync run id used for this persistence pass.
+    pub run_id: String,
+    /// Files persisted.
+    pub files_seen: usize,
+    /// Symbols persisted.
+    pub symbols_seen: usize,
+    /// Evidence items persisted.
+    pub evidence_seen: usize,
+    /// Claims persisted.
+    pub claims_seen: usize,
+}
+
 /// Apply all bundled migrations to a SQLite database through a local `sqlite3` executable.
 pub fn apply_migrations_with_sqlite(
     sqlite_executable: impl AsRef<Path>,
@@ -142,6 +160,111 @@ pub fn apply_migrations_with_sqlite(
         sqlite_path: sqlite_path.to_path_buf(),
         latest_version: latest_migration_version(),
         migrations_seen: available_migrations().len(),
+    })
+}
+
+/// Persist a semantic exploration snapshot into the local SQLite state.
+pub fn persist_exploration_with_sqlite(
+    sqlite_executable: impl AsRef<Path>,
+    sqlite_path: impl AsRef<Path>,
+    identity: &RepositoryIdentity,
+    mode: &str,
+    snapshot: &ExplorationSnapshot,
+) -> Result<PersistenceReport, String> {
+    let sqlite_path = sqlite_path.as_ref();
+    let repository_id = identity.storage_key();
+    let run_id = format!(
+        "run:{:016x}",
+        fnv1a64(format!("{repository_id}:{mode}:{}", snapshot.files.len()).as_bytes())
+    );
+    let claims = promote_claims_from_snapshot(snapshot);
+    let mut sql = String::new();
+    sql.push_str("PRAGMA foreign_keys = ON;\nBEGIN;\n");
+    sql.push_str(&format!(
+        "INSERT INTO repositories (id, root_path, git_remote, updated_at) VALUES ('{}', '{}', {}, CURRENT_TIMESTAMP) ON CONFLICT(id) DO UPDATE SET root_path=excluded.root_path, git_remote=excluded.git_remote, updated_at=CURRENT_TIMESTAMP;\n",
+        sql_quote(&repository_id),
+        sql_quote(&identity.root_path.to_string_lossy()),
+        sql_optional(identity.git_remote.as_deref()),
+    ));
+    sql.push_str(&format!(
+        "INSERT OR REPLACE INTO sync_runs (id, repository_id, mode, status, finished_at, notes) VALUES ('{}', '{}', '{}', 'completed', CURRENT_TIMESTAMP, '{}');\n",
+        sql_quote(&run_id),
+        sql_quote(&repository_id),
+        sql_quote(mode),
+        sql_quote("semantic exploration persisted"),
+    ));
+
+    for file in &snapshot.files {
+        let file_id = file_id(&repository_id, &file.path);
+        sql.push_str(&format!(
+            "INSERT INTO files (id, repository_id, path, content_hash, language, role, is_generated, last_seen_run_id, updated_at) VALUES ('{}', '{}', '{}', '{}', {}, '{}', 0, '{}', CURRENT_TIMESTAMP) ON CONFLICT(repository_id, path) DO UPDATE SET content_hash=excluded.content_hash, language=excluded.language, role=excluded.role, last_seen_run_id=excluded.last_seen_run_id, updated_at=CURRENT_TIMESTAMP;\n",
+            sql_quote(&file_id),
+            sql_quote(&repository_id),
+            sql_quote(&file.path),
+            sql_quote(&file_content_hash(file)),
+            sql_optional(file.language.as_deref()),
+            sql_quote(file.role.as_str()),
+            sql_quote(&run_id),
+        ));
+
+        for symbol in &file.symbols {
+            let symbol_id = symbol_id(&repository_id, &file.path, &symbol.name, symbol.line);
+            sql.push_str(&format!(
+                "INSERT OR REPLACE INTO symbols (id, repository_id, file_id, name, kind, start_line, confidence) VALUES ('{}', '{}', '{}', '{}', '{}', {}, 'source-backed');\n",
+                sql_quote(&symbol_id),
+                sql_quote(&repository_id),
+                sql_quote(&file_id),
+                sql_quote(&symbol.name),
+                sql_quote(&symbol.kind),
+                symbol.line,
+            ));
+        }
+
+        sql.push_str(&format!(
+            "INSERT OR REPLACE INTO evidence_items (id, repository_id, kind, source_path, summary, content_hash, confidence, run_id) VALUES ('{}', '{}', 'file', '{}', '{}', '{}', 'source-backed', '{}');\n",
+            sql_quote(&file.evidence_id),
+            sql_quote(&repository_id),
+            sql_quote(&file.path),
+            sql_quote(&format!(
+                "{} file with {} discovered symbols and {} import/dependency hints",
+                file.role.as_str(),
+                file.symbols.len(),
+                file.imports.len()
+            )),
+            sql_quote(&file_content_hash(file)),
+            sql_quote(&run_id),
+        ));
+    }
+
+    for claim in &claims {
+        sql.push_str(&format!(
+            "INSERT OR REPLACE INTO claims (id, repository_id, statement, status, confidence, owner, first_seen_run_id, last_verified_run_id, updated_at) VALUES ('{}', '{}', '{}', 'active', '{}', 'ai', '{}', '{}', CURRENT_TIMESTAMP);\n",
+            sql_quote(&claim.id),
+            sql_quote(&repository_id),
+            sql_quote(&claim.statement),
+            sql_quote(&claim.confidence),
+            sql_quote(&run_id),
+            sql_quote(&run_id),
+        ));
+        for evidence_id in &claim.evidence_ids {
+            sql.push_str(&format!(
+                "INSERT OR REPLACE INTO claim_evidence (claim_id, evidence_id, relationship) VALUES ('{}', '{}', 'supports');\n",
+                sql_quote(&claim.id),
+                sql_quote(evidence_id),
+            ));
+        }
+    }
+
+    sql.push_str("COMMIT;\n");
+    run_sqlite(sqlite_executable.as_ref(), sqlite_path, &sql)?;
+
+    Ok(PersistenceReport {
+        repository_id,
+        run_id,
+        files_seen: snapshot.files.len(),
+        symbols_seen: snapshot.files.iter().map(|file| file.symbols.len()).sum(),
+        evidence_seen: snapshot.evidence.len(),
+        claims_seen: claims.len(),
     })
 }
 
@@ -221,6 +344,48 @@ fn sql_quote(value: &str) -> String {
         }
     }
     quoted
+}
+
+fn sql_optional(value: Option<&str>) -> String {
+    match value {
+        Some(value) => format!("'{}'", sql_quote(value)),
+        None => "NULL".to_string(),
+    }
+}
+
+fn file_id(repository_id: &str, path: &str) -> String {
+    format!(
+        "file-row:{:016x}",
+        fnv1a64(format!("{repository_id}:{path}").as_bytes())
+    )
+}
+
+fn symbol_id(repository_id: &str, path: &str, name: &str, line: usize) -> String {
+    format!(
+        "symbol:{:016x}",
+        fnv1a64(format!("{repository_id}:{path}:{name}:{line}").as_bytes())
+    )
+}
+
+fn file_content_hash(file: &codewiki_explore::ExploredFile) -> String {
+    format!(
+        "{:016x}",
+        fnv1a64(
+            format!(
+                "{}:{}:{}:{}:{}",
+                file.path,
+                file.line_count,
+                file.symbols.len(),
+                file.imports.len(),
+                role_label(file.role)
+            )
+            .as_bytes()
+        )
+    )
+}
+
+fn role_label(role: FileRole) -> &'static str {
+    role.as_str()
 }
 
 /// Planned storage layout for committed and local state.
@@ -797,6 +962,79 @@ mod tests {
             String::from_utf8_lossy(&output.stdout).trim(),
             "1:initial_state"
         );
+
+        let _ = fs::remove_dir_all(base);
+    }
+
+    #[test]
+    fn sqlite_persists_exploration_claims_and_evidence() {
+        let sqlite = if Path::new("/usr/bin/sqlite3").exists() {
+            PathBuf::from("/usr/bin/sqlite3")
+        } else {
+            PathBuf::from("sqlite3")
+        };
+        let base = std::env::temp_dir().join(format!(
+            "codewiki-store-persist-test-{}-{}",
+            std::process::id(),
+            unique_test_suffix()
+        ));
+        let db = base.join("state.sqlite3");
+        apply_migrations_with_sqlite(&sqlite, &db).expect("migrations apply");
+
+        let identity = RepositoryIdentity::new(base.join("repo"), None);
+        let snapshot = ExplorationSnapshot {
+            schema_version: 1,
+            files: vec![codewiki_explore::ExploredFile {
+                path: "src/lib.rs".to_string(),
+                language: Some("Rust".to_string()),
+                role: FileRole::Source,
+                line_count: 3,
+                symbols: vec![codewiki_explore::ExploredSymbol {
+                    name: "build".to_string(),
+                    kind: "function".to_string(),
+                    line: 1,
+                }],
+                imports: vec!["std::fs".to_string()],
+                evidence_id: "file:test".to_string(),
+            }],
+            areas: vec![codewiki_explore::AreaSummary {
+                name: "src".to_string(),
+                file_count: 1,
+                symbol_count: 1,
+                roles: vec![FileRole::Source],
+            }],
+            dependency_hints: Vec::new(),
+            evidence: vec![codewiki_explore::EvidenceRef {
+                id: "file:test".to_string(),
+                path: "src/lib.rs".to_string(),
+                kind: "file".to_string(),
+            }],
+            truncated: false,
+            file_limit: 3_000,
+        };
+
+        let report = persist_exploration_with_sqlite(&sqlite, &db, &identity, "init", &snapshot)
+            .expect("persist snapshot");
+
+        assert_eq!(report.files_seen, 1);
+        assert_eq!(report.symbols_seen, 1);
+        assert_eq!(report.evidence_seen, 1);
+        assert!(report.claims_seen >= 2);
+
+        let output = Command::new(&sqlite)
+            .arg(&db)
+            .arg("SELECT (SELECT COUNT(*) FROM files) || ':' || (SELECT COUNT(*) FROM symbols) || ':' || (SELECT COUNT(*) FROM evidence_items) || ':' || (SELECT COUNT(*) FROM claims) || ':' || (SELECT COUNT(*) FROM claim_evidence);")
+            .output()
+            .expect("query persisted state");
+
+        assert!(output.status.success());
+        let counts = String::from_utf8_lossy(&output.stdout);
+        let parts: Vec<_> = counts.trim().split(':').collect();
+        assert_eq!(parts[0], "1");
+        assert_eq!(parts[1], "1");
+        assert_eq!(parts[2], "1");
+        assert!(parts[3].parse::<usize>().expect("claims count") >= 2);
+        assert!(parts[4].parse::<usize>().expect("claim evidence count") >= 2);
 
         let _ = fs::remove_dir_all(base);
     }
