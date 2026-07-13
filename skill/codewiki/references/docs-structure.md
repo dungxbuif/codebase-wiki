@@ -41,10 +41,10 @@ This structure may live either inside the source repository or inside a separate
 ## Page Rules
 
 - Always create `docs/codewiki/index.md` after successful init.
-- Treat all other paths as canonical slots, not mandatory stubs.
-- Create a page only when it has evidence-backed content.
+- Generate canonical top-level synthesis pages during init/sync when semantic exploration has run.
+- If evidence is thin, keep the page explicit about gaps instead of pretending the section is complete.
 - Prefer canonical top-level pages before creating many `areas/<area-slug>.md` pages.
-- Use `areas/<area-slug>.md` only for substantial code areas, bounded contexts, packages, apps, services, or domains.
+- Use `areas/<area-slug>.md` for observed top-level areas and keep the page evidence-scoped.
 - Keep one canonical home per concept. Link instead of duplicating.
 - Preserve human-owned sections during sync.
 

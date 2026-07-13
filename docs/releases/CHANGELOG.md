@@ -46,3 +46,4 @@ All notable changes should be recorded here.
 - Added staleness detection and SQLite-backed Q&A context rendering with active/stale claim separation.
 - Added production fixture integration tests for TypeScript, Python, and Rust-shaped repositories.
 - Added generated-region markers so sync can preserve human-owned documentation edits.
+- Added canonical synthesis pages and area pages generated from semantic evidence.

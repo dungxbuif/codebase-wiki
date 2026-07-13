@@ -111,6 +111,9 @@ Build CodeWiki as a complete repo-native Codex skill for semantic wiki generatio
 - `crates/codewiki-core/tests/production_fixtures.rs`
 - `docs/work/tickets/TICKET-016-sync-safety-generated-regions.md`
 - `docs/work/designs/DESIGN-016-sync-safety-generated-regions.md`
+- `docs/work/tickets/TICKET-017-synthesis-pages-v1.md`
+- `docs/work/designs/DESIGN-017-synthesis-pages-v1.md`
+- `skill/codewiki/references/docs-structure.md`
 
 ## Recent Decisions
 
@@ -154,6 +157,7 @@ Build CodeWiki as a complete repo-native Codex skill for semantic wiki generatio
 - Mark claims stale when supporting file evidence changes and render SQLite-backed Q&A context with active/stale claim separation.
 - Verify init, docs, semantic claims, SQLite Q&A context, and stale sync across TypeScript, Python, and Rust-shaped production fixtures.
 - Add generated-region markers and sync merge behavior so human-owned text around generated docs is preserved.
+- Generate canonical synthesis pages and area pages from semantic evidence while recording gaps explicitly.
 
 ## Next Steps
 
@@ -161,7 +165,7 @@ Build CodeWiki as a complete repo-native Codex skill for semantic wiki generatio
 - Write detail design for config/storage and repository exploration before implementation.
 - Implement prompt module behavior in the actual CodeWiki init/sync/Q&A runtime.
 - Add fixture repositories and production-readiness quality tests.
-- Build deeper architecture/domain/workflow synthesis and final skill runtime polish.
+- Finalize skill runtime polish and release readiness checks.
 - Build the skill init/sync/Q&A workflows first; use Rust only where deterministic helper behavior is needed.
 - Keep source integrations skill-based: no built-in non-Git providers unless a later design explicitly changes that boundary.
 

@@ -95,6 +95,8 @@ Production fixture coverage now exercises TypeScript app, Python service, and Ru
 
 Generated docs use explicit `<!-- codewiki:generated:start -->` / `<!-- codewiki:generated:end -->` regions. Sync updates only those regions and preserves human-owned text outside them. If an existing changed page has no generated markers, sync preserves it instead of overwriting it.
 
+Synthesis pages are generated for canonical wiki slots including domains, workflows, data, interfaces, operations, testing, decisions, glossary, open questions, and observed areas. These pages are deterministic evidence summaries: when evidence is thin, they record gaps rather than claiming complete understanding.
+
 The canonical generated docs slots are defined by `docs/decisions/ADR-0005-codewiki-generated-docs-structure.md`: `index.md`, `map.md`, `architecture.md`, `domains.md`, `workflows.md`, `data.md`, `interfaces.md`, `operations.md`, `testing.md`, `decisions.md`, `glossary.md`, `open-questions.md`, `evidence/**`, and optional `areas/<area-slug>.md`.
 
 ## Runtime Flow

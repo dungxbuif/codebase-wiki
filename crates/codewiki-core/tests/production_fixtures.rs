@@ -24,12 +24,18 @@ fn production_fixtures_initialize_docs_state_and_qa_context() {
         assert!(repo.join(".codewiki/sources.yml").exists());
         assert!(repo.join("docs/codewiki/index.md").exists());
         assert!(repo.join("docs/codewiki/map.md").exists());
+        assert!(repo.join("docs/codewiki/domains.md").exists());
+        assert!(repo.join("docs/codewiki/interfaces.md").exists());
+        assert!(repo.join("docs/codewiki/open-questions.md").exists());
         assert!(repo.join("docs/codewiki/evidence/claims.md").exists());
 
         let map = fs::read_to_string(repo.join("docs/codewiki/map.md")).expect("read map");
         assert!(map.contains("Semantic Structure"));
         assert!(map.contains("Dependency Hints"));
         assert!(map.contains(fixture.expected_signal()));
+        let interfaces =
+            fs::read_to_string(repo.join("docs/codewiki/interfaces.md")).expect("interfaces");
+        assert!(interfaces.contains(fixture.expected_interface_signal()));
 
         let claims =
             fs::read_to_string(repo.join("docs/codewiki/evidence/claims.md")).expect("claims");
@@ -109,6 +115,14 @@ impl FixtureKind {
 
     fn qa_query(self) -> &'static str {
         self.expected_signal()
+    }
+
+    fn expected_interface_signal(self) -> &'static str {
+        match self {
+            Self::TypeScriptApp => "App",
+            Self::PythonService => "health",
+            Self::RustWorkspace => "serve",
+        }
     }
 
     fn write(self, repo: &Path) {

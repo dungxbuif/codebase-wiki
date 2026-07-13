@@ -87,6 +87,42 @@ fn render_initial_pages_with_exploration(
             content: render_architecture_page(semantic_markdown),
         },
         GeneratedPage {
+            path: "docs/codewiki/domains.md".to_string(),
+            content: render_domains_page(exploration),
+        },
+        GeneratedPage {
+            path: "docs/codewiki/workflows.md".to_string(),
+            content: render_workflows_page(exploration),
+        },
+        GeneratedPage {
+            path: "docs/codewiki/data.md".to_string(),
+            content: render_data_page(exploration),
+        },
+        GeneratedPage {
+            path: "docs/codewiki/interfaces.md".to_string(),
+            content: render_interfaces_page(exploration),
+        },
+        GeneratedPage {
+            path: "docs/codewiki/operations.md".to_string(),
+            content: render_operations_page(exploration),
+        },
+        GeneratedPage {
+            path: "docs/codewiki/testing.md".to_string(),
+            content: render_testing_page(exploration),
+        },
+        GeneratedPage {
+            path: "docs/codewiki/decisions.md".to_string(),
+            content: render_decisions_page(exploration),
+        },
+        GeneratedPage {
+            path: "docs/codewiki/glossary.md".to_string(),
+            content: render_glossary_page(exploration),
+        },
+        GeneratedPage {
+            path: "docs/codewiki/open-questions.md".to_string(),
+            content: render_open_questions_page(exploration),
+        },
+        GeneratedPage {
             path: "docs/codewiki/evidence/README.md".to_string(),
             content: "# Evidence\n\nThis directory records how generated CodeWiki claims are supported.\n\n- `sources.md`: inspected source/docs/provider artifacts.\n- `claims.md`: durable claims and confidence.\n- `commands.md`: verification commands and summarized results.\n".to_string(),
         },
@@ -103,6 +139,15 @@ fn render_initial_pages_with_exploration(
             content: "# Commands\n\nNo repository verification commands have been recorded yet.\n".to_string(),
         },
     ];
+    let mut pages = pages;
+    if let Some(snapshot) = exploration {
+        for area in &snapshot.areas {
+            pages.push(GeneratedPage {
+                path: format!("docs/codewiki/areas/{}.md", slugify(&area.name)),
+                content: render_area_page(snapshot, &area.name),
+            });
+        }
+    }
     pages
         .into_iter()
         .map(|page| GeneratedPage {
@@ -225,6 +270,256 @@ fn render_claims_page(exploration: Option<&ExplorationSnapshot>) -> String {
     content
 }
 
+fn render_domains_page(exploration: Option<&ExplorationSnapshot>) -> String {
+    let mut content = "# Domains\n\n";
+    let mut out = content.to_string();
+    match exploration {
+        Some(snapshot) if !snapshot.areas.is_empty() => {
+            out.push_str("Top-level repository areas are treated as initial domain or subsystem candidates. These are structural hints until promoted by deeper analysis.\n\n");
+            for area in &snapshot.areas {
+                out.push_str(&format!(
+                    "- `{}`: {} files, {} symbols; roles: {}\n",
+                    area.name,
+                    area.file_count,
+                    area.symbol_count,
+                    area.roles
+                        .iter()
+                        .map(|role| role.as_str())
+                        .collect::<Vec<_>>()
+                        .join(", ")
+                ));
+            }
+        }
+        _ => out.push_str("No domain candidates were detected yet.\n"),
+    }
+    out
+}
+
+fn render_workflows_page(exploration: Option<&ExplorationSnapshot>) -> String {
+    let mut out = "# Workflows\n\n".to_string();
+    match exploration {
+        Some(snapshot) => {
+            out.push_str("Workflow seeds are inferred from entry-like files, tests, and dependency hints. Runtime flow remains pending until verified by source reading or commands.\n\n");
+            for file in snapshot.files.iter().filter(|file| {
+                file.path.contains("main")
+                    || file.path.contains("app")
+                    || file.path.contains("index")
+                    || file.role.as_str() == "test"
+            }) {
+                out.push_str(&format!(
+                    "- `{}`: {} symbols, {} import/dependency hints; evidence `{}`\n",
+                    file.path,
+                    file.symbols.len(),
+                    file.imports.len(),
+                    file.evidence_id
+                ));
+            }
+        }
+        None => out.push_str("Workflow synthesis is pending semantic exploration.\n"),
+    }
+    out
+}
+
+fn render_data_page(exploration: Option<&ExplorationSnapshot>) -> String {
+    let mut out = "# Data\n\n".to_string();
+    match exploration {
+        Some(snapshot) => {
+            let mut matched = false;
+            for file in snapshot.files.iter().filter(|file| {
+                let path = file.path.to_lowercase();
+                path.contains("schema")
+                    || path.contains("model")
+                    || path.contains("migration")
+                    || path.ends_with(".sql")
+                    || path.contains("data")
+            }) {
+                matched = true;
+                out.push_str(&format!(
+                    "- `{}`: data-related candidate; evidence `{}`\n",
+                    file.path, file.evidence_id
+                ));
+            }
+            if !matched {
+                out.push_str("No explicit data/schema files were detected. Data model remains an open question.\n");
+            }
+        }
+        None => out.push_str("Data synthesis is pending semantic exploration.\n"),
+    }
+    out
+}
+
+fn render_interfaces_page(exploration: Option<&ExplorationSnapshot>) -> String {
+    let mut out = "# Interfaces\n\n".to_string();
+    match exploration {
+        Some(snapshot) => {
+            out.push_str(
+                "Interface candidates come from exported/public symbols and dependency hints.\n\n",
+            );
+            for file in snapshot.files.iter().take(50) {
+                let public_symbols: Vec<_> = file
+                    .symbols
+                    .iter()
+                    .filter(|symbol| {
+                        matches!(
+                            symbol.kind.as_str(),
+                            "function" | "class" | "interface" | "type" | "struct" | "trait"
+                        )
+                    })
+                    .take(10)
+                    .collect();
+                if public_symbols.is_empty() && file.imports.is_empty() {
+                    continue;
+                }
+                out.push_str(&format!("- `{}`\n", file.path));
+                for symbol in public_symbols {
+                    out.push_str(&format!(
+                        "  - symbol `{}` ({}) at line {}\n",
+                        symbol.name, symbol.kind, symbol.line
+                    ));
+                }
+                for import in file.imports.iter().take(5) {
+                    out.push_str(&format!("  - dependency hint `{import}`\n"));
+                }
+            }
+        }
+        None => out.push_str("Interface synthesis is pending semantic exploration.\n"),
+    }
+    out
+}
+
+fn render_operations_page(exploration: Option<&ExplorationSnapshot>) -> String {
+    let mut out = "# Operations\n\n".to_string();
+    match exploration {
+        Some(snapshot) => {
+            out.push_str("Operational evidence is inferred from manifests, configs, build files, and docs.\n\n");
+            for file in snapshot.files.iter().filter(|file| {
+                file.role.as_str() == "config" || file.role.as_str() == "documentation"
+            }) {
+                out.push_str(&format!(
+                    "- `{}`: {} evidence `{}`\n",
+                    file.path,
+                    file.role.as_str(),
+                    file.evidence_id
+                ));
+            }
+        }
+        None => out.push_str("Operations synthesis is pending semantic exploration.\n"),
+    }
+    out
+}
+
+fn render_testing_page(exploration: Option<&ExplorationSnapshot>) -> String {
+    let mut out = "# Testing\n\n".to_string();
+    match exploration {
+        Some(snapshot) => {
+            let tests: Vec<_> = snapshot
+                .files
+                .iter()
+                .filter(|file| file.role.as_str() == "test")
+                .collect();
+            if tests.is_empty() {
+                out.push_str("No test files were detected in the bounded exploration snapshot.\n");
+            } else {
+                for file in tests {
+                    out.push_str(&format!(
+                        "- `{}`: {} symbols; evidence `{}`\n",
+                        file.path,
+                        file.symbols.len(),
+                        file.evidence_id
+                    ));
+                }
+            }
+        }
+        None => out.push_str("Testing synthesis is pending semantic exploration.\n"),
+    }
+    out
+}
+
+fn render_decisions_page(_exploration: Option<&ExplorationSnapshot>) -> String {
+    "# Decisions\n\nNo repository-specific architecture decisions have been promoted yet. Record future decisions here only when they are backed by source evidence, existing docs, or explicit human input.\n".to_string()
+}
+
+fn render_glossary_page(exploration: Option<&ExplorationSnapshot>) -> String {
+    let mut out = "# Glossary\n\n".to_string();
+    match exploration {
+        Some(snapshot) => {
+            for area in &snapshot.areas {
+                out.push_str(&format!("- `{}`: top-level area candidate\n", area.name));
+            }
+            for file in snapshot.files.iter().take(50) {
+                for symbol in file.symbols.iter().take(10) {
+                    out.push_str(&format!(
+                        "- `{}`: {} from `{}` line {}\n",
+                        symbol.name, symbol.kind, file.path, symbol.line
+                    ));
+                }
+            }
+        }
+        None => out.push_str("Glossary generation is pending semantic exploration.\n"),
+    }
+    out
+}
+
+fn render_open_questions_page(exploration: Option<&ExplorationSnapshot>) -> String {
+    let mut out = "# Open Questions\n\n".to_string();
+    match exploration {
+        Some(snapshot) => {
+            if snapshot.truncated {
+                out.push_str("- Exploration hit the file limit; coverage is incomplete.\n");
+            }
+            if snapshot
+                .files
+                .iter()
+                .all(|file| file.role.as_str() != "test")
+            {
+                out.push_str("- No tests were detected; verification strategy is unknown.\n");
+            }
+            out.push_str("- Runtime behavior needs command evidence or deeper source analysis before being treated as confirmed.\n");
+            out.push_str("- Domain boundaries are inferred from paths and should be reviewed during deeper synthesis.\n");
+        }
+        None => out.push_str("- Semantic exploration has not run yet.\n"),
+    }
+    out
+}
+
+fn render_area_page(snapshot: &ExplorationSnapshot, area_name: &str) -> String {
+    let mut out = format!("# Area: `{area_name}`\n\n");
+    out.push_str("This area page is generated from bounded semantic exploration evidence.\n\n");
+    for file in snapshot
+        .files
+        .iter()
+        .filter(|file| file.path.split('/').next() == Some(area_name))
+        .take(50)
+    {
+        out.push_str(&format!(
+            "- `{}`: {}, {} symbols, {} imports; evidence `{}`\n",
+            file.path,
+            file.role.as_str(),
+            file.symbols.len(),
+            file.imports.len(),
+            file.evidence_id
+        ));
+    }
+    out
+}
+
+fn slugify(value: &str) -> String {
+    let mut slug = String::new();
+    for ch in value.chars().flat_map(char::to_lowercase) {
+        if ch.is_ascii_alphanumeric() {
+            slug.push(ch);
+        } else if !slug.ends_with('-') {
+            slug.push('-');
+        }
+    }
+    let slug = slug.trim_matches('-');
+    if slug.is_empty() {
+        "area".to_string()
+    } else {
+        slug.to_string()
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -246,6 +541,10 @@ mod tests {
         assert!(paths.contains(&"docs/codewiki/index.md"));
         assert!(paths.contains(&"docs/codewiki/map.md"));
         assert!(paths.contains(&"docs/codewiki/architecture.md"));
+        assert!(paths.contains(&"docs/codewiki/domains.md"));
+        assert!(paths.contains(&"docs/codewiki/workflows.md"));
+        assert!(paths.contains(&"docs/codewiki/interfaces.md"));
+        assert!(paths.contains(&"docs/codewiki/open-questions.md"));
         assert!(paths.contains(&"docs/codewiki/evidence/claims.md"));
         assert!(pages.iter().any(|page| {
             page.content
@@ -308,6 +607,12 @@ mod tests {
             page.path == "docs/codewiki/evidence/claims.md"
                 && page.content.contains("claim:")
                 && page.content.contains("evidence: `file:test`")
+        }));
+        assert!(pages.iter().any(|page| {
+            page.path == "docs/codewiki/areas/src.md" && page.content.contains("src/lib.rs")
+        }));
+        assert!(pages.iter().any(|page| {
+            page.path == "docs/codewiki/interfaces.md" && page.content.contains("build")
         }));
     }
 }
