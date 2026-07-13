@@ -44,3 +44,4 @@ All notable changes should be recorded here.
 - Added semantic exploration v1 for bounded file, area, symbol, import/dependency-hint, and evidence-reference snapshots used by generated wiki docs.
 - Added durable claim persistence v1 for semantic files, symbols, evidence items, claims, and claim/evidence links in local SQLite.
 - Added staleness detection and SQLite-backed Q&A context rendering with active/stale claim separation.
+- Added production fixture integration tests for TypeScript, Python, and Rust-shaped repositories.

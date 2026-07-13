@@ -106,6 +106,9 @@ Build CodeWiki as a complete repo-native Codex skill for semantic wiki generatio
 - `docs/work/tickets/TICKET-014-staleness-qa-retrieval-v1.md`
 - `docs/work/designs/DESIGN-014-staleness-qa-retrieval-v1.md`
 - `skill/codewiki/references/qa.md`
+- `docs/work/tickets/TICKET-015-production-fixtures-eval-suite.md`
+- `docs/work/designs/DESIGN-015-production-fixtures-eval-suite.md`
+- `crates/codewiki-core/tests/production_fixtures.rs`
 
 ## Recent Decisions
 
@@ -147,6 +150,7 @@ Build CodeWiki as a complete repo-native Codex skill for semantic wiki generatio
 - Add semantic exploration v1 as a deterministic companion boundary for bounded file, area, symbol, import/dependency-hint, and evidence-reference snapshots.
 - Persist semantic files, symbols, evidence items, promoted claims, and claim/evidence links into local SQLite during init/sync.
 - Mark claims stale when supporting file evidence changes and render SQLite-backed Q&A context with active/stale claim separation.
+- Verify init, docs, semantic claims, SQLite Q&A context, and stale sync across TypeScript, Python, and Rust-shaped production fixtures.
 
 ## Next Steps
 
@@ -154,7 +158,7 @@ Build CodeWiki as a complete repo-native Codex skill for semantic wiki generatio
 - Write detail design for config/storage and repository exploration before implementation.
 - Implement prompt module behavior in the actual CodeWiki init/sync/Q&A runtime.
 - Add fixture repositories and production-readiness quality tests.
-- Build deeper architecture/domain/workflow synthesis and production fixture/evaluation coverage.
+- Build deeper architecture/domain/workflow synthesis and sync safety for human-edited generated docs.
 - Build the skill init/sync/Q&A workflows first; use Rust only where deterministic helper behavior is needed.
 - Keep source integrations skill-based: no built-in non-Git providers unless a later design explicitly changes that boundary.
 

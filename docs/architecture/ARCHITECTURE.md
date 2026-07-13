@@ -91,6 +91,8 @@ Claim persistence v1 promotes deterministic source-backed structure claims from 
 
 Staleness v1 compares new semantic file content hashes against existing evidence hashes. When supporting file evidence changes, linked active claims are marked `stale` before new evidence is persisted. Q&A retrieval renders active and stale SQLite claims separately so agents can answer from fresh docs/state first and inspect stale source paths narrowly when needed.
 
+Production fixture coverage now exercises TypeScript app, Python service, and Rust workspace-shaped repositories through init, generated docs, semantic claims, SQLite Q&A context, and stale sync behavior.
+
 The canonical generated docs slots are defined by `docs/decisions/ADR-0005-codewiki-generated-docs-structure.md`: `index.md`, `map.md`, `architecture.md`, `domains.md`, `workflows.md`, `data.md`, `interfaces.md`, `operations.md`, `testing.md`, `decisions.md`, `glossary.md`, `open-questions.md`, `evidence/**`, and optional `areas/<area-slug>.md`.
 
 ## Runtime Flow
