@@ -26,6 +26,7 @@ Implemented foundation capabilities:
 - generated `docs/**` pages for canonical wiki slots and observed areas;
 - sync safety with generated-region markers that preserve human edits;
 - production fixture tests for TypeScript, Python, and Rust-shaped repositories.
+- binary-first installed Rust companion helper at `skills/codewiki/bin/codewiki`, with copied source fallback.
 
 ## Install Skill
 
@@ -40,6 +41,8 @@ From a local checkout, install with:
 ```bash
 scripts/install-codewiki-skill.sh
 ```
+
+The installer copies `skill/codewiki`, builds `bin/codewiki` when Cargo is available, and keeps companion source as fallback. The skill wrapper `scripts/codewiki-helper.sh` prefers `CODEWIKI_COMPANION_BIN`, then the installed binary, then PATH/source fallback.
 
 ## Product Direction
 

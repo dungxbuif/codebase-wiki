@@ -1,7 +1,7 @@
 ---
 artifact_type: api_contract_index
 id: API-MASTER
-status: draft
+status: active
 owner: shared
 human_fields: [contract_intent, approval]
 ai_fields: [contract_rows, errors, auth_notes, versioning, linked_decisions]
@@ -25,12 +25,9 @@ Document HTTP endpoints, RPC methods, events, CLI commands, or any other public 
 | `skill/codewiki/scripts/codewiki-helper.sh [args...]` | skill helper script | optional Rust binary/source | implemented | Resolves the Rust companion through `CODEWIKI_COMPANION_BIN`, installed `bin/codewiki`, `PATH`, `CODEWIKI_REPO`, installed companion source, or source checkout. |
 | `codewiki help` / `codewiki --help` | companion command | none | implemented | Prints scaffold usage and companion-tool status. |
 | `codewiki version` / `codewiki --version` | companion command | none | implemented | Prints current package version. |
-| `codewiki status` | companion command | none | implemented | Prints Rust companion scaffold status, command list, planned detection, config path, local state summary, and docs root. |
+| `codewiki status` | companion command | none | implemented | Prints Rust companion status, command list, detection capabilities, config path, local state summary, and docs root. |
 | `codewiki init [path]` | companion command | local filesystem | implemented | Creates missing `.codewiki/config.yml`, `.codewiki/plan.yml`, `.codewiki/AGENTS.md`, `docs/quickstart.md`, and applies local SQLite migrations. Defaults to the current directory when `path` is omitted. |
 | `codewiki sync [path]` | companion command | local filesystem | implemented | Re-detects repository signals, compares generated plan/docs to desired output, updates changed/missing generated files, and no-ops when current. |
-| `codewiki doctor` | companion command | none | planned | Future deterministic environment/config diagnostic helper. |
-| `codewiki inspect` | companion command | none | planned | Future deterministic repository signal inspection helper. |
-| `codewiki cache` | companion command | none | planned | Future deterministic cache/index helper. |
 
 ## Errors
 

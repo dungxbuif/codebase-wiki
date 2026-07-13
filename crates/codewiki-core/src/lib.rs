@@ -249,7 +249,7 @@ fn status_text() -> String {
     let docs = WikiDocsLayout::default();
 
     format!(
-        "CodeWiki companion tool scaffold ready\nruntime: rust\ncommands: help, version, status\nplanned detection: {}\ncommitted config: {}\ncommitted plan: {}\nlocal agents: {}\nlocal state: {}\ndocs root: {}\n",
+        "CodeWiki companion tool ready\nruntime: rust\ncommands: help, version, status, init, sync\nrepository detection: {}\ncommitted config: {}\ncommitted plan: {}\nlocal agents: {}\nlocal state: {}\ndocs root: {}\n",
         detection.summary(),
         store.committed_config_path,
         store.committed_plan_path,

@@ -1,7 +1,7 @@
 ---
 artifact_type: integrations_doc
 id: INTEGRATIONS
-status: draft
+status: active
 owner: shared
 human_fields: [provider_choice, credential_approval, business_owner]
 ai_fields: [systems, contracts, secrets_names, failure_modes]
@@ -21,7 +21,7 @@ shared_fields: [status, trace]
 | --- | --- | --- | --- | --- |
 | Git | Repository identity, diff, history, and sync context | Local git CLI/library boundary | CodeWiki | required |
 | Filesystem | Source and generated docs access | Local paths in target repo | CodeWiki | required |
-| SQLite | Durable local runtime state | Versioned schema in platform app data | CodeWiki | planned |
+| SQLite | Durable local runtime state | Versioned schema in platform app data | CodeWiki | required |
 | Rust companion tool | Deterministic helper surface for the skill | `codewiki` binary and internal crates | CodeWiki | accepted |
 | Octocode | Default first-choice semantic code-intelligence provider | Install/activate per target repo when filesystem/Git exploration is insufficient | target repo | conditional_default |
 | codebase-memory-mcp | Conditional runtime memory integration | Install/activate only when extra shared cross-session memory is needed beyond CodeWiki SQLite state | target repo | conditional |

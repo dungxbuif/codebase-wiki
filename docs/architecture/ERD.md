@@ -1,7 +1,7 @@
 ---
 artifact_type: erd_master
 id: ERD-MASTER
-status: draft
+status: active
 owner: shared
 human_fields: [data_ownership_decisions, migration_approval]
 ai_fields: [entities, relationships, constraints, migrations, linked_decisions]

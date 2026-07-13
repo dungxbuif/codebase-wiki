@@ -34,8 +34,8 @@ updated: 2026-07-13
 
 - Status: CodeWiki foundation production baseline is complete and verified.
 - Active backlog: `docs/work/BACKLOG.md`
-- Current queue focus: foundation baseline complete; future work is release distribution or advanced provider-backed synthesis.
-- Active phase: `docs/work/phases/PHASE-001-codewiki-foundation.md`
+- Current queue focus: foundation baseline closed; no active implementation queue remains.
+- Active phase: None; `docs/work/phases/PHASE-001-codewiki-foundation.md` is done.
 - Active ticket: None.
 - Active bug: None.
 
@@ -119,7 +119,11 @@ Maintain CodeWiki as a complete repo-native Codex skill for semantic wiki genera
 - `docs/work/TRACEABILITY.md`
 - `README.md`
 - `docs/work/tickets/TICKET-019-codewiki-standards-and-status.md`
+- `docs/work/tickets/TICKET-024-final-foundation-closure.md`
 - `docs/standards/CODEWIKI.md`
+- `docs/requirements/USER_STORIES.md`
+- `docs/architecture/ERD.md`
+- `docs/architecture/INTEGRATIONS.md`
 
 ## Recent Decisions
 
@@ -173,17 +177,10 @@ Maintain CodeWiki as a complete repo-native Codex skill for semantic wiki genera
 
 ## Next Steps
 
-- Create execution tickets from `PHASE-001`.
-- Write detail design for config/storage and repository exploration before implementation.
-- Implement prompt module behavior in the actual CodeWiki init/sync/Q&A runtime.
-- Add fixture repositories and production-readiness quality tests.
-- Optional next work: push to remote, tag/release, or add advanced provider-backed synthesis.
-- Build the skill init/sync/Q&A workflows first; use Rust only where deterministic helper behavior is needed.
-- Keep source integrations skill-based: no built-in non-Git providers unless a later design explicitly changes that boundary.
-- For target repos, generate CodeWiki pages as direct `docs/` pages such as `docs/quickstart.md`, `docs/source-map.md`, `docs/architecture/overview.md`, and `docs/evidence/claims.md`; never create `docs/codewiki/` by default.
+- No required foundation work remains.
+- Optional future work requires a new phase/ticket: publish/push release, marketplace packaging, or advanced provider-backed synthesis.
+- Keep source integrations skill-based unless a later ADR explicitly changes that boundary.
 
 ## Open Questions
 
-- Exact Rust crate/workspace layout has an initial scaffold for companion tooling; future crate splits may change if skill implementation pressure proves it.
-- Octocode is the default provider when code-intelligence is needed; codebase-memory-mcp and CocoIndex remain conditional by trigger.
-- Initial Codex skill packaging exists under `skill/codewiki`; marketplace/distribution details beyond direct install remain open.
+- Marketplace/distribution beyond the direct repository installer is optional future work, not part of the completed foundation baseline.

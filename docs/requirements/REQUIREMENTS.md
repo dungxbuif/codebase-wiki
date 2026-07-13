@@ -1,7 +1,7 @@
 ---
 artifact_type: requirements_index
 id: REQUIREMENTS
-status: draft
+status: active
 owner: shared
 human_fields: [priority, acceptance, requirement_source]
 ai_fields: [requirement_rows, status_updates, trace_links]

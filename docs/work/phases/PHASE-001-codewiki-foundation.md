@@ -1,7 +1,7 @@
 ---
 artifact_type: phase
 id: PHASE-001
-status: ready
+status: done
 owner: human
 human_fields:
   - goal
@@ -19,15 +19,45 @@ shared_fields:
   - trace
   - tickets_and_bugs
 trace:
-  backlog_items: [BL-001, BL-002, BL-003, BL-004, BL-005, BL-007, BL-008, BL-009]
+  backlog_items: [BL-001, BL-002, BL-003, BL-004, BL-005, BL-006, BL-007, BL-008, BL-009, BL-010, BL-011, BL-012, BL-013]
   roadmap: docs/work/ROADMAP.md
   requirements: [docs/requirements/SPEC.md, docs/requirements/REQUIREMENTS.md]
-  tickets: [docs/work/tickets/TICKET-001-rust-cli-workspace.md, docs/work/tickets/TICKET-002-skill-first-installer.md, docs/work/tickets/TICKET-003-config-storage-skeleton.md]
+  tickets:
+    - docs/work/tickets/TICKET-001-rust-cli-workspace.md
+    - docs/work/tickets/TICKET-002-skill-first-installer.md
+    - docs/work/tickets/TICKET-003-config-storage-skeleton.md
+    - docs/work/tickets/TICKET-004-sqlite-state-migrations.md
+    - docs/work/tickets/TICKET-005-sqlite-executor-paths.md
+    - docs/work/tickets/TICKET-006-init-skeleton.md
+    - docs/work/tickets/TICKET-007-repo-detection-v1.md
+    - docs/work/tickets/TICKET-008-wikiplan-evidence-models.md
+    - docs/work/tickets/TICKET-009-canonical-docs-generator.md
+    - docs/work/tickets/TICKET-010-sync-skeleton.md
+    - docs/work/tickets/TICKET-011-workspace-source-extensions.md
+    - docs/work/tickets/TICKET-012-semantic-exploration-v1.md
+    - docs/work/tickets/TICKET-013-claim-persistence-v1.md
+    - docs/work/tickets/TICKET-014-staleness-qa-retrieval-v1.md
+    - docs/work/tickets/TICKET-015-production-fixtures-eval-suite.md
+    - docs/work/tickets/TICKET-016-sync-safety-generated-regions.md
+    - docs/work/tickets/TICKET-017-synthesis-pages-v1.md
+    - docs/work/tickets/TICKET-018-release-readiness.md
+    - docs/work/tickets/TICKET-019-codewiki-standards-and-status.md
+    - docs/work/tickets/TICKET-020-direct-docs-root-and-skill-helper.md
+    - docs/work/tickets/TICKET-021-binary-first-companion-install.md
+    - docs/work/tickets/TICKET-022-openwiki-deepwiki-docs-patterns.md
+    - docs/work/tickets/TICKET-023-reference-baseline-and-source-provider-status.md
+    - docs/work/tickets/TICKET-024-final-foundation-closure.md
   bugs: []
-  test_verification: TBD
+  test_verification: docs/work/VALIDATION_MATRIX.md
   validation_matrix: docs/work/VALIDATION_MATRIX.md
-  adrs: [docs/decisions/ADR-0001-codewiki-core-tooling-and-state.md, docs/decisions/ADR-0002-rust-cli-and-reference-submodule-strategy.md, docs/decisions/ADR-0003-skill-first-product-and-rust-companion-tool.md, docs/decisions/ADR-0004-runtime-optional-code-intelligence-tools.md]
-  release_notes: TBD
+  adrs:
+    - docs/decisions/ADR-0001-codewiki-core-tooling-and-state.md
+    - docs/decisions/ADR-0002-rust-cli-and-reference-submodule-strategy.md
+    - docs/decisions/ADR-0003-skill-first-product-and-rust-companion-tool.md
+    - docs/decisions/ADR-0004-runtime-optional-code-intelligence-tools.md
+    - docs/decisions/ADR-0005-codewiki-generated-docs-structure.md
+    - docs/decisions/ADR-0006-workspace-placement-and-source-extension-skills.md
+  release_notes: docs/releases/CHANGELOG.md
 ---
 
 # Phase: PHASE-001 CodeWiki Foundation
@@ -41,22 +71,22 @@ trace:
 ## Status
 
 - ID: PHASE-001
-- Status: ready
+- Status: done
 - Owner: human
 - Created: 2026-07-13
 - Updated: 2026-07-13
 
 ## Trace Links
 
-- Backlog items: `BL-001`, `BL-002`, `BL-003`, `BL-004`, `BL-005`, `BL-007`, `BL-008`, `BL-009`
+- Backlog items: `BL-001`, `BL-002`, `BL-003`, `BL-004`, `BL-005`, `BL-006`, `BL-007`, `BL-008`, `BL-009`, `BL-010`, `BL-011`, `BL-012`, `BL-013`
 - Roadmap: `docs/work/ROADMAP.md`
 - Requirements: `docs/requirements/SPEC.md`, `docs/requirements/REQUIREMENTS.md`
-- Tickets: `docs/work/tickets/TICKET-001-rust-cli-workspace.md`, `docs/work/tickets/TICKET-002-skill-first-installer.md`, `docs/work/tickets/TICKET-003-config-storage-skeleton.md`
+- Tickets: `docs/work/tickets/TICKET-001-rust-cli-workspace.md` through `docs/work/tickets/TICKET-024-final-foundation-closure.md`
 - Bugs: none
-- Test verification: TBD
+- Test verification: `docs/work/VALIDATION_MATRIX.md`
 - Validation matrix: `docs/work/VALIDATION_MATRIX.md`
-- ADRs: `docs/decisions/ADR-0001-codewiki-core-tooling-and-state.md`, `docs/decisions/ADR-0002-rust-cli-and-reference-submodule-strategy.md`, `docs/decisions/ADR-0003-skill-first-product-and-rust-companion-tool.md`, `docs/decisions/ADR-0004-runtime-optional-code-intelligence-tools.md`
-- Release notes: TBD
+- ADRs: `docs/decisions/ADR-0001-codewiki-core-tooling-and-state.md`, `docs/decisions/ADR-0002-rust-cli-and-reference-submodule-strategy.md`, `docs/decisions/ADR-0003-skill-first-product-and-rust-companion-tool.md`, `docs/decisions/ADR-0004-runtime-optional-code-intelligence-tools.md`, `docs/decisions/ADR-0005-codewiki-generated-docs-structure.md`, `docs/decisions/ADR-0006-workspace-placement-and-source-extension-skills.md`
+- Release notes: `docs/releases/CHANGELOG.md`
 
 ## Goal
 
@@ -103,6 +133,11 @@ Create the complete foundation for CodeWiki as a repo-native skill that can init
 | TICKET-017 | ticket | Synthesis pages v1 | done | `docs/work/tickets/TICKET-017-synthesis-pages-v1.md` |
 | TICKET-018 | ticket | Release readiness | done | `docs/work/tickets/TICKET-018-release-readiness.md` |
 | TICKET-019 | ticket | CodeWiki standards and status | done | `docs/work/tickets/TICKET-019-codewiki-standards-and-status.md` |
+| TICKET-020 | ticket | Direct docs root and skill helper | done | `docs/work/tickets/TICKET-020-direct-docs-root-and-skill-helper.md` |
+| TICKET-021 | ticket | Binary-first companion install | done | `docs/work/tickets/TICKET-021-binary-first-companion-install.md` |
+| TICKET-022 | ticket | OpenWiki/DeepWiki docs patterns | done | `docs/work/tickets/TICKET-022-openwiki-deepwiki-docs-patterns.md` |
+| TICKET-023 | ticket | Reference baseline and source provider status | done | `docs/work/tickets/TICKET-023-reference-baseline-and-source-provider-status.md` |
+| TICKET-024 | ticket | Final foundation closure | done | `docs/work/tickets/TICKET-024-final-foundation-closure.md` |
 
 ## Dependencies
 
@@ -130,7 +165,7 @@ Create the complete foundation for CodeWiki as a repo-native skill that can init
 - Skill packaging and installer are specified before full init/sync implementation.
 - Rust companion-tool workspace design is specified before companion implementation.
 - Reference repos are available as submodules and can be studied without vendoring their runtime assumptions.
-- Validation matrix contains planned proof rows for the core product behaviors.
+- Validation matrix contains implemented proof rows for the core product behaviors.
 
 ## Verification Plan
 

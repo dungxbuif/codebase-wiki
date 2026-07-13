@@ -1,7 +1,7 @@
 ---
 artifact_type: architecture_doc
 id: ARCH-MASTER
-status: draft
+status: active
 owner: shared
 human_fields: [approved_boundaries, architectural_constraints, tradeoff_approval]
 ai_fields: [overview, modules, diagrams, flows, dependencies, risks]
@@ -17,7 +17,7 @@ shared_fields: [status, linked_decisions]
 
 ## Overview
 
-CodeWiki is planned as a skill-first Codex system with a small core:
+CodeWiki is a skill-first Codex system with a small core:
 
 ```text
 Repository or source workspace
@@ -42,14 +42,14 @@ The core should not hard-code language/framework adapters. It should combine rep
 | CodeWiki skill | Own agent workflow for init, sync, Q&A, evidence, and docs | `skill/codewiki/SKILL.md` | Primary product surface |
 | Skill installer | Install the skill into Codex home from this repo | `scripts/install-codewiki-skill.sh` | One-command install path |
 | Rust companion tool | Provide deterministic helper commands for repo inspection/config/state when needed | `crates/codewiki-cli` | Companion surface, not the product |
-| Core engine | Parse commands and orchestrate internal boundaries | `crates/codewiki-core` | Owns current `help`, `version`, and `status` behavior |
+| Core engine | Parse commands and orchestrate internal boundaries | `crates/codewiki-core` | Owns `help`, `version`, `status`, `init`, and `sync` behavior |
 | Repo detector | Detect languages, frameworks, package managers, entrypoints, test/build tools, and docs | `crates/codewiki-detect` | Dynamic detection only; no core adapters |
 | Explorer | Select files/symbols/docs to inspect and record evidence | `crates/codewiki-explore` | Deterministic semantic snapshot v1; lexical hints are evidence, not final claims |
 | Evidence store | Persist facts, hypotheses, claims, source references, and claim/evidence links | `crates/codewiki-store` | SQLite local runtime state with migration and persistence helpers |
-| WikiPlan generator | Produce page plan, scope, confidence, open questions, and refresh strategy | TBD | Committed summary planned under `.codewiki/` |
+| WikiPlan generator | Produce page plan, scope, confidence, open questions, and refresh strategy | `crates/codewiki-store`, `crates/codewiki-core` | Committed summary under `.codewiki/plan.yml` |
 | Doc generator | Write human/agent-readable wiki docs | `crates/codewiki-docs` | Canonical generated docs root is `docs/**` |
-| Sync engine | Detect stale docs and update safely | TBD | Must respect human-owned edits |
-| Q&A engine | Answer from docs first, then evidence/source when needed | TBD | Should cite evidence |
+| Sync engine | Detect stale docs and update safely | `crates/codewiki-core`, `crates/codewiki-docs`, `crates/codewiki-store` | Respects human-owned edits via generated-region markers |
+| Q&A engine | Answer from docs first, then evidence/source when needed | `crates/codewiki-store`, `skill/codewiki/references/qa.md` | Renders active/stale claim context and requires evidence citations |
 | Provider boundary | Wrap optional code-intelligence providers | `crates/codewiki-provider` | Provider selection is target-repo specific |
 | Source extension skills | User-authored skills that emit bounded evidence packets for non-Git sources | skill references/templates | Not bundled providers |
 
@@ -78,7 +78,7 @@ CodeWiki uses three distinct wiki workspace layers. The workspace may be the sou
   sources.yml     # primary Git source and optional source skill declarations
 
 docs/
-  index.md        # required generated wiki entrypoint
+  quickstart.md   # required generated wiki entrypoint
   ...             # canonical generated semantic docs
 ```
 

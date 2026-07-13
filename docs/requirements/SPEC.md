@@ -1,7 +1,7 @@
 ---
 artifact_type: requirement_spec
 id: REQ-MASTER
-status: draft
+status: active
 owner: human
 human_fields: [product_summary, goals, non_goals, users_and_stakeholders, acceptance_criteria]
 ai_fields: [functional_requirements, non_functional_requirements, constraints, linked_decisions]
@@ -55,7 +55,7 @@ CodeWiki is a Codex skill that builds and maintains a semantic wiki for software
 - Generated docs live in committed project space under the canonical `docs/**` structure.
 - Generated docs may live in the source repository or in an external/personal wiki workspace confirmed with the user.
 - `docs/quickstart.md` is the required generated entrypoint after successful init.
-- Canonical generated docs slots include map, architecture, domains, workflows, data, interfaces, operations, testing, decisions, glossary, open questions, evidence, and optional area pages.
+- Canonical generated docs slots include quickstart, source map, architecture, domain, workflows, data models, API/interfaces, operations, testing, decisions, glossary, open questions, evidence, and optional area pages.
 - Project config lives in committed `.codewiki/config.yml`.
 - Plan/state summaries that should travel with the repo live in committed `.codewiki/plan.yml` or equivalent.
 - Target-repo CodeWiki agent guidance lives in committed `.codewiki/AGENTS.md`.
