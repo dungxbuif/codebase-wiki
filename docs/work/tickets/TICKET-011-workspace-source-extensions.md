@@ -33,6 +33,8 @@ trace:
 - [x] Non-Git sources are supported only through user-provided source extension skills.
 - [x] CodeWiki core does not define built-in Jira/Figma/provider commands.
 - [x] `.codewiki/sources.yml` is documented as the source registry.
+- [x] Rust companion helper can initialize an external wiki workspace without writing docs/control files into the source repository.
+- [x] Skill includes a copyable template for user-authored source extension skills.
 
 ## Verification Results
 
@@ -40,9 +42,17 @@ trace:
 - Result: pass
 - Notes: 13 tests passed across 2 suites.
 
+- Command: `rtk cargo test -p codewiki-core -p codewiki-store`
+- Result: pass
+- Notes: 22 tests passed across 4 suites; includes external workspace initialization and `.codewiki/sources.yml` rendering.
+
+- Command: `rtk cargo test`
+- Result: pass
+- Notes: 28 tests passed across 11 suites.
+
 - Command: `rtk proxy python3 -c '...'`
 - Result: pass
-- Notes: validated `SKILL.md` references `workspace-placement.md` and `source-extensions.md`, and files exist.
+- Notes: validated `SKILL.md` references `workspace-placement.md`, `source-extensions.md`, and `source-skill-template.md`, and files exist.
 
 ## Completion Checklist
 
@@ -56,4 +66,3 @@ trace:
 - [x] `docs/CONTEXT.md` updated
 - [x] `docs/work/BACKLOG.md` updated
 - [x] Trace links updated
-

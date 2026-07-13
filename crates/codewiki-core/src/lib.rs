@@ -3,8 +3,8 @@
 use codewiki_detect::{DetectionCapabilities, detect_repository};
 use codewiki_docs::{WikiDocsLayout, render_initial_pages};
 use codewiki_store::{
-    CodeWikiConfig, DetectedStack, RepositoryIdentity, StatePaths, StoreLayout, WikiPlan,
-    apply_migrations_with_sqlite, render_target_agents_md,
+    CodeWikiConfig, DetectedStack, RepositoryIdentity, SourceRecord, StatePaths, StoreLayout,
+    WikiPlan, apply_migrations_with_sqlite, render_sources_yaml, render_target_agents_md,
 };
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -172,34 +172,40 @@ fn help_text() -> String {
 }
 
 fn sync_repo(repo_root: &Path) -> Result<String, String> {
-    if !repo_root.join(".codewiki").exists() {
+    sync_workspace(repo_root, repo_root)
+}
+
+fn sync_workspace(source_root: &Path, workspace_root: &Path) -> Result<String, String> {
+    if !workspace_root.join(".codewiki").exists() {
         return Err("CodeWiki is not initialized; run `codewiki init` first".to_string());
     }
-    let detection = detect_repository(repo_root)
+    let detection = detect_repository(source_root)
         .map_err(|error| format!("failed to detect repository signals: {error}"))?;
-    let repo_label = repo_root
+    let repo_label = source_root
         .file_name()
         .and_then(|name| name.to_str())
         .unwrap_or("repository");
     let mut actions = Vec::new();
     write_if_changed(
-        &repo_root.join(".codewiki/plan.yml"),
+        &workspace_root.join(".codewiki/plan.yml"),
         &render_plan_with_detection(&detection),
         &mut actions,
     )?;
     for page in render_initial_pages(repo_label, &detection.to_markdown()) {
-        write_if_changed(&repo_root.join(page.path), &page.content, &mut actions)?;
+        write_if_changed(&workspace_root.join(page.path), &page.content, &mut actions)?;
     }
 
     if actions.is_empty() {
         Ok(format!(
-            "CodeWiki sync no-op\nrepo: {}\n",
-            repo_root.display()
+            "CodeWiki sync no-op\nsource: {}\nworkspace: {}\n",
+            source_root.display(),
+            workspace_root.display(),
         ))
     } else {
         Ok(format!(
-            "CodeWiki synced\nrepo: {}\n{}\n",
-            repo_root.display(),
+            "CodeWiki synced\nsource: {}\nworkspace: {}\n{}\n",
+            source_root.display(),
+            workspace_root.display(),
             actions.join("\n")
         ))
     }
@@ -222,11 +228,24 @@ fn status_text() -> String {
 }
 
 fn init_repo(repo_root: &Path, context: &RuntimeContext) -> Result<String, String> {
-    fs::create_dir_all(repo_root)
-        .map_err(|error| format!("failed to create repository root: {error}"))?;
+    init_workspace(repo_root, repo_root, context)
+}
 
-    let identity = RepositoryIdentity::new(repo_root, None);
-    let detection = detect_repository(repo_root)
+/// Initialize CodeWiki for a source root into a wiki workspace.
+///
+/// When `source_root == workspace_root`, this is repo-local mode. When they differ,
+/// source files are treated as evidence and generated docs/control files are written
+/// into the external workspace.
+pub fn init_workspace(
+    source_root: &Path,
+    workspace_root: &Path,
+    context: &RuntimeContext,
+) -> Result<String, String> {
+    fs::create_dir_all(workspace_root)
+        .map_err(|error| format!("failed to create wiki workspace root: {error}"))?;
+
+    let identity = RepositoryIdentity::new(source_root, None);
+    let detection = detect_repository(source_root)
         .map_err(|error| format!("failed to detect repository signals: {error}"))?;
     let state_paths = StatePaths::resolve(&context.app_data_base, &context.cache_base, &identity);
     state_paths
@@ -237,31 +256,42 @@ fn init_repo(repo_root: &Path, context: &RuntimeContext) -> Result<String, Strin
 
     let mut actions = Vec::new();
     write_if_missing(
-        &repo_root.join(".codewiki/config.yml"),
+        &workspace_root.join(".codewiki/config.yml"),
         &CodeWikiConfig::default().to_yaml(),
         &mut actions,
     )?;
     write_if_missing(
-        &repo_root.join(".codewiki/plan.yml"),
+        &workspace_root.join(".codewiki/plan.yml"),
         &render_plan_with_detection(&detection),
         &mut actions,
     )?;
     write_if_missing(
-        &repo_root.join(".codewiki/AGENTS.md"),
+        &workspace_root.join(".codewiki/AGENTS.md"),
         &render_target_agents_md(),
         &mut actions,
     )?;
-    let repo_label = repo_root
+    let primary_source = SourceRecord::new(
+        "git",
+        "primary-repo",
+        source_root.to_string_lossy().to_string(),
+    );
+    write_if_missing(
+        &workspace_root.join(".codewiki/sources.yml"),
+        &render_sources_yaml(&primary_source, &[]),
+        &mut actions,
+    )?;
+    let repo_label = source_root
         .file_name()
         .and_then(|name| name.to_str())
         .unwrap_or("repository");
     for page in render_initial_pages(repo_label, &detection.to_markdown()) {
-        write_if_missing(&repo_root.join(page.path), &page.content, &mut actions)?;
+        write_if_missing(&workspace_root.join(page.path), &page.content, &mut actions)?;
     }
 
     Ok(format!(
-        "CodeWiki initialized\nrepo: {}\nstate_db: {}\nmigration_version: {}\n{}\n",
-        repo_root.display(),
+        "CodeWiki initialized\nsource: {}\nworkspace: {}\nstate_db: {}\nmigration_version: {}\n{}\n",
+        source_root.display(),
+        workspace_root.display(),
         migration_report.sqlite_path.display(),
         migration_report.latest_version,
         actions.join("\n"),
@@ -422,6 +452,7 @@ mod tests {
         assert!(repo.join(".codewiki/config.yml").exists());
         assert!(repo.join(".codewiki/plan.yml").exists());
         assert!(repo.join(".codewiki/AGENTS.md").exists());
+        assert!(repo.join(".codewiki/sources.yml").exists());
         assert!(repo.join("docs/codewiki/index.md").exists());
         assert!(repo.join("docs/codewiki/map.md").exists());
         assert!(repo.join("docs/codewiki/architecture.md").exists());
@@ -497,6 +528,42 @@ mod tests {
             fs::read_to_string(repo.join("docs/codewiki/map.md"))
                 .expect("read map")
                 .contains("Repository Map")
+        );
+
+        let _ = fs::remove_dir_all(base);
+    }
+
+    #[test]
+    fn init_workspace_keeps_docs_outside_source_repo() {
+        let sqlite = if Path::new("/usr/bin/sqlite3").exists() {
+            PathBuf::from("/usr/bin/sqlite3")
+        } else {
+            PathBuf::from("sqlite3")
+        };
+        let base = temp_path("codewiki-core-external-workspace");
+        let source = base.join("source");
+        let workspace = base.join("personal-wiki");
+        fs::create_dir_all(source.join("src")).expect("mkdir src");
+        fs::write(source.join("src/main.rs"), "fn main() {}\n").expect("write main");
+        let context = RuntimeContext {
+            cwd: source.clone(),
+            app_data_base: base.join("app-data"),
+            cache_base: base.join("cache"),
+            sqlite_executable: sqlite,
+        };
+
+        let output = init_workspace(&source, &workspace, &context).expect("init workspace");
+
+        assert!(output.contains("workspace:"));
+        assert!(workspace.join(".codewiki/config.yml").exists());
+        assert!(workspace.join(".codewiki/sources.yml").exists());
+        assert!(workspace.join("docs/codewiki/index.md").exists());
+        assert!(!source.join(".codewiki/config.yml").exists());
+        assert!(!source.join("docs/codewiki/index.md").exists());
+        assert!(
+            fs::read_to_string(workspace.join(".codewiki/sources.yml"))
+                .expect("read sources")
+                .contains("primary: true")
         );
 
         let _ = fs::remove_dir_all(base);

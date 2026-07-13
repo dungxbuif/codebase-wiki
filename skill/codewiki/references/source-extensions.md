@@ -64,6 +64,8 @@ The source skill may use its own tools/connectors, but CodeWiki treats its outpu
 
 ## Template For A Custom Source Skill
 
+For a copyable template, load `source-skill-template.md`.
+
 Create a separate skill, not a provider inside CodeWiki core:
 
 ```text
@@ -84,4 +86,3 @@ Its `SKILL.md` should say:
 - what confidence labels mean for that source.
 
 CodeWiki can then reference it from `.codewiki/sources.yml` using `ref: skill:<skill-name>`.
-

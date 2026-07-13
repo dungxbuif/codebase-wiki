@@ -95,6 +95,7 @@ Build CodeWiki as a complete repo-native Codex skill for semantic wiki generatio
 - `docs/decisions/ADR-0006-workspace-placement-and-source-extension-skills.md`
 - `skill/codewiki/references/workspace-placement.md`
 - `skill/codewiki/references/source-extensions.md`
+- `skill/codewiki/references/source-skill-template.md`
 
 ## Recent Decisions
 
@@ -131,6 +132,8 @@ Build CodeWiki as a complete repo-native Codex skill for semantic wiki generatio
 - Add `codewiki sync [path]` compare/update/no-op skeleton and ignore generated CodeWiki files during detection.
 - Support repo-local and external/personal wiki workspace placement; ask before writing when ambiguous.
 - Treat Git as the default source and support non-Git sources only through user-provided source extension skills.
+- Write `.codewiki/sources.yml` during initialization with Git as the primary source, including when docs are placed in an external/personal workspace.
+- Provide a copyable source-skill template so users can add Jira/Figma/fix-note style sources as separate skills instead of CodeWiki core providers.
 
 ## Next Steps
 
@@ -138,9 +141,9 @@ Build CodeWiki as a complete repo-native Codex skill for semantic wiki generatio
 - Write detail design for config/storage and repository exploration before implementation.
 - Implement prompt module behavior in the actual CodeWiki init/sync/Q&A runtime.
 - Add fixture repositories and production-readiness quality tests.
-- Finalize source extension templates and validate the updated skill package.
+- Build deeper semantic exploration and claim persistence on top of the current detection/WikiPlan/docs skeleton.
 - Build the skill init/sync/Q&A workflows first; use Rust only where deterministic helper behavior is needed.
-- Design SQLite schema and migrations next.
+- Keep source integrations skill-based: no built-in non-Git providers unless a later design explicitly changes that boundary.
 
 ## Open Questions
 

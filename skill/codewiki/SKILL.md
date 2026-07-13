@@ -38,6 +38,7 @@ Keep this file as the compact router. Load bundled references only when needed:
 - `references/docs-structure.md`: load for every init/sync run and when repairing or explaining the wiki layout.
 - `references/workspace-placement.md`: load before writing files when repo-local vs external/personal wiki placement is not explicit.
 - `references/source-extensions.md`: load when adding or using non-Git evidence/change sources.
+- `references/source-skill-template.md`: load when the user wants to create a custom source skill.
 - `references/init.md`: load when initializing or generating a new CodeWiki.
 - `references/sync.md`: load when updating, refreshing, or reconciling an existing CodeWiki.
 - `references/qa.md`: load when answering questions from existing CodeWiki docs/state.

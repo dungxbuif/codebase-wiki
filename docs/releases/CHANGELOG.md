@@ -40,3 +40,4 @@ All notable changes should be recorded here.
 - Added canonical starter docs generation for `index`, `map`, `architecture`, and `evidence/**`.
 - Added `codewiki sync [path]` compare/update/no-op skeleton.
 - Added skill-first support design for external/personal wiki workspaces and user-provided non-Git source extension skills.
+- Added `.codewiki/sources.yml` generation, external workspace initialization support, and a source-skill template for custom non-Git evidence sources.
