@@ -56,16 +56,23 @@ When initializing a target repository, prefer:
   AGENTS.md
   sources.yml
 docs/
-  index.md
-  map.md
-  architecture.md
-  domains.md
-  workflows.md
-  data.md
-  interfaces.md
-  operations.md
-  testing.md
-  decisions.md
+  quickstart.md
+  source-map.md
+  architecture/
+    overview.md
+    decisions.md
+  domain/
+    overview.md
+  workflows/
+    overview.md
+  data-models/
+    overview.md
+  api/
+    overview.md
+  operations/
+    runbook.md
+  testing/
+    strategy.md
   glossary.md
   open-questions.md
   evidence/
@@ -74,10 +81,13 @@ docs/
     commands.md
     claims.md
   areas/
-    <area-slug>.md
+    <area-slug>/
+      overview.md
 ```
 
-`docs/index.md` is required after a successful init. Other pages are canonical slots, not mandatory stubs: create them only when the repository has enough evidence-backed content. Use `areas/<area-slug>.md` only for substantial areas that deserve deeper treatment.
+`docs/quickstart.md` is required after a successful init. Other pages are canonical slots, not mandatory stubs: create them only when the repository has enough evidence-backed content. Use `areas/<area-slug>/overview.md` only for substantial areas that deserve deeper treatment.
+
+Follow OpenWiki/DeepWiki structure discipline: start with a concise quickstart, create section directories only for real documentation areas, avoid thin one-file folders unless they have a strong boundary, and make each page begin with a relevant source-files block when source evidence exists.
 
 In external/personal workspace mode, this same structure lives in the chosen workspace directory, while the source repository remains read-only evidence unless the user asks otherwise.
 

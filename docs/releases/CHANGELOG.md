@@ -37,7 +37,7 @@ All notable changes should be recorded here.
 - Added `codewiki init [path]` skeleton for target repo CodeWiki files and local SQLite state initialization.
 - Added repository detection v1 and wrote detection signals into init plan/index output.
 - Added WikiPlan v1 plus confidence, evidence, claim, and planned page models.
-- Added canonical starter docs generation for `index`, `map`, `architecture`, and `evidence/**`.
+- Added canonical starter docs generation for `quickstart`, `source-map`, OpenWiki-style section directories, and `evidence/**`.
 - Added `codewiki sync [path]` compare/update/no-op skeleton.
 - Added skill-first support design for external/personal wiki workspaces and user-provided non-Git source extension skills.
 - Added `.codewiki/sources.yml` generation, external workspace initialization support, and a source-skill template for custom non-Git evidence sources.
@@ -50,5 +50,6 @@ All notable changes should be recorded here.
 - Added an installed skill helper script plus copied Rust companion source so CodeWiki skills can invoke deterministic Rust support without making the companion the primary UX.
 - Changed the skill installer/helper to prefer a prebuilt installed `bin/codewiki` companion binary, with companion source retained only as fallback.
 - Changed the generated docs default from nested `docs/codewiki/**` to direct `docs/**` canonical pages.
+- Reworked generated docs layout/content patterns from OpenWiki and DeepWiki: quickstart-first navigation, section directories, no thin pages, backlog-in-quickstart, and relevant-source-files blocks on source-backed pages.
 - Reconciled README, roadmap, traceability, validation, and release-readiness docs for the completed CodeWiki foundation baseline.
 - Added CodeWiki-specific standards and reconciled implemented requirement statuses.

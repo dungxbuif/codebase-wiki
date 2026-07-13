@@ -12,16 +12,23 @@ Load this reference for every `init` and `sync` run, and when Q&A needs to expla
   sources.yml
 
 docs/
-  index.md
-  map.md
-  architecture.md
-  domains.md
-  workflows.md
-  data.md
-  interfaces.md
-  operations.md
-  testing.md
-  decisions.md
+  quickstart.md
+  source-map.md
+  architecture/
+    overview.md
+    decisions.md
+  domain/
+    overview.md
+  workflows/
+    overview.md
+  data-models/
+    overview.md
+  api/
+    overview.md
+  operations/
+    runbook.md
+  testing/
+    strategy.md
   glossary.md
   open-questions.md
   evidence/
@@ -30,7 +37,8 @@ docs/
     commands.md
     claims.md
   areas/
-    <area-slug>.md
+    <area-slug>/
+      overview.md
 ```
 
 `docs/**` is the knowledge surface. `.codewiki/**` is the committed control plane. SQLite state and rebuildable cache live outside the repo/workspace.
@@ -41,26 +49,29 @@ This structure may live either inside the source repository or inside a separate
 
 ## Page Rules
 
-- Always create `docs/index.md` after successful init.
-- Generate canonical top-level synthesis pages during init/sync when semantic exploration has run.
+- Always create `docs/quickstart.md` after successful init.
+- Generate section directories only when the section has real explanatory value.
 - If evidence is thin, keep the page explicit about gaps instead of pretending the section is complete.
-- Prefer canonical top-level pages before creating many `areas/<area-slug>.md` pages.
-- Use `areas/<area-slug>.md` for observed top-level areas and keep the page evidence-scoped.
+- Prefer headings inside `quickstart.md` or broader section pages before creating many small directories.
+- Use `areas/<area-slug>/overview.md` for observed top-level areas only when the area is substantial.
 - Keep one canonical home per concept. Link instead of duplicating.
 - Preserve human-owned sections during sync.
+- Each generated source-backed page should start with a `<details>` block listing relevant source files, following the DeepWiki page pattern.
+- Each page should include source anchors inline or in a source-map section where they help future humans/agents verify claims.
+- Keep deferred areas in a concise `## Backlog` section at the end of `quickstart.md`; do not create separate stub pages.
 
 ## Canonical Page Semantics
 
-- `index.md`: overview, freshness, wiki navigation, coverage gaps, and how to use the wiki.
-- `map.md`: semantic navigation map of packages, apps, services, bounded contexts, and where to start.
-- `architecture.md`: runtime architecture, major components, dependency direction, constraints, and change risks.
-- `domains.md`: product/business/domain concepts and invariants.
-- `workflows.md`: user/system flows, jobs, event flows, lifecycles, and important sequences.
-- `data.md`: persistence, schemas, migrations, storage boundaries, and data ownership.
-- `interfaces.md`: public APIs, CLIs, events, RPC, package/library surfaces, and integrations.
-- `operations.md`: setup, build/run/deploy, environment, observability, troubleshooting, and runtime risks.
-- `testing.md`: test strategy, commands, fixtures, coverage gaps, and safe-change checks.
-- `decisions.md`: durable decisions inferred from docs, code, and Git history; link existing ADRs when present.
+- `quickstart.md`: entrypoint, overview, freshness, navigation, key source files, notes for future agents, and backlog.
+- `source-map.md`: semantic navigation map of packages, apps, services, bounded contexts, and where to start.
+- `architecture/overview.md`: runtime architecture, major components, dependency direction, constraints, and change risks.
+- `architecture/decisions.md`: durable decisions inferred from docs, code, and Git history; link existing ADRs when present.
+- `domain/overview.md`: product/business/domain concepts and invariants.
+- `workflows/overview.md`: user/system flows, jobs, event flows, lifecycles, and important sequences.
+- `data-models/overview.md`: persistence, schemas, migrations, storage boundaries, and data ownership.
+- `api/overview.md`: public APIs, CLIs, events, RPC, package/library surfaces, and integrations.
+- `operations/runbook.md`: setup, build/run/deploy, environment, observability, troubleshooting, and runtime risks.
+- `testing/strategy.md`: test strategy, commands, fixtures, coverage gaps, and safe-change checks.
 - `glossary.md`: project-specific terms, acronyms, aliases, and domain language.
 - `open-questions.md`: uncertainties that affect future understanding, sync quality, or safe changes.
 - `evidence/README.md`: how evidence is recorded and verified.

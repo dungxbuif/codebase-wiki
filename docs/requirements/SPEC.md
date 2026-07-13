@@ -54,7 +54,7 @@ CodeWiki is a Codex skill that builds and maintains a semantic wiki for software
 - WikiPlan records pages, scope, evidence needs, open questions, confidence, and update strategy.
 - Generated docs live in committed project space under the canonical `docs/**` structure.
 - Generated docs may live in the source repository or in an external/personal wiki workspace confirmed with the user.
-- `docs/index.md` is the required generated entrypoint after successful init.
+- `docs/quickstart.md` is the required generated entrypoint after successful init.
 - Canonical generated docs slots include map, architecture, domains, workflows, data, interfaces, operations, testing, decisions, glossary, open questions, evidence, and optional area pages.
 - Project config lives in committed `.codewiki/config.yml`.
 - Plan/state summaries that should travel with the repo live in committed `.codewiki/plan.yml` or equivalent.

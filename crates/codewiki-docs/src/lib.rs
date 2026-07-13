@@ -26,24 +26,35 @@ pub struct GeneratedPage {
 /// Render the initial generated CodeWiki entrypoint.
 pub fn render_initial_index(repo_label: &str) -> String {
     format!(
-        "# CodeWiki: {repo_label}\n\n\
-         This is the generated CodeWiki entrypoint for this repository.\n\n\
+        "# {repo_label} quickstart\n\n\
+         This is the generated CodeWiki entrypoint for this repository. \
+         It is the human and future-agent starting point for understanding what the project does, how the wiki is organized, and where to go next.\n\n\
          ## Status\n\n\
          - State: initialized\n\
          - Semantic exploration: pending\n\
          - Full WikiPlan: pending\n\n\
-         ## How To Use This Wiki\n\n\
-         Start here, then follow links to generated pages as they are added. \
+         ## Start Here\n\n\
          CodeWiki answers should use `docs/**` first, then `.codewiki/plan.yml`, \
          `.codewiki/AGENTS.md`, local SQLite evidence, source files, Git history, and optional providers only when needed.\n\n\
+         - [Source map](./source-map.md)\n\
+         - [Architecture overview](./architecture/overview.md)\n\
+         - [Domain overview](./domain/overview.md)\n\
+         - [Workflows](./workflows/overview.md)\n\
+         - [Data models](./data-models/overview.md)\n\
+         - [API and interfaces](./api/overview.md)\n\
+         - [Operations runbook](./operations/runbook.md)\n\
+         - [Testing strategy](./testing/strategy.md)\n\n\
          ## Current Coverage\n\n\
          - Initial control files are present.\n\
          - Durable local SQLite state is initialized.\n\
          - Repository detection and semantic documentation are not complete yet.\n\n\
-         ## Next Pages\n\n\
-         - `map.md`\n\
-         - `architecture.md`\n\
-         - `evidence/claims.md`\n\n"
+         ## Notes For Future Agents\n\n\
+         - Treat this wiki as a synthesis layer, not a raw file inventory.\n\
+         - Prefer updating the canonical page for a concept instead of duplicating the same explanation elsewhere.\n\
+         - Preserve human-owned content around CodeWiki generated regions.\n\
+         - If a page would be a stub, keep the item in the backlog instead of creating a thin file.\n\n\
+         ## Backlog\n\n\
+         - Deeper semantic synthesis is pending first full exploration.\n\n"
     )
 }
 
@@ -71,7 +82,7 @@ fn render_initial_pages_with_exploration(
 
     let pages = vec![
         GeneratedPage {
-            path: "docs/index.md".to_string(),
+            path: "docs/quickstart.md".to_string(),
             content: render_initial_index_with_detection(
                 repo_label,
                 detection_markdown,
@@ -79,39 +90,39 @@ fn render_initial_pages_with_exploration(
             ),
         },
         GeneratedPage {
-            path: "docs/map.md".to_string(),
+            path: "docs/source-map.md".to_string(),
             content: render_map_page(detection_markdown, semantic_markdown),
         },
         GeneratedPage {
-            path: "docs/architecture.md".to_string(),
+            path: "docs/architecture/overview.md".to_string(),
             content: render_architecture_page(semantic_markdown),
         },
         GeneratedPage {
-            path: "docs/domains.md".to_string(),
+            path: "docs/domain/overview.md".to_string(),
             content: render_domains_page(exploration),
         },
         GeneratedPage {
-            path: "docs/workflows.md".to_string(),
+            path: "docs/workflows/overview.md".to_string(),
             content: render_workflows_page(exploration),
         },
         GeneratedPage {
-            path: "docs/data.md".to_string(),
+            path: "docs/data-models/overview.md".to_string(),
             content: render_data_page(exploration),
         },
         GeneratedPage {
-            path: "docs/interfaces.md".to_string(),
+            path: "docs/api/overview.md".to_string(),
             content: render_interfaces_page(exploration),
         },
         GeneratedPage {
-            path: "docs/operations.md".to_string(),
+            path: "docs/operations/runbook.md".to_string(),
             content: render_operations_page(exploration),
         },
         GeneratedPage {
-            path: "docs/testing.md".to_string(),
+            path: "docs/testing/strategy.md".to_string(),
             content: render_testing_page(exploration),
         },
         GeneratedPage {
-            path: "docs/decisions.md".to_string(),
+            path: "docs/architecture/decisions.md".to_string(),
             content: render_decisions_page(exploration),
         },
         GeneratedPage {
@@ -143,7 +154,7 @@ fn render_initial_pages_with_exploration(
     if let Some(snapshot) = exploration {
         for area in &snapshot.areas {
             pages.push(GeneratedPage {
-                path: format!("docs/areas/{}.md", slugify(&area.name)),
+                path: format!("docs/areas/{}/overview.md", slugify(&area.name)),
                 content: render_area_page(snapshot, &area.name),
             });
         }
@@ -151,10 +162,111 @@ fn render_initial_pages_with_exploration(
     pages
         .into_iter()
         .map(|page| GeneratedPage {
-            path: page.path,
-            content: wrap_generated_region(&page.content),
+            path: page.path.clone(),
+            content: wrap_generated_region(&add_relevant_source_files(
+                page.path.as_str(),
+                &page.content,
+                exploration,
+            )),
         })
         .collect()
+}
+
+fn add_relevant_source_files(
+    page_path: &str,
+    content: &str,
+    exploration: Option<&ExplorationSnapshot>,
+) -> String {
+    if page_path.starts_with("docs/evidence/") {
+        return content.to_string();
+    }
+
+    let Some(snapshot) = exploration else {
+        return content.to_string();
+    };
+
+    let paths = relevant_paths_for_page(page_path, snapshot);
+    if paths.is_empty() {
+        return content.to_string();
+    }
+
+    let mut out = "<details>\n<summary>Relevant source files</summary>\n\n".to_string();
+    out.push_str("The following files were used as context for generating this wiki page:\n\n");
+    for path in paths {
+        out.push_str(&format!("- `{path}`\n"));
+    }
+    out.push_str("</details>\n\n");
+    out.push_str(content);
+    out
+}
+
+fn relevant_paths_for_page(page_path: &str, snapshot: &ExplorationSnapshot) -> Vec<String> {
+    let mut paths: Vec<String> = snapshot
+        .files
+        .iter()
+        .filter(|file| matches_page_focus(page_path, file))
+        .take(12)
+        .map(|file| file.path.clone())
+        .collect();
+
+    if paths.len() < 5 {
+        for file in snapshot.files.iter().take(12) {
+            if !paths.contains(&file.path) {
+                paths.push(file.path.clone());
+            }
+            if paths.len() >= 5 {
+                break;
+            }
+        }
+    }
+
+    paths
+}
+
+fn matches_page_focus(page_path: &str, file: &codewiki_explore::ExploredFile) -> bool {
+    let lower = file.path.to_lowercase();
+    match page_path {
+        "docs/quickstart.md" | "docs/source-map.md" => true,
+        "docs/architecture/overview.md" => {
+            file.role.as_str() == "source" || file.role.as_str() == "config"
+        }
+        "docs/domain/overview.md" => {
+            lower.contains("domain") || lower.contains("model") || lower.contains("service")
+        }
+        "docs/workflows/overview.md" => {
+            lower.contains("workflow")
+                || lower.contains("job")
+                || lower.contains("event")
+                || lower.contains("main")
+                || lower.contains("app")
+                || lower.contains("index")
+        }
+        "docs/data-models/overview.md" => {
+            lower.contains("schema")
+                || lower.contains("model")
+                || lower.contains("migration")
+                || lower.ends_with(".sql")
+                || lower.contains("data")
+        }
+        "docs/api/overview.md" => {
+            !file.symbols.is_empty() || lower.contains("api") || lower.contains("route")
+        }
+        "docs/operations/runbook.md" => {
+            file.role.as_str() == "config" || file.role.as_str() == "documentation"
+        }
+        "docs/testing/strategy.md" => file.role.as_str() == "test",
+        "docs/architecture/decisions.md" => {
+            file.role.as_str() == "documentation" || lower.contains("adr")
+        }
+        "docs/glossary.md" | "docs/open-questions.md" => true,
+        path if path.starts_with("docs/areas/") => {
+            let area = path
+                .trim_start_matches("docs/areas/")
+                .trim_end_matches("/overview.md");
+            slugify(file.path.split('/').next().unwrap_or_default()) == area
+        }
+        _ => true,
+    }
 }
 
 /// Wrap generated content in markers so sync can preserve human-owned text around it.
@@ -527,7 +639,7 @@ mod tests {
     fn initial_index_mentions_docs_first_order() {
         let index = render_initial_index("example");
 
-        assert!(index.contains("# CodeWiki: example"));
+        assert!(index.contains("# example quickstart"));
         assert!(index.contains("docs/**"));
         assert!(index.contains("Semantic exploration: pending"));
     }
@@ -537,12 +649,12 @@ mod tests {
         let pages = render_initial_pages("example", "### Languages\n\n- Rust\n");
         let paths: Vec<_> = pages.iter().map(|page| page.path.as_str()).collect();
 
-        assert!(paths.contains(&"docs/index.md"));
-        assert!(paths.contains(&"docs/map.md"));
-        assert!(paths.contains(&"docs/architecture.md"));
-        assert!(paths.contains(&"docs/domains.md"));
-        assert!(paths.contains(&"docs/workflows.md"));
-        assert!(paths.contains(&"docs/interfaces.md"));
+        assert!(paths.contains(&"docs/quickstart.md"));
+        assert!(paths.contains(&"docs/source-map.md"));
+        assert!(paths.contains(&"docs/architecture/overview.md"));
+        assert!(paths.contains(&"docs/domain/overview.md"));
+        assert!(paths.contains(&"docs/workflows/overview.md"));
+        assert!(paths.contains(&"docs/api/overview.md"));
         assert!(paths.contains(&"docs/open-questions.md"));
         assert!(paths.contains(&"docs/evidence/claims.md"));
         assert!(pages.iter().any(|page| {
@@ -597,7 +709,7 @@ mod tests {
         let pages = render_semantic_pages("example", "### Languages\n\n- Rust\n", &snapshot);
 
         assert!(pages.iter().any(|page| {
-            page.path == "docs/map.md" && page.content.contains("Semantic Structure")
+            page.path == "docs/source-map.md" && page.content.contains("Semantic Structure")
         }));
         assert!(pages.iter().any(|page| {
             page.path == "docs/evidence/sources.md" && page.content.contains("file:test")
@@ -608,11 +720,17 @@ mod tests {
                 && page.content.contains("evidence: `file:test`")
         }));
         assert!(pages.iter().any(|page| {
-            page.path == "docs/areas/src.md" && page.content.contains("src/lib.rs")
+            page.path == "docs/areas/src/overview.md" && page.content.contains("src/lib.rs")
+        }));
+        assert!(pages.iter().any(|page| {
+            page.path == "docs/api/overview.md"
+                && page
+                    .content
+                    .contains("<summary>Relevant source files</summary>")
         }));
         assert!(
             pages.iter().any(|page| {
-                page.path == "docs/interfaces.md" && page.content.contains("build")
+                page.path == "docs/api/overview.md" && page.content.contains("build")
             })
         );
     }

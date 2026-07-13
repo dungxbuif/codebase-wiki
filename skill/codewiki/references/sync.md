@@ -13,7 +13,7 @@ Update only the wiki content affected by repository or documentation changes. Pr
 ## Procedure
 
 1. Load current CodeWiki state.
-   - Read `.codewiki/config.yml`, `.codewiki/plan.yml`, `.codewiki/AGENTS.md`, `.codewiki/sources.yml`, and `docs/index.md`.
+   - Read `.codewiki/config.yml`, `.codewiki/plan.yml`, `.codewiki/AGENTS.md`, `.codewiki/sources.yml`, and `docs/quickstart.md`.
    - Inspect the relevant existing generated pages before editing.
 
 2. Determine change scope.

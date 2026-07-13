@@ -27,15 +27,24 @@ trace:
 
 Generate useful canonical starter docs during init:
 
-- `docs/index.md`
-- `docs/map.md`
-- `docs/architecture.md`
+- `docs/quickstart.md`
+- `docs/source-map.md`
+- `docs/architecture/overview.md`
+- `docs/domain/overview.md`
+- `docs/workflows/overview.md`
+- `docs/data-models/overview.md`
+- `docs/api/overview.md`
+- `docs/operations/runbook.md`
+- `docs/testing/strategy.md`
+- `docs/architecture/decisions.md`
+- `docs/glossary.md`
+- `docs/open-questions.md`
 - `docs/evidence/README.md`
 - `docs/evidence/sources.md`
 - `docs/evidence/claims.md`
 - `docs/evidence/commands.md`
 
-These pages must be honest about coverage: detection is done, full semantic exploration is pending.
+These pages must be honest about coverage: detection is done, full semantic exploration is pending. Later semantic runs should keep OpenWiki's section-directory discipline and DeepWiki's relevant-source-files block instead of flattening every concept into top-level files.
 
 ## Verification
 

@@ -46,4 +46,4 @@ trace:
 
 - Command: `rtk proxy env CODEWIKI_APP_DATA_DIR=/tmp/codewiki-detect-state CODEWIKI_CACHE_DIR=/tmp/codewiki-detect-cache cargo run -p codewiki-cli -- init /tmp/codewiki-detect-smoke`
 - Result: pass
-- Notes: TypeScript, Next.js, and React signals appeared in `.codewiki/plan.yml` and `docs/index.md`.
+- Notes: TypeScript, Next.js, and React signals appeared in `.codewiki/plan.yml` and `docs/quickstart.md`.

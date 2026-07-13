@@ -147,19 +147,18 @@ fn is_generated_codewiki_path(path: &Path) -> bool {
 fn is_generated_docs_path(path: &Path) -> bool {
     path.starts_with("docs/evidence")
         || path.starts_with("docs/areas")
+        || path.starts_with("docs/architecture")
+        || path.starts_with("docs/domain")
+        || path.starts_with("docs/workflows")
+        || path.starts_with("docs/data-models")
+        || path.starts_with("docs/api")
+        || path.starts_with("docs/operations")
+        || path.starts_with("docs/testing")
         || matches!(
             path.to_str(),
             Some(
-                "docs/index.md"
-                    | "docs/map.md"
-                    | "docs/architecture.md"
-                    | "docs/domains.md"
-                    | "docs/workflows.md"
-                    | "docs/data.md"
-                    | "docs/interfaces.md"
-                    | "docs/operations.md"
-                    | "docs/testing.md"
-                    | "docs/decisions.md"
+                "docs/quickstart.md"
+                    | "docs/source-map.md"
                     | "docs/glossary.md"
                     | "docs/open-questions.md"
             )
@@ -367,7 +366,7 @@ mod tests {
     #[test]
     fn ignores_generated_codewiki_files() {
         let root = temp_fixture("generated");
-        write_file(&root, "docs/index.md", "# generated\n");
+        write_file(&root, "docs/quickstart.md", "# generated\n");
         write_file(&root, ".codewiki/plan.yml", "schema_version: 1\n");
         write_file(&root, "README.md", "# source doc\n");
 

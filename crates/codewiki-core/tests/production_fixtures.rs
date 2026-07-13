@@ -22,18 +22,18 @@ fn production_fixtures_initialize_docs_state_and_qa_context() {
         assert!(output.stdout.contains("claims_persisted:"));
         assert!(repo.join(".codewiki/config.yml").exists());
         assert!(repo.join(".codewiki/sources.yml").exists());
-        assert!(repo.join("docs/index.md").exists());
-        assert!(repo.join("docs/map.md").exists());
-        assert!(repo.join("docs/domains.md").exists());
-        assert!(repo.join("docs/interfaces.md").exists());
+        assert!(repo.join("docs/quickstart.md").exists());
+        assert!(repo.join("docs/source-map.md").exists());
+        assert!(repo.join("docs/domain/overview.md").exists());
+        assert!(repo.join("docs/api/overview.md").exists());
         assert!(repo.join("docs/open-questions.md").exists());
         assert!(repo.join("docs/evidence/claims.md").exists());
 
-        let map = fs::read_to_string(repo.join("docs/map.md")).expect("read map");
+        let map = fs::read_to_string(repo.join("docs/source-map.md")).expect("read map");
         assert!(map.contains("Semantic Structure"));
         assert!(map.contains("Dependency Hints"));
         assert!(map.contains(fixture.expected_signal()));
-        let interfaces = fs::read_to_string(repo.join("docs/interfaces.md")).expect("interfaces");
+        let interfaces = fs::read_to_string(repo.join("docs/api/overview.md")).expect("interfaces");
         assert!(interfaces.contains(fixture.expected_interface_signal()));
 
         let claims = fs::read_to_string(repo.join("docs/evidence/claims.md")).expect("claims");

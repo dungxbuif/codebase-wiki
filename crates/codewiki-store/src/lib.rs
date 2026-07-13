@@ -898,9 +898,13 @@ impl PlannedPage {
     /// Return canonical default page plan.
     pub fn canonical_defaults() -> Vec<Self> {
         [
-            ("docs/index.md", "CodeWiki Index", "index"),
-            ("docs/map.md", "Repository Map", "map"),
-            ("docs/architecture.md", "Architecture", "architecture"),
+            ("docs/quickstart.md", "CodeWiki Quickstart", "quickstart"),
+            ("docs/source-map.md", "Source Map", "source-map"),
+            (
+                "docs/architecture/overview.md",
+                "Architecture",
+                "architecture",
+            ),
             ("docs/evidence/claims.md", "Claims", "evidence.claims"),
         ]
         .into_iter()
@@ -1000,7 +1004,7 @@ mod tests {
 
         assert!(yaml.contains("schema_version: 1"));
         assert!(yaml.contains("claims must cite files"));
-        assert!(yaml.contains("docs/index.md"));
+        assert!(yaml.contains("docs/quickstart.md"));
         assert!(yaml.contains("confidence_default: source-backed"));
     }
 

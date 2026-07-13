@@ -27,7 +27,7 @@ trace:
 
 ## Acceptance Criteria
 
-- [x] `codewiki init [path]` creates `.codewiki/config.yml`, `.codewiki/plan.yml`, `.codewiki/AGENTS.md`, and `docs/index.md`.
+- [x] `codewiki init [path]` creates `.codewiki/config.yml`, `.codewiki/plan.yml`, `.codewiki/AGENTS.md`, and `docs/quickstart.md`.
 - [x] Init applies local SQLite migrations for the target repository.
 - [x] Init is idempotent and does not overwrite existing files.
 - [x] Tests prove file creation and no-overwrite behavior.
@@ -53,7 +53,7 @@ trace:
 
 - Command: `rtk proxy env CODEWIKI_APP_DATA_DIR=/tmp/codewiki-state-smoke CODEWIKI_CACHE_DIR=/tmp/codewiki-cache-smoke cargo run -p codewiki-cli -- init /tmp/codewiki-init-smoke`
 - Result: pass
-- Notes: created `.codewiki/config.yml`, `.codewiki/plan.yml`, `.codewiki/AGENTS.md`, `docs/index.md`, and local SQLite state DB. Env vars were used because sandbox blocks default HOME app-data writes.
+- Notes: created `.codewiki/config.yml`, `.codewiki/plan.yml`, `.codewiki/AGENTS.md`, `docs/quickstart.md`, and local SQLite state DB. Env vars were used because sandbox blocks default HOME app-data writes.
 
 ## Completion Checklist
 

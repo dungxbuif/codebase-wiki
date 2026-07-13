@@ -142,17 +142,17 @@ Maintain CodeWiki as a complete repo-native Codex skill for semantic wiki genera
 - Verify the scaffold with `rtk cargo fmt --all --check`, `rtk cargo test`, and `rtk cargo run -p codewiki-cli -- status`.
 - Add a repository installer script that installs `skill/codewiki` into `$CODEX_HOME/skills/codewiki`.
 - Add `origin` remote: `git@github.com:dungxbuif/harness.git`.
-- Use OpenWiki as the reference for evidence, write-boundary, docs-first, and sync/no-op discipline.
-- Use DeepWiki as the reference for mode-separated prompts, structured RAG context packets, same-language answers, and focused deep research.
-- Do not copy either reference prompt wholesale; CodeWiki should use a small skill entry plus mode-specific prompt modules.
+- Use OpenWiki as the reference for evidence, write-boundary, docs-first, sync/no-op discipline, quickstart-first docs, section directories, and avoiding thin pages.
+- Use DeepWiki as the reference for generated wiki structure metadata, per-page relevant source files, related pages, importance, diagrams/tables/citations, structured RAG context packets, same-language answers, and focused deep research.
+- Do not copy either reference prompt wholesale; CodeWiki should use a small skill entry plus mode-specific prompt modules and copy the product patterns.
 - Standardize target-repo generated docs directly under `docs/`; keep `.codewiki/**` for committed control-plane files.
 - Keep `skill/codewiki/SKILL.md` as a compact router and put mode-specific workflow detail in `skill/codewiki/references/`.
 - Start SQLite durable state with an executor-agnostic migration registry in `codewiki-store`.
 - Resolve local state/cache paths from repository identity and apply migrations through the local `sqlite3` executable.
-- Add `codewiki init [path]` to create target `.codewiki/**`, `docs/index.md`, and initialize local SQLite state.
+- Add `codewiki init [path]` to create target `.codewiki/**`, `docs/quickstart.md`, and initialize local SQLite state.
 - Add repository detection v1 for languages, package managers, framework hints, entrypoints, tests, and docs signals.
 - Add typed WikiPlan v1, planned pages, confidence, evidence, and claim models.
-- Generate canonical starter docs for index, map, architecture, and evidence pages during init.
+- Generate canonical starter docs for `quickstart.md`, `source-map.md`, OpenWiki-style section directories, and evidence pages during init.
 - Add `codewiki sync [path]` compare/update/no-op skeleton and ignore only generated CodeWiki canonical pages during detection, not all human-authored `docs/**`.
 - Support repo-local and external/personal wiki workspace placement; ask before writing when ambiguous.
 - Treat Git as the default source and support non-Git sources only through user-provided source extension skills.
@@ -167,6 +167,7 @@ Maintain CodeWiki as a complete repo-native Codex skill for semantic wiki genera
 - Reconcile release-readiness docs, roadmap, traceability, README, installer syntax, companion status, and validation evidence.
 - Finalize CodeWiki-specific product/evidence/sync/tool standards and implemented requirement statuses.
 - Add `skill/codewiki/scripts/codewiki-helper.sh`; make the installer build `bin/codewiki` for binary-first companion usage and keep copied Rust companion source as fallback.
+- Copy OpenWiki/DeepWiki docs quality patterns into CodeWiki: `quickstart.md` entrypoint, section directories only for real areas, `## Backlog` instead of stubs, and DeepWiki-style relevant-source-files blocks.
 
 ## Next Steps
 
@@ -177,7 +178,7 @@ Maintain CodeWiki as a complete repo-native Codex skill for semantic wiki genera
 - Optional next work: push to remote, tag/release, or add advanced provider-backed synthesis.
 - Build the skill init/sync/Q&A workflows first; use Rust only where deterministic helper behavior is needed.
 - Keep source integrations skill-based: no built-in non-Git providers unless a later design explicitly changes that boundary.
-- For target repos, generate CodeWiki pages as direct `docs/` pages such as `docs/index.md`, `docs/map.md`, and `docs/evidence/claims.md`; never create `docs/codewiki/` by default.
+- For target repos, generate CodeWiki pages as direct `docs/` pages such as `docs/quickstart.md`, `docs/source-map.md`, `docs/architecture/overview.md`, and `docs/evidence/claims.md`; never create `docs/codewiki/` by default.
 
 ## Open Questions
 
