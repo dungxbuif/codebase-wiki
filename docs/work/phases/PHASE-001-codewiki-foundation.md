@@ -91,7 +91,7 @@ Create the complete foundation for CodeWiki as a repo-native skill that can init
 | TICKET-005 | ticket | SQLite executor and state paths | done | `docs/work/tickets/TICKET-005-sqlite-executor-paths.md` |
 | TICKET-006 | ticket | Init skeleton | done | `docs/work/tickets/TICKET-006-init-skeleton.md` |
 | TICKET-007 | ticket | Repository detection v1 | done | `docs/work/tickets/TICKET-007-repo-detection-v1.md` |
-| TBD | ticket | Implement WikiPlan schema and generator | draft | TBD |
+| TICKET-008 | ticket | WikiPlan and evidence models | done | `docs/work/tickets/TICKET-008-wikiplan-evidence-models.md` |
 | TBD | ticket | Implement docs generation and sync loop | draft | TBD |
 
 ## Dependencies

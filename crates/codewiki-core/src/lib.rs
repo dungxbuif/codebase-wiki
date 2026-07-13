@@ -3,7 +3,7 @@
 use codewiki_detect::{DetectionCapabilities, detect_repository};
 use codewiki_docs::{WikiDocsLayout, render_initial_index};
 use codewiki_store::{
-    CodeWikiConfig, RepositoryIdentity, StatePaths, StoreLayout, WikiPlan,
+    CodeWikiConfig, DetectedStack, RepositoryIdentity, StatePaths, StoreLayout, WikiPlan,
     apply_migrations_with_sqlite, render_target_agents_md,
 };
 use std::fs;
@@ -221,21 +221,15 @@ fn init_repo(repo_root: &Path, context: &RuntimeContext) -> Result<String, Strin
 }
 
 fn render_plan_with_detection(detection: &codewiki_detect::RepositoryDetection) -> String {
-    let mut yaml = WikiPlan::default().to_yaml();
-    yaml.push_str("detected:\n");
-    yaml.push_str("  languages:\n");
-    append_yaml_list(&mut yaml, &detection.languages, 4);
-    yaml.push_str("  package_managers:\n");
-    append_yaml_list(&mut yaml, &detection.package_managers, 4);
-    yaml.push_str("  frameworks:\n");
-    append_yaml_list(&mut yaml, &detection.frameworks, 4);
-    yaml.push_str("  entrypoints:\n");
-    append_yaml_list(&mut yaml, &detection.entrypoints, 4);
-    yaml.push_str("  tests:\n");
-    append_yaml_list(&mut yaml, &detection.tests, 4);
-    yaml.push_str("  docs:\n");
-    append_yaml_list(&mut yaml, &detection.docs, 4);
-    yaml
+    WikiPlan::from_detected(DetectedStack {
+        languages: detection.languages.clone(),
+        package_managers: detection.package_managers.clone(),
+        frameworks: detection.frameworks.clone(),
+        entrypoints: detection.entrypoints.clone(),
+        tests: detection.tests.clone(),
+        docs: detection.docs.clone(),
+    })
+    .to_yaml()
 }
 
 fn render_initial_index_with_detection(repo_label: &str, detection_markdown: &str) -> String {
@@ -243,17 +237,6 @@ fn render_initial_index_with_detection(repo_label: &str, detection_markdown: &st
     index.push_str("## Detected Repository Signals\n\n");
     index.push_str(detection_markdown);
     index
-}
-
-fn append_yaml_list(yaml: &mut String, items: &[String], indent: usize) {
-    let prefix = " ".repeat(indent);
-    if items.is_empty() {
-        yaml.push_str(&format!("{prefix}[]\n"));
-        return;
-    }
-    for item in items {
-        yaml.push_str(&format!("{prefix}- \"{}\"\n", item.replace('"', "\\\"")));
-    }
 }
 
 fn write_if_missing(path: &Path, content: &str, actions: &mut Vec<String>) -> Result<(), String> {

@@ -326,28 +326,223 @@ pub struct WikiPlan {
     /// Plan schema version.
     pub schema_version: u32,
     /// Current plan status.
-    pub status: &'static str,
+    pub status: String,
     /// Evidence policy for generated docs.
-    pub evidence_policy: &'static str,
+    pub evidence_policy: String,
+    /// Detected stack signals.
+    pub detected: DetectedStack,
+    /// Planned generated pages.
+    pub pages: Vec<PlannedPage>,
+    /// Open questions that affect future understanding.
+    pub open_questions: Vec<String>,
+    /// Stale claim IDs or summaries.
+    pub stale_claims: Vec<String>,
 }
 
 impl Default for WikiPlan {
     fn default() -> Self {
         Self {
             schema_version: CODEWIKI_SCHEMA_VERSION,
-            status: "draft",
-            evidence_policy: "claims must cite files, symbols, commands, docs, or explicit hypotheses",
+            status: "draft".to_string(),
+            evidence_policy:
+                "claims must cite files, symbols, commands, docs, or explicit hypotheses"
+                    .to_string(),
+            detected: DetectedStack::default(),
+            pages: PlannedPage::canonical_defaults(),
+            open_questions: Vec::new(),
+            stale_claims: Vec::new(),
         }
     }
 }
 
 impl WikiPlan {
+    /// Create a plan from detected stack signals.
+    pub fn from_detected(detected: DetectedStack) -> Self {
+        Self {
+            detected,
+            ..Self::default()
+        }
+    }
+
     /// Render the plan skeleton as stable YAML.
     pub fn to_yaml(&self) -> String {
-        format!(
-            "schema_version: {}\nstatus: {}\nevidence_policy: {}\npages: []\nopen_questions: []\nstale_claims: []\n",
-            self.schema_version, self.status, self.evidence_policy
-        )
+        let mut yaml = format!(
+            "schema_version: {}\nstatus: {}\nevidence_policy: {}\nconfidence_default: {}\n",
+            self.schema_version,
+            self.status,
+            self.evidence_policy,
+            Confidence::SourceBacked.as_str(),
+        );
+        yaml.push_str("detected:\n");
+        push_yaml_list(&mut yaml, "languages", &self.detected.languages, 2);
+        push_yaml_list(
+            &mut yaml,
+            "package_managers",
+            &self.detected.package_managers,
+            2,
+        );
+        push_yaml_list(&mut yaml, "frameworks", &self.detected.frameworks, 2);
+        push_yaml_list(&mut yaml, "entrypoints", &self.detected.entrypoints, 2);
+        push_yaml_list(&mut yaml, "tests", &self.detected.tests, 2);
+        push_yaml_list(&mut yaml, "docs", &self.detected.docs, 2);
+        yaml.push_str("pages:\n");
+        for page in &self.pages {
+            yaml.push_str(&format!(
+                "  - path: {}\n    title: \"{}\"\n    slot: {}\n    status: {}\n    confidence: {}\n",
+                page.path,
+                yaml_escape(&page.title),
+                page.slot,
+                page.status,
+                page.confidence.as_str(),
+            ));
+        }
+        push_yaml_list(&mut yaml, "open_questions", &self.open_questions, 0);
+        push_yaml_list(&mut yaml, "stale_claims", &self.stale_claims, 0);
+        yaml
+    }
+}
+
+/// Confidence label for claims, pages, and evidence.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Confidence {
+    /// Directly supported by authoritative evidence.
+    Confirmed,
+    /// Supported by source evidence but not independently confirmed.
+    SourceBacked,
+    /// Plausible but incomplete; must not be presented as fact.
+    Hypothesis,
+    /// Weak signal worth revisiting.
+    Watchlist,
+}
+
+impl Confidence {
+    /// Stable serialized label.
+    pub fn as_str(self) -> &'static str {
+        match self {
+            Self::Confirmed => "confirmed",
+            Self::SourceBacked => "source-backed",
+            Self::Hypothesis => "hypothesis",
+            Self::Watchlist => "watchlist",
+        }
+    }
+}
+
+/// Evidence kind for durable source references.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum EvidenceKind {
+    /// Source file evidence.
+    File,
+    /// Symbol evidence.
+    Symbol,
+    /// Command output summary.
+    Command,
+    /// Existing documentation evidence.
+    Documentation,
+    /// Git history evidence.
+    Git,
+    /// Optional provider evidence.
+    Provider,
+    /// Explicit hypothesis evidence marker.
+    Hypothesis,
+}
+
+impl EvidenceKind {
+    /// Stable serialized label.
+    pub fn as_str(self) -> &'static str {
+        match self {
+            Self::File => "file",
+            Self::Symbol => "symbol",
+            Self::Command => "command",
+            Self::Documentation => "documentation",
+            Self::Git => "git",
+            Self::Provider => "provider",
+            Self::Hypothesis => "hypothesis",
+        }
+    }
+}
+
+/// Durable evidence item model.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct EvidenceItem {
+    /// Evidence kind.
+    pub kind: EvidenceKind,
+    /// Source path when applicable.
+    pub source_path: Option<String>,
+    /// Human-readable evidence summary.
+    pub summary: String,
+    /// Evidence confidence.
+    pub confidence: Confidence,
+}
+
+/// Durable claim model.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Claim {
+    /// Claim statement.
+    pub statement: String,
+    /// Claim confidence.
+    pub confidence: Confidence,
+    /// Evidence items supporting or qualifying the claim.
+    pub evidence: Vec<EvidenceItem>,
+}
+
+/// Detected repository stack signals stored in the WikiPlan.
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
+pub struct DetectedStack {
+    /// Detected languages.
+    pub languages: Vec<String>,
+    /// Detected package managers/build tools.
+    pub package_managers: Vec<String>,
+    /// Detected frameworks/libraries.
+    pub frameworks: Vec<String>,
+    /// Detected entrypoint files.
+    pub entrypoints: Vec<String>,
+    /// Detected test files/dirs.
+    pub tests: Vec<String>,
+    /// Detected docs files/dirs.
+    pub docs: Vec<String>,
+}
+
+/// Planned generated page.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct PlannedPage {
+    /// Generated page path.
+    pub path: String,
+    /// Human-readable title.
+    pub title: String,
+    /// Canonical page slot.
+    pub slot: String,
+    /// Planning status.
+    pub status: String,
+    /// Page confidence.
+    pub confidence: Confidence,
+}
+
+impl PlannedPage {
+    /// Return canonical default page plan.
+    pub fn canonical_defaults() -> Vec<Self> {
+        [
+            ("docs/codewiki/index.md", "CodeWiki Index", "index"),
+            ("docs/codewiki/map.md", "Repository Map", "map"),
+            (
+                "docs/codewiki/architecture.md",
+                "Architecture",
+                "architecture",
+            ),
+            (
+                "docs/codewiki/evidence/claims.md",
+                "Claims",
+                "evidence.claims",
+            ),
+        ]
+        .into_iter()
+        .map(|(path, title, slot)| Self {
+            path: path.to_string(),
+            title: title.to_string(),
+            slot: slot.to_string(),
+            status: "planned".to_string(),
+            confidence: Confidence::SourceBacked,
+        })
+        .collect()
     }
 }
 
@@ -375,6 +570,22 @@ pub fn render_target_agents_md() -> String {
         "",
     ]
     .join("\n")
+}
+
+fn push_yaml_list(yaml: &mut String, key: &str, items: &[String], indent: usize) {
+    let prefix = " ".repeat(indent);
+    yaml.push_str(&format!("{prefix}{key}:\n"));
+    if items.is_empty() {
+        yaml.push_str(&format!("{prefix}  []\n"));
+        return;
+    }
+    for item in items {
+        yaml.push_str(&format!("{prefix}  - \"{}\"\n", yaml_escape(item)));
+    }
+}
+
+fn yaml_escape(value: &str) -> String {
+    value.replace('\\', "\\\\").replace('"', "\\\"")
 }
 
 #[cfg(test)]
@@ -406,7 +617,8 @@ mod tests {
 
         assert!(yaml.contains("schema_version: 1"));
         assert!(yaml.contains("claims must cite files"));
-        assert!(yaml.contains("pages: []"));
+        assert!(yaml.contains("docs/codewiki/index.md"));
+        assert!(yaml.contains("confidence_default: source-backed"));
     }
 
     #[test]
@@ -513,6 +725,42 @@ mod tests {
         );
 
         let _ = fs::remove_dir_all(base);
+    }
+
+    #[test]
+    fn wikiplan_records_detected_stack() {
+        let plan = WikiPlan::from_detected(DetectedStack {
+            languages: vec!["Rust".to_string()],
+            package_managers: vec!["Cargo".to_string()],
+            frameworks: Vec::new(),
+            entrypoints: vec!["src/main.rs".to_string()],
+            tests: Vec::new(),
+            docs: Vec::new(),
+        });
+
+        let yaml = plan.to_yaml();
+
+        assert!(yaml.contains("- \"Rust\""));
+        assert!(yaml.contains("- \"Cargo\""));
+        assert!(yaml.contains("- \"src/main.rs\""));
+    }
+
+    #[test]
+    fn evidence_claim_models_have_confidence_labels() {
+        let claim = Claim {
+            statement: "The app has a Rust entrypoint.".to_string(),
+            confidence: Confidence::SourceBacked,
+            evidence: vec![EvidenceItem {
+                kind: EvidenceKind::File,
+                source_path: Some("src/main.rs".to_string()),
+                summary: "Rust main file exists.".to_string(),
+                confidence: Confidence::Confirmed,
+            }],
+        };
+
+        assert_eq!(claim.confidence.as_str(), "source-backed");
+        assert_eq!(claim.evidence[0].kind.as_str(), "file");
+        assert_eq!(claim.evidence[0].confidence.as_str(), "confirmed");
     }
 
     fn unique_test_suffix() -> String {

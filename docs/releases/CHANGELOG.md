@@ -36,3 +36,4 @@ All notable changes should be recorded here.
 - Added local state/cache path resolution and sqlite3-backed migration application.
 - Added `codewiki init [path]` skeleton for target repo CodeWiki files and local SQLite state initialization.
 - Added repository detection v1 and wrote detection signals into init plan/index output.
+- Added WikiPlan v1 plus confidence, evidence, claim, and planned page models.
