@@ -84,6 +84,8 @@ Build CodeWiki as a complete repo-native Codex skill for semantic wiki generatio
 - `docs/work/designs/DESIGN-005-sqlite-executor-paths.md`
 - `docs/work/tickets/TICKET-006-init-skeleton.md`
 - `docs/work/designs/DESIGN-006-init-skeleton.md`
+- `docs/work/tickets/TICKET-007-repo-detection-v1.md`
+- `docs/work/designs/DESIGN-007-repo-detection-v1.md`
 
 ## Recent Decisions
 
@@ -114,13 +116,14 @@ Build CodeWiki as a complete repo-native Codex skill for semantic wiki generatio
 - Start SQLite durable state with an executor-agnostic migration registry in `codewiki-store`.
 - Resolve local state/cache paths from repository identity and apply migrations through the local `sqlite3` executable.
 - Add `codewiki init [path]` to create target `.codewiki/**`, `docs/codewiki/index.md`, and initialize local SQLite state.
+- Add repository detection v1 for languages, package managers, framework hints, entrypoints, tests, and docs signals.
 
 ## Next Steps
 
 - Create execution tickets from `PHASE-001`.
 - Write detail design for config/storage and repository exploration before implementation.
 - Implement prompt module behavior in the actual CodeWiki init/sync/Q&A runtime.
-- Implement repository detection v1 and feed it into `codewiki init`.
+- Implement WikiPlan v1 and evidence/claim Rust models.
 - Build the skill init/sync/Q&A workflows first; use Rust only where deterministic helper behavior is needed.
 - Design SQLite schema and migrations next.
 

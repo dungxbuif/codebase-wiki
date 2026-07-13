@@ -1,6 +1,6 @@
 //! Core command orchestration for CodeWiki.
 
-use codewiki_detect::DetectionCapabilities;
+use codewiki_detect::{DetectionCapabilities, detect_repository};
 use codewiki_docs::{WikiDocsLayout, render_initial_index};
 use codewiki_store::{
     CodeWikiConfig, RepositoryIdentity, StatePaths, StoreLayout, WikiPlan,
@@ -176,6 +176,8 @@ fn init_repo(repo_root: &Path, context: &RuntimeContext) -> Result<String, Strin
         .map_err(|error| format!("failed to create repository root: {error}"))?;
 
     let identity = RepositoryIdentity::new(repo_root, None);
+    let detection = detect_repository(repo_root)
+        .map_err(|error| format!("failed to detect repository signals: {error}"))?;
     let state_paths = StatePaths::resolve(&context.app_data_base, &context.cache_base, &identity);
     state_paths
         .ensure_dirs()
@@ -191,7 +193,7 @@ fn init_repo(repo_root: &Path, context: &RuntimeContext) -> Result<String, Strin
     )?;
     write_if_missing(
         &repo_root.join(".codewiki/plan.yml"),
-        &WikiPlan::default().to_yaml(),
+        &render_plan_with_detection(&detection),
         &mut actions,
     )?;
     write_if_missing(
@@ -205,7 +207,7 @@ fn init_repo(repo_root: &Path, context: &RuntimeContext) -> Result<String, Strin
         .unwrap_or("repository");
     write_if_missing(
         &repo_root.join("docs/codewiki/index.md"),
-        &render_initial_index(repo_label),
+        &render_initial_index_with_detection(repo_label, &detection.to_markdown()),
         &mut actions,
     )?;
 
@@ -216,6 +218,42 @@ fn init_repo(repo_root: &Path, context: &RuntimeContext) -> Result<String, Strin
         migration_report.latest_version,
         actions.join("\n"),
     ))
+}
+
+fn render_plan_with_detection(detection: &codewiki_detect::RepositoryDetection) -> String {
+    let mut yaml = WikiPlan::default().to_yaml();
+    yaml.push_str("detected:\n");
+    yaml.push_str("  languages:\n");
+    append_yaml_list(&mut yaml, &detection.languages, 4);
+    yaml.push_str("  package_managers:\n");
+    append_yaml_list(&mut yaml, &detection.package_managers, 4);
+    yaml.push_str("  frameworks:\n");
+    append_yaml_list(&mut yaml, &detection.frameworks, 4);
+    yaml.push_str("  entrypoints:\n");
+    append_yaml_list(&mut yaml, &detection.entrypoints, 4);
+    yaml.push_str("  tests:\n");
+    append_yaml_list(&mut yaml, &detection.tests, 4);
+    yaml.push_str("  docs:\n");
+    append_yaml_list(&mut yaml, &detection.docs, 4);
+    yaml
+}
+
+fn render_initial_index_with_detection(repo_label: &str, detection_markdown: &str) -> String {
+    let mut index = render_initial_index(repo_label);
+    index.push_str("## Detected Repository Signals\n\n");
+    index.push_str(detection_markdown);
+    index
+}
+
+fn append_yaml_list(yaml: &mut String, items: &[String], indent: usize) {
+    let prefix = " ".repeat(indent);
+    if items.is_empty() {
+        yaml.push_str(&format!("{prefix}[]\n"));
+        return;
+    }
+    for item in items {
+        yaml.push_str(&format!("{prefix}- \"{}\"\n", item.replace('"', "\\\"")));
+    }
 }
 
 fn write_if_missing(path: &Path, content: &str, actions: &mut Vec<String>) -> Result<(), String> {
@@ -343,6 +381,11 @@ mod tests {
         assert!(repo.join(".codewiki/AGENTS.md").exists());
         assert!(repo.join("docs/codewiki/index.md").exists());
         assert!(output.stdout.contains("migration_version: 1"));
+        assert!(
+            fs::read_to_string(repo.join(".codewiki/plan.yml"))
+                .expect("read plan")
+                .contains("detected:")
+        );
 
         let _ = fs::remove_dir_all(base);
     }

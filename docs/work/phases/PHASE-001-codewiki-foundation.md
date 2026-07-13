@@ -90,7 +90,7 @@ Create the complete foundation for CodeWiki as a repo-native skill that can init
 | TICKET-004 | ticket | SQLite state migrations | done | `docs/work/tickets/TICKET-004-sqlite-state-migrations.md` |
 | TICKET-005 | ticket | SQLite executor and state paths | done | `docs/work/tickets/TICKET-005-sqlite-executor-paths.md` |
 | TICKET-006 | ticket | Init skeleton | done | `docs/work/tickets/TICKET-006-init-skeleton.md` |
-| TBD | ticket | Implement repository detection and exploration contract | draft | TBD |
+| TICKET-007 | ticket | Repository detection v1 | done | `docs/work/tickets/TICKET-007-repo-detection-v1.md` |
 | TBD | ticket | Implement WikiPlan schema and generator | draft | TBD |
 | TBD | ticket | Implement docs generation and sync loop | draft | TBD |
 
