@@ -26,6 +26,7 @@ Document HTTP endpoints, RPC methods, events, CLI commands, or any other public 
 | `codewiki version` / `codewiki --version` | companion command | none | implemented | Prints current package version. |
 | `codewiki status` | companion command | none | implemented | Prints Rust companion scaffold status, command list, planned detection, config path, local state summary, and docs root. |
 | `codewiki init [path]` | companion command | local filesystem | implemented | Creates missing `.codewiki/config.yml`, `.codewiki/plan.yml`, `.codewiki/AGENTS.md`, `docs/codewiki/index.md`, and applies local SQLite migrations. Defaults to the current directory when `path` is omitted. |
+| `codewiki sync [path]` | companion command | local filesystem | implemented | Re-detects repository signals, compares generated plan/docs to desired output, updates changed/missing generated files, and no-ops when current. |
 | `codewiki doctor` | companion command | none | planned | Future deterministic environment/config diagnostic helper. |
 | `codewiki inspect` | companion command | none | planned | Future deterministic repository signal inspection helper. |
 | `codewiki cache` | companion command | none | planned | Future deterministic cache/index helper. |
@@ -36,6 +37,7 @@ Document HTTP endpoints, RPC methods, events, CLI commands, or any other public 
 | --- | --- | --- |
 | Unknown command | Companion command is not recognized | Companion binary exits with code 2 and suggests `codewiki help`. |
 | Invalid init usage | `codewiki init` receives too many arguments | CLI exits with code 2 and prints `codewiki init [path]` usage. |
+| Invalid sync usage | `codewiki sync` receives too many arguments or runs before init | CLI exits with code 1 or 2 and prints the relevant message. |
 | Init write failure | Target repo files, state dirs, or SQLite migrations cannot be created | CLI exits with code 1 and prints the failing path or migration error. |
 
 ## Versioning

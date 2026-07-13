@@ -38,3 +38,4 @@ All notable changes should be recorded here.
 - Added repository detection v1 and wrote detection signals into init plan/index output.
 - Added WikiPlan v1 plus confidence, evidence, claim, and planned page models.
 - Added canonical starter docs generation for `index`, `map`, `architecture`, and `evidence/**`.
+- Added `codewiki sync [path]` compare/update/no-op skeleton.

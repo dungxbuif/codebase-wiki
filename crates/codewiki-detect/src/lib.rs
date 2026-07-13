@@ -127,13 +127,21 @@ fn collect_files(
         if path.is_dir() {
             collect_files(root, &path, depth + 1, files)?;
         } else if path.is_file() {
-            files.push(path.strip_prefix(root).unwrap_or(&path).to_path_buf());
+            let relative = path.strip_prefix(root).unwrap_or(&path).to_path_buf();
+            if is_generated_codewiki_path(&relative) {
+                continue;
+            }
+            files.push(relative);
         }
         if files.len() >= 2_000 {
             break;
         }
     }
     Ok(())
+}
+
+fn is_generated_codewiki_path(path: &Path) -> bool {
+    path.starts_with("docs/codewiki") || path.starts_with(".codewiki")
 }
 
 fn should_skip(name: &str) -> bool {
@@ -331,6 +339,19 @@ mod tests {
         assert!(detected.languages.contains(&"Python".to_string()));
         assert!(detected.frameworks.contains(&"FastAPI".to_string()));
         assert!(detected.tests.contains(&"tests/test_app.py".to_string()));
+        let _ = fs::remove_dir_all(root);
+    }
+
+    #[test]
+    fn ignores_generated_codewiki_files() {
+        let root = temp_fixture("generated");
+        write_file(&root, "docs/codewiki/index.md", "# generated\n");
+        write_file(&root, ".codewiki/plan.yml", "schema_version: 1\n");
+        write_file(&root, "README.md", "# source doc\n");
+
+        let detected = detect_repository(&root).expect("detect");
+
+        assert_eq!(detected.docs, vec!["README.md".to_string()]);
         let _ = fs::remove_dir_all(root);
     }
 

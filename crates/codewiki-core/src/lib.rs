@@ -44,6 +44,7 @@ enum Command {
     Version,
     Status,
     Init { repo_root: PathBuf },
+    Sync { repo_root: PathBuf },
 }
 
 /// Runtime context used by commands that touch the filesystem.
@@ -100,6 +101,10 @@ where
             Ok(summary) => CliOutput::ok(summary),
             Err(message) => CliOutput::error(1, format!("error: {message}\n")),
         },
+        Ok(Command::Sync { repo_root }) => match sync_repo(&repo_root) {
+            Ok(summary) => CliOutput::ok(summary),
+            Err(message) => CliOutput::error(1, format!("error: {message}\n")),
+        },
         Err(message) => CliOutput::error(2, message),
     }
 }
@@ -128,6 +133,16 @@ where
             }
             Ok(Command::Init { repo_root })
         }
+        "sync" => {
+            let repo_root = match args.next() {
+                Some(path) => resolve_repo_path(cwd, path.as_ref()),
+                None => cwd.to_path_buf(),
+            };
+            if args.next().is_some() {
+                return Err("error: usage is `codewiki sync [path]`\n".to_string());
+            }
+            Ok(Command::Sync { repo_root })
+        }
         unknown => Err(format!(
             "error: unknown command `{unknown}`\n\nRun `codewiki help` for available commands.\n"
         )),
@@ -145,6 +160,7 @@ fn help_text() -> String {
         "  codewiki version",
         "  codewiki status",
         "  codewiki init [path]",
+        "  codewiki sync [path]",
         "",
         "Planned companion commands:",
         "  codewiki doctor",
@@ -153,6 +169,40 @@ fn help_text() -> String {
         "",
     ]
     .join("\n")
+}
+
+fn sync_repo(repo_root: &Path) -> Result<String, String> {
+    if !repo_root.join(".codewiki").exists() {
+        return Err("CodeWiki is not initialized; run `codewiki init` first".to_string());
+    }
+    let detection = detect_repository(repo_root)
+        .map_err(|error| format!("failed to detect repository signals: {error}"))?;
+    let repo_label = repo_root
+        .file_name()
+        .and_then(|name| name.to_str())
+        .unwrap_or("repository");
+    let mut actions = Vec::new();
+    write_if_changed(
+        &repo_root.join(".codewiki/plan.yml"),
+        &render_plan_with_detection(&detection),
+        &mut actions,
+    )?;
+    for page in render_initial_pages(repo_label, &detection.to_markdown()) {
+        write_if_changed(&repo_root.join(page.path), &page.content, &mut actions)?;
+    }
+
+    if actions.is_empty() {
+        Ok(format!(
+            "CodeWiki sync no-op\nrepo: {}\n",
+            repo_root.display()
+        ))
+    } else {
+        Ok(format!(
+            "CodeWiki synced\nrepo: {}\n{}\n",
+            repo_root.display(),
+            actions.join("\n")
+        ))
+    }
 }
 
 fn status_text() -> String {
@@ -246,6 +296,24 @@ fn write_if_missing(path: &Path, content: &str, actions: &mut Vec<String>) -> Re
     Ok(())
 }
 
+fn write_if_changed(path: &Path, content: &str, actions: &mut Vec<String>) -> Result<(), String> {
+    if path.exists() {
+        let existing = fs::read_to_string(path)
+            .map_err(|error| format!("failed to read `{}`: {error}", path.display()))?;
+        if existing == content {
+            return Ok(());
+        }
+    }
+    if let Some(parent) = path.parent() {
+        fs::create_dir_all(parent)
+            .map_err(|error| format!("failed to create `{}`: {error}", parent.display()))?;
+    }
+    fs::write(path, content)
+        .map_err(|error| format!("failed to write `{}`: {error}", path.display()))?;
+    actions.push(format!("updated: {}", path.display()));
+    Ok(())
+}
+
 fn resolve_repo_path(cwd: &Path, path: &str) -> PathBuf {
     let path = PathBuf::from(path);
     if path.is_absolute() {
@@ -321,6 +389,7 @@ mod tests {
 
         assert_eq!(output.exit_code, 0);
         assert!(output.stdout.contains("codewiki init [path]"));
+        assert!(output.stdout.contains("codewiki sync [path]"));
     }
 
     #[test]
@@ -393,6 +462,42 @@ mod tests {
             "custom: true\n"
         );
         assert!(output.stdout.contains("preserved:"));
+
+        let _ = fs::remove_dir_all(base);
+    }
+
+    #[test]
+    fn sync_noops_when_current_and_updates_stale_page() {
+        let sqlite = if Path::new("/usr/bin/sqlite3").exists() {
+            PathBuf::from("/usr/bin/sqlite3")
+        } else {
+            PathBuf::from("sqlite3")
+        };
+        let base = temp_path("codewiki-core-sync");
+        let repo = base.join("repo");
+        fs::create_dir_all(repo.join("src")).expect("mkdir src");
+        fs::write(repo.join("src/main.rs"), "fn main() {}\n").expect("write main");
+        let context = RuntimeContext {
+            cwd: repo.clone(),
+            app_data_base: base.join("app-data"),
+            cache_base: base.join("cache"),
+            sqlite_executable: sqlite,
+        };
+        assert_eq!(run_with_context(["init"], &context).exit_code, 0);
+
+        let no_op = run_with_context(["sync"], &context);
+        assert_eq!(no_op.exit_code, 0, "{}", no_op.stderr);
+        assert!(no_op.stdout.contains("no-op"));
+
+        fs::write(repo.join("docs/codewiki/map.md"), "stale\n").expect("stale map");
+        let synced = run_with_context(["sync"], &context);
+        assert_eq!(synced.exit_code, 0, "{}", synced.stderr);
+        assert!(synced.stdout.contains("updated:"));
+        assert!(
+            fs::read_to_string(repo.join("docs/codewiki/map.md"))
+                .expect("read map")
+                .contains("Repository Map")
+        );
 
         let _ = fs::remove_dir_all(base);
     }
