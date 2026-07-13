@@ -2,6 +2,11 @@
 
 use codewiki_explore::{ExplorationSnapshot, promote_claims_from_snapshot};
 
+/// Start marker for generated page regions.
+pub const GENERATED_REGION_START: &str = "<!-- codewiki:generated:start -->";
+/// End marker for generated page regions.
+pub const GENERATED_REGION_END: &str = "<!-- codewiki:generated:end -->";
+
 /// Planned generated docs layout.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct WikiDocsLayout {
@@ -64,7 +69,7 @@ fn render_initial_pages_with_exploration(
     let semantic_markdown = exploration.map(ExplorationSnapshot::to_markdown);
     let semantic_markdown = semantic_markdown.as_deref();
 
-    vec![
+    let pages = vec![
         GeneratedPage {
             path: "docs/codewiki/index.md".to_string(),
             content: render_initial_index_with_detection(
@@ -97,7 +102,19 @@ fn render_initial_pages_with_exploration(
             path: "docs/codewiki/evidence/commands.md".to_string(),
             content: "# Commands\n\nNo repository verification commands have been recorded yet.\n".to_string(),
         },
-    ]
+    ];
+    pages
+        .into_iter()
+        .map(|page| GeneratedPage {
+            path: page.path,
+            content: wrap_generated_region(&page.content),
+        })
+        .collect()
+}
+
+/// Wrap generated content in markers so sync can preserve human-owned text around it.
+pub fn wrap_generated_region(content: &str) -> String {
+    format!("{GENERATED_REGION_START}\n{content}\n{GENERATED_REGION_END}\n")
 }
 
 fn render_initial_index_with_detection(
@@ -234,6 +251,11 @@ mod tests {
             page.content
                 .contains("Full semantic area mapping is pending")
         }));
+        assert!(
+            pages
+                .iter()
+                .all(|page| page.content.contains(GENERATED_REGION_START))
+        );
     }
 
     #[test]

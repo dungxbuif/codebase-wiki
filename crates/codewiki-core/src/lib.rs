@@ -1,7 +1,9 @@
 //! Core command orchestration for CodeWiki.
 
 use codewiki_detect::{DetectionCapabilities, detect_repository};
-use codewiki_docs::{WikiDocsLayout, render_semantic_pages};
+use codewiki_docs::{
+    GENERATED_REGION_END, GENERATED_REGION_START, WikiDocsLayout, render_semantic_pages,
+};
 use codewiki_explore::explore_repository;
 use codewiki_store::{
     CodeWikiConfig, DetectedStack, RepositoryIdentity, SourceRecord, StatePaths, StoreLayout,
@@ -374,6 +376,20 @@ fn write_if_changed(path: &Path, content: &str, actions: &mut Vec<String>) -> Re
         if existing == content {
             return Ok(());
         }
+        if let Some(merged) = merge_generated_region(&existing, content) {
+            if merged == existing {
+                return Ok(());
+            }
+            fs::write(path, merged)
+                .map_err(|error| format!("failed to write `{}`: {error}", path.display()))?;
+            actions.push(format!("updated-generated-region: {}", path.display()));
+            return Ok(());
+        }
+        actions.push(format!(
+            "preserved-human-owned-unmarked: {}",
+            path.display()
+        ));
+        return Ok(());
     }
     if let Some(parent) = path.parent() {
         fs::create_dir_all(parent)
@@ -383,6 +399,19 @@ fn write_if_changed(path: &Path, content: &str, actions: &mut Vec<String>) -> Re
         .map_err(|error| format!("failed to write `{}`: {error}", path.display()))?;
     actions.push(format!("updated: {}", path.display()));
     Ok(())
+}
+
+fn merge_generated_region(existing: &str, generated: &str) -> Option<String> {
+    let start = existing.find(GENERATED_REGION_START)?;
+    let after_start = start + GENERATED_REGION_START.len();
+    let relative_end = existing[after_start..].find(GENERATED_REGION_END)?;
+    let end = after_start + relative_end + GENERATED_REGION_END.len();
+    let mut merged = String::new();
+    merged.push_str(&existing[..start]);
+    merged.push_str(generated.trim_end());
+    merged.push('\n');
+    merged.push_str(&existing[end..]);
+    Some(merged)
 }
 
 fn resolve_repo_path(cwd: &Path, path: &str) -> PathBuf {
@@ -559,7 +588,7 @@ mod tests {
     }
 
     #[test]
-    fn sync_noops_when_current_and_updates_stale_page() {
+    fn sync_noops_when_current_and_updates_generated_region_only() {
         let sqlite = if Path::new("/usr/bin/sqlite3").exists() {
             PathBuf::from("/usr/bin/sqlite3")
         } else {
@@ -582,20 +611,21 @@ mod tests {
         assert!(no_op.stdout.contains("no-op"));
         assert!(no_op.stdout.contains("claims_persisted:"));
 
-        fs::write(repo.join("docs/codewiki/map.md"), "stale\n").expect("stale map");
+        let existing_map = fs::read_to_string(repo.join("docs/codewiki/map.md")).expect("map");
+        fs::write(
+            repo.join("docs/codewiki/map.md"),
+            format!("human preface\n{existing_map}\nhuman notes\n"),
+        )
+        .expect("edit map");
+        fs::write(repo.join("src/main.rs"), "use std::fs;\nfn main() {}\n").expect("mutate source");
         let synced = run_with_context(["sync"], &context);
         assert_eq!(synced.exit_code, 0, "{}", synced.stderr);
-        assert!(synced.stdout.contains("updated:"));
-        assert!(
-            fs::read_to_string(repo.join("docs/codewiki/map.md"))
-                .expect("read map")
-                .contains("Repository Map")
-        );
-        assert!(
-            fs::read_to_string(repo.join("docs/codewiki/map.md"))
-                .expect("read map")
-                .contains("Dependency Hints")
-        );
+        assert!(synced.stdout.contains("updated-generated-region:"));
+        let map = fs::read_to_string(repo.join("docs/codewiki/map.md")).expect("read map");
+        assert!(map.contains("human preface"));
+        assert!(map.contains("human notes"));
+        assert!(map.contains("Repository Map"));
+        assert!(map.contains("Dependency Hints"));
         assert!(
             sqlite_count(
                 &context.sqlite_executable,

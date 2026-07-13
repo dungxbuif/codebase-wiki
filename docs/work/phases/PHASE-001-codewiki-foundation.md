@@ -99,6 +99,7 @@ Create the complete foundation for CodeWiki as a repo-native skill that can init
 | TICKET-013 | ticket | Claim persistence v1 | done | `docs/work/tickets/TICKET-013-claim-persistence-v1.md` |
 | TICKET-014 | ticket | Staleness and Q&A retrieval v1 | done | `docs/work/tickets/TICKET-014-staleness-qa-retrieval-v1.md` |
 | TICKET-015 | ticket | Production fixtures eval suite | done | `docs/work/tickets/TICKET-015-production-fixtures-eval-suite.md` |
+| TICKET-016 | ticket | Sync safety generated regions | done | `docs/work/tickets/TICKET-016-sync-safety-generated-regions.md` |
 | TBD | ticket | Implement docs generation and sync loop | draft | TBD |
 
 ## Dependencies
