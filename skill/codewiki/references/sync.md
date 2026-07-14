@@ -4,6 +4,7 @@ Load this reference when the user asks to update, refresh, reconcile, or sync an
 
 Also load `docs-structure.md`.
 Also load `conventions.md`.
+Also load `reader-first.md`.
 Also load `workspace-placement.md` when source repo and wiki workspace may differ.
 Also load `source-extensions.md` when `.agents/skills/codewiki/project/sources.yml` contains non-Git sources or the user asks to include them.
 
@@ -44,12 +45,18 @@ Update only the wiki content affected by repository or documentation changes. Pr
    - If the companion reports `preserved-human-edited-generated-region`, read the current page and perform a semantic merge: retain the user's contribution, refresh only stale evidence-backed claims, and preserve disagreements as explicit notes or open questions.
    - If the companion reports `preserved-unverified-legacy-generated-region`, preserve the page and reconcile it once before establishing a new integrity baseline.
    - Never resolve a docs conflict by copying the newly generated page wholesale over the current page.
+   - Treat companion evidence refresh as `synthesis_incomplete`; the LLM must update affected page contracts and reader prose before completion.
 
 6. Update control state.
    - Refresh `.agents/skills/codewiki/project/plan.yml` coverage, confidence, stale areas, and open questions.
    - Update `.agents/skills/codewiki/project/AGENTS.md` only when local CodeWiki rules or provider status changed.
 
-7. Record verification.
+7. Re-evaluate and validate.
+   - Run contract/source/diagram/cross-page checks and isolated docs-only onboarding for affected reading paths.
+   - Perform at most one bounded revision with named gaps.
+   - Refresh `quality-report.yml` and run `codewiki validate <workspace>`.
+
+8. Record verification.
    - Run relevant checks or record skip reasons.
    - Report preserved manual edits and any unresolved docs/source disagreement.
    - Note no-op outcome when docs are current.

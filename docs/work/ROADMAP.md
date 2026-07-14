@@ -38,3 +38,4 @@ Use this file to group work into milestones or major phases.
 | M1 | Implement CodeWiki foundation: config, storage, detection, WikiPlan, and docs generation | done | [PHASE-001-codewiki-foundation.md](phases/PHASE-001-codewiki-foundation.md) |
 | M2 | Implement sync, stale evidence detection, and docs-first Q&A context | done | [PHASE-001-codewiki-foundation.md](phases/PHASE-001-codewiki-foundation.md) |
 | M3 | Package CodeWiki as a reusable Codex skill for arbitrary repositories | done | [PHASE-001-codewiki-foundation.md](phases/PHASE-001-codewiki-foundation.md) |
+| M4 | Make generated docs sufficient and reproducible for developer onboarding through versioned skill integrity, reader-first planning, real LLM synthesis, diagrams, and quality evaluation | in_review | [PHASE-002-reader-first-docs-quality.md](phases/PHASE-002-reader-first-docs-quality.md) |

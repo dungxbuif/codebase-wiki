@@ -16,6 +16,23 @@ These standards apply to CodeWiki product work in addition to the general Harnes
 - Lexical dependency hints are hints until verified by deeper source analysis or provider evidence.
 - Stale claims must not be used as facts without narrow source re-check.
 
+## Reader Documentation Quality
+
+- Deterministic discovery artifacts belong in `docs/evidence/**`; they must not be promoted as reader prose.
+- Reader-doc success requires completed model mental-model, WikiPlan v2, page-synthesis, source-audit, diagram, cross-page, and docs-only onboarding stages.
+- Reader pages explain purpose, scope, mental model, relationships/flow, change guidance, risks, and verification before optional source inventories.
+- Dynamic topics are semantic systems, components, workflows, state/data boundaries, integrations, or high-risk change surfaces—not files or top-level directories.
+- Reject local absolute links, duplicate frontmatter/headings, renderer-specific MDX, raw symbol/import inventories, malformed diagrams, broken links, and orphan pages.
+- A critical onboarding failure cannot be averaged away. Route named gaps through at most one bounded revision, then report incomplete.
+
+## Distribution Integrity
+
+- Skill instructions, references, helper, and companion interface form one versioned package.
+- Installed managed content must match `INSTALLATION.yml` and be compatible with `package.yml` before status/init/sync/validate through the helper.
+- Generation run metadata records the resolved skill root, package and contract versions, managed digest, and source revision.
+- `legacy_unverified`, `content_drift`, and `incompatible` installations cannot report `reader_docs_ready`.
+- Doctor is read-only and never auto-updates an installation.
+
 ## Convention Quality
 
 - Discover project, language, framework/library, and area conventions from repository configuration, docs, repeated source patterns, tests, commands, or Git evidence.

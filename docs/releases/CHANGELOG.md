@@ -21,11 +21,19 @@ All notable changes should be recorded here.
 
 ### Changed
 
+- Split generation into deterministic evidence collection, required model mental-model/WikiPlan/page synthesis, and deterministic/semantic quality gates; companion init/sync now stop at `synthesis_incomplete` instead of publishing snapshot summaries as reader docs.
+- Upgraded committed planning to WikiPlan v2 with repository mental-model and typed reader/evidence/diagram/refresh/acceptance page contracts; path-derived `areas/**` generation is removed.
+- Added explicit v1-plan preservation/enrichment, legacy-control-plane rejection, and plan integrity checks for hierarchy, unique topic ownership, prerequisites, cycles, synthesized coverage, and unplanned reader pages.
+- Capture Git source provenance before repo-local initialization writes control files, preventing clean repositories from being reported as dirty by CodeWiki's own output.
 - Changed sync ownership semantics so manual edits inside generated regions win: new regions carry portable integrity hashes, unchanged bodies refresh safely, and edited or legacy-unverified bodies are preserved for LLM semantic reconciliation.
 - Standardized every CodeWiki-generated Markdown basename as uppercase while keeping wiki directories lowercase, made `docs/QUICKSTART.md` the sole entrypoint, and added marker-aware migration for legacy lowercase generated pages.
 
 ### Added
 
+- Added reader-doc validation for source/run provenance, installed-skill identity, model/evaluator metadata, bounded revision count, required reader pages, portable links, duplicate structures, raw inventory patterns, Mermaid fences, cross-page links, and orphan pages.
+- Added versioned skill package/install manifests, managed-content digest, atomic installer staging, `doctor`, `package-digest`, `validate`, helper preflight, and run-level skill provenance.
+- Added reader-first synthesis/diagram/quality references and Mezon/Grok-Wiki regression research covering concept-first planning and export-hygiene failures.
+- Added a pinned Mezon Desktop `9d7ba65` benchmark: six reader pages passed docs-only questions, source audit, installed-skill provenance, and deterministic `reader_docs_ready` validation.
 - Added evidence-derived project/language/framework convention discovery and canonical `docs/conventions/OVERVIEW.md` generation.
 - Initialized repository control harness for CodeWiki.
 - Added OpenWiki and deepwiki-open as reference submodules.

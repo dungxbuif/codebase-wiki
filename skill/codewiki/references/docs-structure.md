@@ -38,9 +38,8 @@ docs/
     SOURCES.md
     COMMANDS.md
     CLAIMS.md
-  areas/
-    <area-slug>/
-      OVERVIEW.md
+  components/
+    <SEMANTIC-TOPIC>.md
 ```
 
 `docs/**` is the knowledge surface. `.agents/skills/codewiki/project/**` is the committed control plane. SQLite state and rebuildable cache live outside the repo/workspace.
@@ -57,16 +56,16 @@ This structure may live either inside the source repository or inside a separate
 - Generate section directories only when the section has real explanatory value.
 - If evidence is thin, keep the page explicit about gaps instead of pretending the section is complete.
 - Prefer headings inside `QUICKSTART.md` or broader section pages before creating many small directories.
-- Use `areas/<area-slug>/OVERVIEW.md` for observed top-level areas only when the area is substantial.
+- Put dynamic topic pages under their semantic owner such as `architecture/`, `workflows/`, `components/`, or `data-models/`. Read `areas/**` only for legacy compatibility and re-plan it semantically.
 - Keep one canonical home per concept. Link instead of duplicating.
 - Preserve human-owned sections during sync.
-- Each generated source-backed page should start with a `<details>` block listing relevant source files, following the DeepWiki page pattern.
-- Each page should include source anchors inline or in a source-map section where they help future humans/agents verify claims.
+- Each reader page starts with purpose, scope, and a plain-language mental model. Source inventories never precede the explanation.
+- Important claims use claim-local source anchors. An optional source inventory may appear at the end; exhaustive evidence belongs under `docs/evidence/**`.
 - Keep deferred areas in a concise `## Backlog` section at the end of `QUICKSTART.md`; do not create separate stub pages.
 
 ## Canonical Page Semantics
 
-- `QUICKSTART.md`: entrypoint, overview, freshness, navigation, key source files, notes for future agents, and backlog.
+- `QUICKSTART.md`: five-minute mental model, verified start path, system at a glance, task-oriented reading paths, freshness, limitations, and backlog.
 - `SOURCE-MAP.md`: semantic navigation map of packages, apps, services, bounded contexts, and where to start.
 - `architecture/OVERVIEW.md`: runtime architecture, major components, dependency direction, constraints, and change risks.
 - `architecture/DECISIONS.md`: durable decisions inferred from docs, code, and Git history; link existing ADRs when present.

@@ -23,10 +23,11 @@ Implemented foundation capabilities:
 - dynamic repository detection without core framework adapters;
 - semantic exploration snapshots for files, areas, symbols, imports, evidence, and claims;
 - SQLite durable state for files, symbols, evidence, claims, claim/evidence links, stale claims, and Q&A context;
-- generated `docs/**` pages for canonical wiki slots and observed areas;
+- evidence-only companion init/sync plus required model-driven repository mental model, WikiPlan v2, and concept-first reader synthesis;
+- deterministic reader-doc validation for provenance, contracts, portable links, artifact hygiene, navigation, and declared isolated quality reviews;
 - sync safety with portable generated-body integrity that preserves manual edits inside and outside generated regions for semantic reconciliation;
 - production fixture tests for TypeScript, Python, and Rust-shaped repositories.
-- binary-first installed Rust companion helper at `skills/codewiki/bin/codewiki`, with copied source fallback.
+- versioned, doctor-verified skill packages with atomic replacement, managed-content digest, run provenance, and binary/source fallback.
 
 ## Install Skill
 
@@ -54,11 +55,19 @@ To install globally into `$CODEX_HOME/skills/codewiki`, opt in explicitly:
 curl -fsSL https://raw.githubusercontent.com/dungxbuif/codebase-wiki/master/scripts/install-codewiki-skill.sh | CODEWIKI_INSTALL_SCOPE=global bash
 ```
 
-The installer copies `skill/codewiki`, builds `bin/codewiki` when compatible Cargo/Rust is available, and keeps companion source as fallback. The skill wrapper `scripts/codewiki-helper.sh` prefers `CODEWIKI_COMPANION_BIN`, then the installed binary, then PATH/source fallback.
+The installer stages and validates `skill/codewiki`, builds `bin/codewiki` when compatible Cargo/Rust is available, preserves declared `project/**` state, writes `INSTALLATION.yml`, and activates the package with a rollback-safe rename. The helper verifies the installed digest and interface before status/init/sync/validate.
+
+Useful diagnostics:
+
+```bash
+.agents/skills/codewiki/scripts/codewiki-helper.sh status
+.agents/skills/codewiki/bin/codewiki doctor .agents/skills/codewiki
+```
 
 ## Product Direction
 
 - Automatic `init`: LLM explores source code and creates wiki output without approval gates.
+- Companion `init` is intentionally evidence-only and reports `synthesis_incomplete`; the skill completes model planning/synthesis and must pass `codewiki validate` before claiming onboarding-ready docs.
 - Works across repositories without core language/framework adapters.
 - Uses detection and semantic exploration to understand each repository.
 - Keeps committed config/docs separate from local persistent runtime state and rebuildable cache.

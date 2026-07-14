@@ -42,6 +42,7 @@ Keep this file as the compact router. Load bundled references only when needed:
 - `references/source-skill-template.md`: load when the user wants to create a custom source skill.
 - `references/semantic-exploration.md`: load during init/sync before writing docs, and when Q&A requires source evidence beyond generated docs.
 - `references/conventions.md`: load during every init/sync to discover project, language, framework, and area conventions from repository evidence.
+- `references/reader-first.md`: load during every init/sync to build the mental model and typed WikiPlan, synthesize reader pages, run isolated quality gates, and complete companion validation.
 - `references/init.md`: load when initializing or generating a new CodeWiki.
 - `references/sync.md`: load when updating, refreshing, or reconciling an existing CodeWiki.
 - `references/qa.md`: load when answering questions from existing CodeWiki docs/state.
@@ -89,9 +90,9 @@ docs/
       OVERVIEW.md
 ```
 
-`docs/QUICKSTART.md` and `docs/conventions/OVERVIEW.md` are required after a successful init. Keep generated Markdown filenames uppercase while keeping directories lowercase. Other pages are canonical slots, not mandatory stubs: create them only when the repository has enough evidence-backed content. Use `areas/<area-slug>/OVERVIEW.md` only for substantial areas that deserve deeper treatment.
+`docs/QUICKSTART.md` and `docs/conventions/OVERVIEW.md` are required after a successful synthesized init. Keep generated Markdown filenames uppercase while keeping directories lowercase. Other pages are canonical slots, not mandatory stubs: create them only when the repository has enough evidence-backed content. Dynamic pages live under their semantic owner; `areas/**` is legacy compatibility input, not a default generation target.
 
-Follow OpenWiki/DeepWiki structure discipline: start with a concise quickstart, create section directories only for real documentation areas, avoid thin one-file folders unless they have a strong boundary, and make each page begin with a relevant source-files block when source evidence exists.
+Follow the reader-first contract: start with a concise quickstart, create section directories only for real documentation areas, avoid thin one-file folders unless they have a strong boundary, explain purpose and mental model before code details, cite important claims locally, and keep source inventories at the end or under `docs/evidence/**`.
 
 In external/personal workspace mode, this same structure lives in the chosen workspace directory, while the source repository remains read-only evidence unless the user asks otherwise.
 
@@ -137,11 +138,12 @@ This means ordinary Q&A about documented architecture should not activate Octoco
 2. Detect language, package manager, framework/library, entrypoint, test/build, and docs signals.
 3. Inspect existing docs before source where useful.
 4. Explore source semantically with bounded file, area, symbol, import/dependency-hint, convention, and evidence snapshots.
-5. Build a WikiPlan with pages, scope, evidence needs, confidence, open questions, and refresh strategy.
-6. Generate `docs/**` from evidence and mark uncertainty explicitly.
-7. Write `.agents/skills/codewiki/project/config.yml` and `.agents/skills/codewiki/project/plan.yml`.
-8. Write `.agents/skills/codewiki/project/AGENTS.md` with CodeWiki-local instructions, including optional runtime tool status.
-9. Record verification commands or skip reasons.
+5. Use the companion to persist bounded evidence; expect `generation_status: synthesis_incomplete`.
+6. Build the repository mental model and WikiPlan v2 page contracts from evidence.
+7. Generate reader-first `docs/**` one page contract at a time and mark uncertainty explicitly.
+8. Run contract, source, diagram, cross-page, and isolated docs-only onboarding evaluation; perform at most one bounded revision.
+9. Write the quality report and run companion validation. Init is complete only at `reader_docs_ready`.
+10. Record verification commands or skip reasons.
 
 ## Sync Workflow
 

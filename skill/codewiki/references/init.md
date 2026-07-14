@@ -4,6 +4,7 @@ Load this reference when the user asks to initialize, generate, bootstrap, or cr
 
 Also load `docs-structure.md`.
 Also load `conventions.md`.
+Also load `reader-first.md`.
 Also load `workspace-placement.md` when the output location is not explicit.
 Also load `source-extensions.md` when the user mentions non-Git sources.
 
@@ -40,29 +41,39 @@ Create the initial repo-native semantic wiki without approval gates. The output 
    - Expand scope only when evidence requires it.
    - Avoid secrets and generated/vendor/cache directories.
 
-6. Create `.agents/skills/codewiki/project/plan.yml`.
-   - Include repo identity, detected stack, proposed pages, coverage, evidence needs, confidence, stale/unknown areas, provider tool status, and refresh strategy.
+6. Run companion evidence initialization when available.
+   - Treat `generation_status: synthesis_incomplete` as the correct evidence-ready state.
+   - The companion writes control scaffolding and `docs/evidence/**`; it does not complete reader docs.
+
+7. Replace the scaffold with WikiPlan v2.
+   - Record source commit/dirty state, visible docs, the repository mental model, concept ownership, hierarchy, reading order, and typed page contracts from `reader-first.md`.
+   - Select source anchors for relevance, never to meet a count quota.
    - If optional code intelligence is needed, record the trigger and selected provider.
 
-7. Create or update `.agents/skills/codewiki/project/sources.yml`.
+8. Create or update `.agents/skills/codewiki/project/sources.yml`.
    - Always include the primary Git source when a repository is involved.
    - Add non-Git sources only as declarations or user-provided source skill refs.
    - Do not assume CodeWiki has a built-in provider for Jira, Figma, or other systems.
 
-8. Generate docs under `docs/**`.
+9. Generate docs under `docs/**`.
    - Always write `QUICKSTART.md`; do not create `index.md` as a competing entrypoint.
    - Keep every generated Markdown filename uppercase while keeping directories lowercase.
    - Create only evidence-backed canonical pages.
-   - Use `areas/<area-slug>/OVERVIEW.md` only for substantial areas.
+   - Create dynamic pages under semantic owners; do not regenerate path-derived `areas/**` pages.
    - Always write `conventions/OVERVIEW.md` from the convention discovery contract; record hypotheses and conflicts when evidence is incomplete.
    - Mark uncertainties in `OPEN-QUESTIONS.md` and/or `.agents/skills/codewiki/project/plan.yml`.
 
-9. Write `.agents/skills/codewiki/project/AGENTS.md`.
+10. Write `.agents/skills/codewiki/project/AGENTS.md`.
    - Explain docs-first Q&A order.
    - Record optional provider activation notes for this repository.
    - Keep it local to CodeWiki behavior; do not replace the repository root `AGENTS.md`.
 
-10. Record verification.
+11. Evaluate, revise once at most, and validate.
+   - Run isolated docs-only onboarding and a separate source audit.
+   - Write `.agents/skills/codewiki/project/quality-report.yml` using `reader-first.md`.
+   - Run `codewiki validate <workspace>`; do not report completion unless it returns `reader_docs_ready`.
+
+12. Record verification.
    - Run safe, relevant commands when available and useful.
    - If verification is skipped, record why and residual risk in docs or plan.
 

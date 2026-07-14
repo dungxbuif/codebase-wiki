@@ -3,7 +3,7 @@
 use codewiki_detect::{DetectionCapabilities, detect_repository};
 use codewiki_docs::{
     GENERATED_REGION_END, GENERATED_REGION_HASH_PREFIX, GENERATED_REGION_START, WikiDocsLayout,
-    generated_region_hash, render_semantic_pages,
+    generated_region_hash, render_semantic_pages, validate_reader_workspace,
 };
 use codewiki_explore::explore_repository;
 use codewiki_store::{
@@ -48,9 +48,15 @@ enum Command {
     Help,
     Version,
     Status,
+    Doctor { skill_root: PathBuf },
+    PackageDigest { skill_root: PathBuf },
     Init { repo_root: PathBuf },
     Sync { repo_root: PathBuf },
+    Validate { repo_root: PathBuf },
 }
+
+/// Version of the contract between the skill workflow and Rust companion.
+pub const COMPANION_INTERFACE_VERSION: u32 = 2;
 
 /// Runtime context used by commands that touch the filesystem.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -102,11 +108,23 @@ where
         Ok(Command::Help) => CliOutput::ok(help_text()),
         Ok(Command::Version) => CliOutput::ok(format!("codewiki {}\n", env!("CARGO_PKG_VERSION"))),
         Ok(Command::Status) => CliOutput::ok(status_text()),
+        Ok(Command::Doctor { skill_root }) => match diagnose_installation(&skill_root) {
+            Ok(summary) => CliOutput::ok(summary),
+            Err(message) => CliOutput::error(1, format!("error: {message}\n")),
+        },
+        Ok(Command::PackageDigest { skill_root }) => match managed_skill_digest(&skill_root) {
+            Ok(digest) => CliOutput::ok(format!("{digest}\n")),
+            Err(message) => CliOutput::error(1, format!("error: {message}\n")),
+        },
         Ok(Command::Init { repo_root }) => match init_repo(&repo_root, context) {
             Ok(summary) => CliOutput::ok(summary),
             Err(message) => CliOutput::error(1, format!("error: {message}\n")),
         },
         Ok(Command::Sync { repo_root }) => match sync_repo(&repo_root, context) {
+            Ok(summary) => CliOutput::ok(summary),
+            Err(message) => CliOutput::error(1, format!("error: {message}\n")),
+        },
+        Ok(Command::Validate { repo_root }) => match validate_workspace(&repo_root) {
             Ok(summary) => CliOutput::ok(summary),
             Err(message) => CliOutput::error(1, format!("error: {message}\n")),
         },
@@ -128,6 +146,26 @@ where
         "help" | "-h" | "--help" => Ok(Command::Help),
         "version" | "-V" | "--version" => Ok(Command::Version),
         "status" => Ok(Command::Status),
+        "doctor" => {
+            let skill_root = match args.next() {
+                Some(path) => resolve_repo_path(cwd, path.as_ref()),
+                None => cwd.to_path_buf(),
+            };
+            if args.next().is_some() {
+                return Err("error: usage is `codewiki doctor [skill-root]`\n".to_string());
+            }
+            Ok(Command::Doctor { skill_root })
+        }
+        "package-digest" => {
+            let skill_root = match args.next() {
+                Some(path) => resolve_repo_path(cwd, path.as_ref()),
+                None => cwd.to_path_buf(),
+            };
+            if args.next().is_some() {
+                return Err("error: usage is `codewiki package-digest [skill-root]`\n".to_string());
+            }
+            Ok(Command::PackageDigest { skill_root })
+        }
         "init" => {
             let repo_root = match args.next() {
                 Some(path) => resolve_repo_path(cwd, path.as_ref()),
@@ -148,6 +186,16 @@ where
             }
             Ok(Command::Sync { repo_root })
         }
+        "validate" => {
+            let repo_root = match args.next() {
+                Some(path) => resolve_repo_path(cwd, path.as_ref()),
+                None => cwd.to_path_buf(),
+            };
+            if args.next().is_some() {
+                return Err("error: usage is `codewiki validate [path]`\n".to_string());
+            }
+            Ok(Command::Validate { repo_root })
+        }
         unknown => Err(format!(
             "error: unknown command `{unknown}`\n\nRun `codewiki help` for available commands.\n"
         )),
@@ -164,11 +212,13 @@ fn help_text() -> String {
         "  codewiki help",
         "  codewiki version",
         "  codewiki status",
+        "  codewiki doctor [skill-root]",
         "  codewiki init [path]",
         "  codewiki sync [path]",
+        "  codewiki validate [path]",
         "",
-        "Planned companion commands:",
-        "  codewiki doctor",
+        "Internal/diagnostic commands:",
+        "  codewiki package-digest [skill-root]",
         "  codewiki inspect",
         "  codewiki cache",
         "",
@@ -185,6 +235,8 @@ fn sync_workspace(
     workspace_root: &Path,
     context: &RuntimeContext,
 ) -> Result<String, String> {
+    reject_legacy_control_plane(workspace_root)?;
+    let (source_commit, source_dirty) = source_provenance(source_root);
     if !workspace_root
         .join(".agents/skills/codewiki/project")
         .exists()
@@ -215,18 +267,44 @@ fn sync_workspace(
         .unwrap_or("repository");
     let mut actions = Vec::new();
     migrate_legacy_generated_docs(workspace_root, &mut actions)?;
-    write_if_changed(
-        &workspace_root.join(".agents/skills/codewiki/project/plan.yml"),
-        &render_plan_with_detection(&detection),
+    let plan_path = workspace_root.join(".agents/skills/codewiki/project/plan.yml");
+    migrate_legacy_plan(
+        workspace_root,
+        &detection,
+        &source_commit,
+        source_dirty,
         &mut actions,
     )?;
+    if !plan_path.exists() {
+        write_if_missing(
+            &plan_path,
+            &render_plan_with_detection(&detection, &source_commit, source_dirty),
+            &mut actions,
+        )?;
+    }
     for page in render_semantic_pages(repo_label, &detection.to_markdown(), &exploration) {
         write_if_changed(&workspace_root.join(page.path), &page.content, &mut actions)?;
     }
 
+    let run_path = workspace_root.join(".agents/skills/codewiki/project/run.yml");
+    let quality_path = workspace_root.join(".agents/skills/codewiki/project/quality-report.yml");
+    let evidence_changed = !actions.is_empty() || persistence_report.stale_claims_seen > 0;
+    if evidence_changed || !run_path.exists() || !quality_path.exists() {
+        write_control_if_changed(
+            &run_path,
+            &render_run_status("synthesis_incomplete"),
+            &mut actions,
+        )?;
+        write_control_if_changed(
+            &quality_path,
+            &render_quality_report_template(),
+            &mut actions,
+        )?;
+    }
+
     if actions.is_empty() {
         Ok(format!(
-            "CodeWiki sync no-op\nsource: {}\nworkspace: {}\nstate_db: {}\nmigration_version: {}\nclaims_persisted: {}\nstale_claims: {}\n",
+            "CodeWiki sync no-op\nsource: {}\nworkspace: {}\nstate_db: {}\nmigration_version: {}\nclaims_persisted: {}\nstale_claims: {}\ngeneration_status: synthesis_incomplete\n",
             source_root.display(),
             workspace_root.display(),
             migration_report.sqlite_path.display(),
@@ -236,13 +314,14 @@ fn sync_workspace(
         ))
     } else {
         Ok(format!(
-            "CodeWiki synced\nsource: {}\nworkspace: {}\nstate_db: {}\nmigration_version: {}\nclaims_persisted: {}\nstale_claims: {}\n{}\n",
+            "CodeWiki evidence refreshed\nsource: {}\nworkspace: {}\nstate_db: {}\nmigration_version: {}\nclaims_persisted: {}\nstale_claims: {}\ngeneration_status: synthesis_incomplete\nnext: run the CodeWiki skill synthesis workflow, then `codewiki validate {}`\n{}\n",
             source_root.display(),
             workspace_root.display(),
             migration_report.sqlite_path.display(),
             migration_report.latest_version,
             persistence_report.claims_seen,
             persistence_report.stale_claims_seen,
+            workspace_root.display(),
             actions.join("\n")
         ))
     }
@@ -254,7 +333,9 @@ fn status_text() -> String {
     let docs = WikiDocsLayout::default();
 
     format!(
-        "CodeWiki companion tool ready\nruntime: rust\ncommands: help, version, status, init, sync\nrepository detection: {}\ncommitted config: {}\ncommitted plan: {}\nlocal agents: {}\nlocal state: {}\ndocs root: {}\n",
+        "CodeWiki companion tool ready\nruntime: rust\ncompanion_interface_version: {}\n{}commands: help, version, status, doctor, init, sync, validate\nrepository detection: {}\ncommitted config: {}\ncommitted plan: {}\nlocal agents: {}\nlocal state: {}\ndocs root: {}\n",
+        COMPANION_INTERFACE_VERSION,
+        runtime_skill_metadata(),
         detection.summary(),
         store.committed_config_path,
         store.committed_plan_path,
@@ -278,6 +359,11 @@ pub fn init_workspace(
     workspace_root: &Path,
     context: &RuntimeContext,
 ) -> Result<String, String> {
+    reject_legacy_control_plane(workspace_root)?;
+    // Capture source provenance before repo-local initialization writes its own
+    // control files. Otherwise CodeWiki would report a clean repository as dirty
+    // because of the files it just created.
+    let (source_commit, source_dirty) = source_provenance(source_root);
     fs::create_dir_all(workspace_root)
         .map_err(|error| format!("failed to create wiki workspace root: {error}"))?;
 
@@ -309,7 +395,7 @@ pub fn init_workspace(
     )?;
     write_if_missing(
         &workspace_root.join(".agents/skills/codewiki/project/plan.yml"),
-        &render_plan_with_detection(&detection),
+        &render_plan_with_detection(&detection, &source_commit, source_dirty),
         &mut actions,
     )?;
     write_if_missing(
@@ -327,6 +413,16 @@ pub fn init_workspace(
         &render_sources_yaml(&primary_source, &[]),
         &mut actions,
     )?;
+    write_control_if_changed(
+        &workspace_root.join(".agents/skills/codewiki/project/run.yml"),
+        &render_run_status("synthesis_incomplete"),
+        &mut actions,
+    )?;
+    write_control_if_changed(
+        &workspace_root.join(".agents/skills/codewiki/project/quality-report.yml"),
+        &render_quality_report_template(),
+        &mut actions,
+    )?;
     let repo_label = source_root
         .file_name()
         .and_then(|name| name.to_str())
@@ -336,18 +432,23 @@ pub fn init_workspace(
     }
 
     Ok(format!(
-        "CodeWiki initialized\nsource: {}\nworkspace: {}\nstate_db: {}\nmigration_version: {}\nclaims_persisted: {}\nstale_claims: {}\n{}\n",
+        "CodeWiki evidence initialized\nsource: {}\nworkspace: {}\nstate_db: {}\nmigration_version: {}\nclaims_persisted: {}\nstale_claims: {}\ngeneration_status: synthesis_incomplete\nnext: run the CodeWiki skill synthesis workflow, then `codewiki validate {}`\n{}\n",
         source_root.display(),
         workspace_root.display(),
         migration_report.sqlite_path.display(),
         migration_report.latest_version,
         persistence_report.claims_seen,
         persistence_report.stale_claims_seen,
+        workspace_root.display(),
         actions.join("\n"),
     ))
 }
 
-fn render_plan_with_detection(detection: &codewiki_detect::RepositoryDetection) -> String {
+fn render_plan_with_detection(
+    detection: &codewiki_detect::RepositoryDetection,
+    source_commit: &str,
+    source_dirty: bool,
+) -> String {
     WikiPlan::from_detected(DetectedStack {
         languages: detection.languages.clone(),
         package_managers: detection.package_managers.clone(),
@@ -356,7 +457,391 @@ fn render_plan_with_detection(detection: &codewiki_detect::RepositoryDetection) 
         tests: detection.tests.clone(),
         docs: detection.docs.clone(),
     })
+    .with_provenance(
+        source_commit.to_string(),
+        source_dirty,
+        detection.docs.clone(),
+    )
     .to_yaml()
+}
+
+fn source_provenance(source_root: &Path) -> (String, bool) {
+    (
+        git_value(source_root, &["rev-parse", "HEAD"]).unwrap_or_else(|| "unknown".to_string()),
+        git_value(source_root, &["status", "--porcelain"])
+            .is_some_and(|status| !status.trim().is_empty()),
+    )
+}
+
+fn reject_legacy_control_plane(workspace_root: &Path) -> Result<(), String> {
+    let legacy = workspace_root.join(".codewiki");
+    if legacy.exists() {
+        return Err(format!(
+            "legacy_control_plane: `{}` exists; move or migrate it explicitly before using `.agents/skills/codewiki/project`",
+            legacy.display()
+        ));
+    }
+    Ok(())
+}
+
+fn migrate_legacy_plan(
+    workspace_root: &Path,
+    detection: &codewiki_detect::RepositoryDetection,
+    source_commit: &str,
+    source_dirty: bool,
+    actions: &mut Vec<String>,
+) -> Result<(), String> {
+    let project_root = workspace_root.join(".agents/skills/codewiki/project");
+    let plan_path = project_root.join("plan.yml");
+    if !plan_path.exists() {
+        return Ok(());
+    }
+    let legacy_plan = fs::read_to_string(&plan_path)
+        .map_err(|error| format!("failed to read `{}`: {error}", plan_path.display()))?;
+    let Some(schema_version) = yaml_scalar(&legacy_plan, "schema_version") else {
+        return Err(format!(
+            "invalid_plan: `{}` has no schema_version",
+            plan_path.display()
+        ));
+    };
+    let schema_version = schema_version.parse::<u32>().map_err(|_| {
+        format!(
+            "invalid_plan: `{}` has a non-integer schema_version",
+            plan_path.display()
+        )
+    })?;
+    if schema_version == codewiki_store::WIKIPLAN_SCHEMA_VERSION {
+        return Ok(());
+    }
+    if schema_version != 1 {
+        return Err(format!(
+            "incompatible_plan: schema {schema_version} is not supported; expected 1 or {}",
+            codewiki_store::WIKIPLAN_SCHEMA_VERSION
+        ));
+    }
+
+    let backup_path = project_root.join("plan.v1.legacy.yml");
+    if backup_path.exists() {
+        let existing = fs::read_to_string(&backup_path)
+            .map_err(|error| format!("failed to read `{}`: {error}", backup_path.display()))?;
+        if existing != legacy_plan {
+            return Err(format!(
+                "legacy_plan_conflict: `{}` already contains a different v1 plan",
+                backup_path.display()
+            ));
+        }
+    } else {
+        fs::write(&backup_path, &legacy_plan)
+            .map_err(|error| format!("failed to preserve `{}`: {error}", backup_path.display()))?;
+        actions.push(format!("preserved-legacy-plan: {}", backup_path.display()));
+    }
+
+    let enriched = WikiPlan::from_detected(DetectedStack {
+        languages: detection.languages.clone(),
+        package_managers: detection.package_managers.clone(),
+        frameworks: detection.frameworks.clone(),
+        entrypoints: detection.entrypoints.clone(),
+        tests: detection.tests.clone(),
+        docs: detection.docs.clone(),
+    })
+    .with_provenance(source_commit.to_string(), source_dirty, detection.docs.clone())
+    .with_open_question(
+        "Enrich canonical concepts and evidence anchors from preserved plan.v1.legacy.yml before reader synthesis.",
+    )
+    .to_yaml();
+    write_control_if_changed(&plan_path, &enriched, actions)
+}
+
+fn render_run_status(status: &str) -> String {
+    let (mental_model, wikiplan, synthesis, quality) = if status == "reader_docs_ready" {
+        ("complete", "complete", "complete", "pass")
+    } else {
+        ("pending", "scaffold_only", "pending", "pending")
+    };
+    format!(
+        "schema_version: 1\ncompanion_interface_version: {}\ngeneration_status: {}\n{}stages:\n  discovery: complete\n  evidence_persistence: complete\n  repository_mental_model: {}\n  wikiplan: {}\n  page_synthesis: {}\n  quality: {}\n",
+        COMPANION_INTERFACE_VERSION,
+        status,
+        runtime_skill_metadata(),
+        mental_model,
+        wikiplan,
+        synthesis,
+        quality
+    )
+}
+
+fn runtime_skill_metadata() -> String {
+    let Ok(root) = std::env::var("CODEWIKI_SKILL_ROOT") else {
+        return "skill_installation:\n  state: not_recorded\n".to_string();
+    };
+    let root = PathBuf::from(root);
+    let package = fs::read_to_string(root.join("package.yml")).unwrap_or_default();
+    let installation = fs::read_to_string(root.join("INSTALLATION.yml")).unwrap_or_default();
+    let state = if diagnose_installation(&root).is_ok() {
+        "verified"
+    } else if installation.is_empty() {
+        "legacy_unverified"
+    } else {
+        "invalid"
+    };
+    format!(
+        "skill_installation:\n  state: {}\n  root: \"{}\"\n  package_version: \"{}\"\n  skill_contract_version: \"{}\"\n  reference_contract_version: \"{}\"\n  managed_digest: \"{}\"\n  source_revision: \"{}\"\n",
+        state,
+        yaml_string(&root.to_string_lossy()),
+        yaml_string(
+            &yaml_scalar(&package, "package_version").unwrap_or_else(|| "unknown".to_string())
+        ),
+        yaml_string(
+            &yaml_scalar(&package, "skill_contract_version")
+                .unwrap_or_else(|| "unknown".to_string())
+        ),
+        yaml_string(
+            &yaml_scalar(&package, "reference_contract_version")
+                .unwrap_or_else(|| "unknown".to_string())
+        ),
+        yaml_string(
+            &yaml_scalar(&installation, "managed_digest").unwrap_or_else(|| "unknown".to_string())
+        ),
+        yaml_string(
+            &yaml_scalar(&installation, "source_revision").unwrap_or_else(|| "unknown".to_string())
+        ),
+    )
+}
+
+fn yaml_string(value: &str) -> String {
+    value.replace('\\', "\\\\").replace('"', "\\\"")
+}
+
+fn render_quality_report_template() -> String {
+    "schema_version: 1\nmodel_synthesis: pending\ncontract_coverage: pending\nsource_audit: pending\ndiagram_audit: pending\ncross_page_review: pending\ndocs_only_onboarding: pending\nreader_context: docs_only\nsource_auditor_context: source_and_evidence\ncritical_failures: pending\nrevision_attempts: 0\ngeneration_model: \"unrecorded\"\nevaluation_model: \"unrecorded\"\nnotes: \"The CodeWiki skill must run isolated reader and source-auditor checks before validation.\"\n".to_string()
+}
+
+fn validate_workspace(workspace_root: &Path) -> Result<String, String> {
+    let report = validate_reader_workspace(workspace_root);
+    if !report.ready {
+        return Err(format!(
+            "reader documentation quality failed ({} pages checked):\n- {}",
+            report.reader_pages_checked,
+            report.errors.join("\n- ")
+        ));
+    }
+    let run_path = workspace_root.join(".agents/skills/codewiki/project/run.yml");
+    if let Some(parent) = run_path.parent() {
+        fs::create_dir_all(parent)
+            .map_err(|error| format!("failed to create `{}`: {error}", parent.display()))?;
+    }
+    let existing_run = fs::read_to_string(&run_path)
+        .map_err(|error| format!("failed to read `{}`: {error}", run_path.display()))?;
+    fs::write(&run_path, mark_run_reader_docs_ready(&existing_run))
+        .map_err(|error| format!("failed to write `{}`: {error}", run_path.display()))?;
+    Ok(format!(
+        "CodeWiki reader docs ready\nworkspace: {}\nreader_pages_checked: {}\ngeneration_status: reader_docs_ready\n",
+        workspace_root.display(),
+        report.reader_pages_checked
+    ))
+}
+
+fn mark_run_reader_docs_ready(existing: &str) -> String {
+    let mut output = String::new();
+    for line in existing.lines() {
+        let replacement = if line.starts_with("generation_status:") {
+            "generation_status: reader_docs_ready"
+        } else if line.trim_start().starts_with("repository_mental_model:") {
+            "  repository_mental_model: complete"
+        } else if line.trim_start().starts_with("wikiplan:") {
+            "  wikiplan: complete"
+        } else if line.trim_start().starts_with("page_synthesis:") {
+            "  page_synthesis: complete"
+        } else if line.trim_start().starts_with("quality:") {
+            "  quality: pass"
+        } else {
+            line
+        };
+        output.push_str(replacement);
+        output.push('\n');
+    }
+    output
+}
+
+fn git_value(root: &Path, args: &[&str]) -> Option<String> {
+    let output = std::process::Command::new("git")
+        .arg("-C")
+        .arg(root)
+        .args(args)
+        .output()
+        .ok()?;
+    if !output.status.success() {
+        return None;
+    }
+    Some(String::from_utf8_lossy(&output.stdout).trim().to_string())
+}
+
+fn diagnose_installation(skill_root: &Path) -> Result<String, String> {
+    let package_path = skill_root.join("package.yml");
+    let installation_path = skill_root.join("INSTALLATION.yml");
+    let package = fs::read_to_string(&package_path).map_err(|_| {
+        format!(
+            "legacy_unverified: missing source package manifest `{}`; reinstall CodeWiki explicitly",
+            package_path.display()
+        )
+    })?;
+    let installation = fs::read_to_string(&installation_path).map_err(|_| {
+        format!(
+            "legacy_unverified: missing install provenance `{}`; reinstall CodeWiki explicitly",
+            installation_path.display()
+        )
+    })?;
+    for key in [
+        "package_version",
+        "skill_contract_version",
+        "reference_contract_version",
+        "companion_interface_version",
+        "wikiplan_schema_min",
+        "wikiplan_schema_max",
+    ] {
+        let source_value = yaml_scalar(&package, key)
+            .ok_or_else(|| format!("invalid_manifest: package.yml lacks {key}"))?;
+        if matches!(
+            key,
+            "package_version"
+                | "skill_contract_version"
+                | "reference_contract_version"
+                | "companion_interface_version"
+        ) {
+            let installed_value = yaml_scalar(&installation, key)
+                .ok_or_else(|| format!("legacy_unverified: INSTALLATION.yml lacks {key}"))?;
+            if source_value != installed_value {
+                return Err(format!(
+                    "incompatible: {key} differs (package={source_value}, installed={installed_value})"
+                ));
+            }
+        }
+    }
+    let schema_min = yaml_scalar(&package, "wikiplan_schema_min")
+        .and_then(|value| value.parse::<u32>().ok())
+        .ok_or_else(|| "invalid_manifest: wikiplan_schema_min is not an integer".to_string())?;
+    let schema_max = yaml_scalar(&package, "wikiplan_schema_max")
+        .and_then(|value| value.parse::<u32>().ok())
+        .ok_or_else(|| "invalid_manifest: wikiplan_schema_max is not an integer".to_string())?;
+    if !(schema_min..=schema_max).contains(&codewiki_store::WIKIPLAN_SCHEMA_VERSION) {
+        return Err(format!(
+            "incompatible: runtime WikiPlan schema {} is outside package range {schema_min}..={schema_max}",
+            codewiki_store::WIKIPLAN_SCHEMA_VERSION
+        ));
+    }
+    let expected_digest = yaml_scalar(&installation, "managed_digest")
+        .ok_or_else(|| "legacy_unverified: INSTALLATION.yml lacks managed_digest".to_string())?;
+    let actual_digest = managed_skill_digest(skill_root)?;
+    if expected_digest != actual_digest {
+        return Err(format!(
+            "content_drift: managed skill digest differs (expected {expected_digest}, actual {actual_digest})"
+        ));
+    }
+    let package_interface = yaml_scalar(&package, "companion_interface_version")
+        .ok_or_else(|| "package.yml lacks companion_interface_version".to_string())?;
+    let installed_interface = yaml_scalar(&installation, "companion_interface_version")
+        .ok_or_else(|| "INSTALLATION.yml lacks companion_interface_version".to_string())?;
+    let runtime_interface = COMPANION_INTERFACE_VERSION.to_string();
+    if package_interface != runtime_interface || installed_interface != runtime_interface {
+        return Err(format!(
+            "incompatible: package={package_interface}, installed={installed_interface}, runtime={runtime_interface}"
+        ));
+    }
+    Ok(format!(
+        "CodeWiki installation verified\nstate: verified\nskill_root: {}\ninstall_scope: {}\nmanaged_digest: {}\ncompanion_interface_version: {}\npackage_version: {}\nskill_contract_version: {}\nreference_contract_version: {}\nwikiplan_schema_range: {}..={}\nsource_revision: {}\n",
+        skill_root.display(),
+        yaml_scalar(&installation, "install_scope").unwrap_or_else(|| "unknown".to_string()),
+        actual_digest,
+        runtime_interface,
+        yaml_scalar(&package, "package_version").unwrap_or_else(|| "unknown".to_string()),
+        yaml_scalar(&package, "skill_contract_version").unwrap_or_else(|| "unknown".to_string()),
+        yaml_scalar(&package, "reference_contract_version")
+            .unwrap_or_else(|| "unknown".to_string()),
+        schema_min,
+        schema_max,
+        yaml_scalar(&installation, "source_revision").unwrap_or_else(|| "unknown".to_string()),
+    ))
+}
+
+fn yaml_scalar(yaml: &str, key: &str) -> Option<String> {
+    yaml.lines().find_map(|line| {
+        let (candidate, value) = line.split_once(':')?;
+        if candidate.trim() != key {
+            return None;
+        }
+        Some(value.trim().trim_matches('"').to_string())
+    })
+}
+
+fn managed_skill_digest(skill_root: &Path) -> Result<String, String> {
+    let mut files = Vec::new();
+    collect_managed_skill_files(skill_root, skill_root, &mut files)?;
+    files.sort();
+    let mut hash = 0xcbf29ce484222325_u64;
+    for path in files {
+        let relative = path
+            .strip_prefix(skill_root)
+            .map_err(|error| format!("failed to relativize `{}`: {error}", path.display()))?;
+        for byte in relative.to_string_lossy().as_bytes() {
+            hash ^= u64::from(*byte);
+            hash = hash.wrapping_mul(0x100000001b3);
+        }
+        hash ^= 0;
+        hash = hash.wrapping_mul(0x100000001b3);
+        let content = fs::read(&path).map_err(|error| {
+            format!("failed to read managed file `{}`: {error}", path.display())
+        })?;
+        for byte in content {
+            hash ^= u64::from(byte);
+            hash = hash.wrapping_mul(0x100000001b3);
+        }
+        hash ^= 0xff;
+        hash = hash.wrapping_mul(0x100000001b3);
+    }
+    Ok(format!("fnv1a64:{hash:016x}"))
+}
+
+fn collect_managed_skill_files(
+    skill_root: &Path,
+    current: &Path,
+    files: &mut Vec<PathBuf>,
+) -> Result<(), String> {
+    let entries = fs::read_dir(current).map_err(|error| {
+        format!(
+            "failed to read skill directory `{}`: {error}",
+            current.display()
+        )
+    })?;
+    for entry in entries {
+        let entry = entry.map_err(|error| format!("failed to inspect skill entry: {error}"))?;
+        let path = entry.path();
+        let metadata = fs::symlink_metadata(&path)
+            .map_err(|error| format!("failed to inspect `{}`: {error}", path.display()))?;
+        if metadata.file_type().is_symlink() {
+            return Err(format!(
+                "managed skill content must not contain symlinks: {}",
+                path.display()
+            ));
+        }
+        let relative = path.strip_prefix(skill_root).unwrap_or(&path);
+        let first = relative
+            .components()
+            .next()
+            .and_then(|part| part.as_os_str().to_str());
+        if matches!(
+            first,
+            Some("bin" | "companion" | "project" | ".git" | "target")
+        ) || relative == Path::new("INSTALLATION.yml")
+        {
+            continue;
+        }
+        if path.is_dir() {
+            collect_managed_skill_files(skill_root, &path, files)?;
+        } else if path.is_file() {
+            files.push(path);
+        }
+    }
+    Ok(())
 }
 
 fn write_if_missing(path: &Path, content: &str, actions: &mut Vec<String>) -> Result<(), String> {
@@ -372,6 +857,28 @@ fn write_if_missing(path: &Path, content: &str, actions: &mut Vec<String>) -> Re
     fs::write(path, content)
         .map_err(|error| format!("failed to write `{}`: {error}", path.display()))?;
     actions.push(format!("created: {}", path.display()));
+    Ok(())
+}
+
+fn write_control_if_changed(
+    path: &Path,
+    content: &str,
+    actions: &mut Vec<String>,
+) -> Result<(), String> {
+    if path.exists() {
+        let existing = fs::read_to_string(path)
+            .map_err(|error| format!("failed to read `{}`: {error}", path.display()))?;
+        if existing == content {
+            return Ok(());
+        }
+    }
+    if let Some(parent) = path.parent() {
+        fs::create_dir_all(parent)
+            .map_err(|error| format!("failed to create `{}`: {error}", parent.display()))?;
+    }
+    fs::write(path, content)
+        .map_err(|error| format!("failed to write `{}`: {error}", path.display()))?;
+    actions.push(format!("updated-control: {}", path.display()));
     Ok(())
 }
 
@@ -712,6 +1219,7 @@ mod tests {
 
         assert_eq!(output.exit_code, 0);
         assert!(output.stdout.contains("runtime: rust"));
+        assert!(output.stdout.contains("companion_interface_version: 2"));
         assert!(
             output
                 .stdout
@@ -731,6 +1239,8 @@ mod tests {
         assert_eq!(output.exit_code, 0);
         assert!(output.stdout.contains("codewiki init [path]"));
         assert!(output.stdout.contains("codewiki sync [path]"));
+        assert!(output.stdout.contains("codewiki doctor"));
+        assert!(output.stdout.contains("codewiki validate [path]"));
     }
 
     #[test]
@@ -739,6 +1249,145 @@ mod tests {
 
         assert_eq!(output.exit_code, 2);
         assert!(output.stderr.contains("unknown command"));
+    }
+
+    #[test]
+    fn doctor_verifies_manifest_and_detects_drift() {
+        let root = temp_path("codewiki-doctor");
+        fs::create_dir_all(root.join("references")).expect("mkdir skill");
+        fs::write(
+            root.join("package.yml"),
+            "schema_version: 1\npackage_version: \"0.2.0\"\nskill_contract_version: 2\nreference_contract_version: 2\ncompanion_interface_version: 2\nwikiplan_schema_min: 2\nwikiplan_schema_max: 2\n",
+        )
+        .expect("write package");
+        fs::write(root.join("SKILL.md"), "# Skill\n").expect("write skill");
+        fs::write(root.join("references/init.md"), "# Init\n").expect("write reference");
+        let digest = managed_skill_digest(&root).expect("digest");
+        fs::write(
+            root.join("INSTALLATION.yml"),
+            format!(
+                "schema_version: 1\npackage_version: \"0.2.0\"\nskill_contract_version: 2\nreference_contract_version: 2\nsource_revision: \"test\"\nmanaged_digest: \"{digest}\"\ncompanion_interface_version: 2\ninstall_scope: local\n"
+            ),
+        )
+        .expect("write installation");
+
+        let verified = diagnose_installation(&root).expect("verified install");
+        assert!(verified.contains("state: verified"));
+
+        fs::write(root.join("references/init.md"), "# Drifted\n").expect("mutate reference");
+        let drift = diagnose_installation(&root).expect_err("drift must fail");
+        assert!(drift.contains("content_drift"));
+        let _ = fs::remove_dir_all(root);
+    }
+
+    #[test]
+    fn validate_requires_synthesized_docs_and_quality_report() {
+        let base = temp_path("codewiki-validate");
+        let repo = base.join("repo");
+        fs::create_dir_all(repo.join("docs/conventions")).expect("mkdir docs");
+        fs::create_dir_all(repo.join(".agents/skills/codewiki/project")).expect("mkdir control");
+        fs::write(
+            repo.join(".agents/skills/codewiki/project/plan.yml"),
+            synthesized_test_plan(),
+        )
+        .expect("write plan");
+        fs::write(
+            repo.join(".agents/skills/codewiki/project/quality-report.yml"),
+            "model_synthesis: pass\ncontract_coverage: pass\nsource_audit: pass\ndiagram_audit: pass\ncross_page_review: pass\ndocs_only_onboarding: pass\nreader_context: docs_only\nsource_auditor_context: source_and_evidence\ncritical_failures: 0\nrevision_attempts: 0\ngeneration_model: \"test-generator\"\nevaluation_model: \"test-evaluator\"\n",
+        )
+        .expect("write report");
+        fs::write(
+            repo.join(".agents/skills/codewiki/project/run.yml"),
+            "schema_version: 1\ncompanion_interface_version: 2\ngeneration_status: synthesis_incomplete\nskill_installation:\n  state: verified\nstages:\n  discovery: complete\n  evidence_persistence: complete\n  repository_mental_model: pending\n  wikiplan: scaffold_only\n  page_synthesis: pending\n  quality: pending\n",
+        )
+        .expect("write run provenance");
+        fs::write(
+            repo.join("docs/QUICKSTART.md"),
+            "# Quickstart\n\n## Purpose\n\nUnderstand the application.\n\n## Mental model\n\nThe application owns its runtime.\n\n## Reading paths\n\nRead the [repository conventions](./conventions/OVERVIEW.md) before changing code.\n",
+        )
+        .expect("write quickstart");
+        fs::write(
+            repo.join("docs/conventions/OVERVIEW.md"),
+            "# Conventions\n\n## Purpose\n\nUse repository evidence.\n",
+        )
+        .expect("write conventions");
+        let context = RuntimeContext {
+            cwd: repo.clone(),
+            app_data_base: base.join("app-data"),
+            cache_base: base.join("cache"),
+            sqlite_executable: PathBuf::from("sqlite3"),
+        };
+
+        let output = run_with_context(["validate"], &context);
+
+        assert_eq!(output.exit_code, 0, "{}", output.stderr);
+        assert!(
+            output
+                .stdout
+                .contains("generation_status: reader_docs_ready")
+        );
+        let run = fs::read_to_string(repo.join(".agents/skills/codewiki/project/run.yml"))
+            .expect("read run");
+        assert!(run.contains("generation_status: reader_docs_ready"));
+        assert!(run.contains("state: verified"));
+        assert!(run.contains("repository_mental_model: complete"));
+        let _ = fs::remove_dir_all(base);
+    }
+
+    #[test]
+    fn init_rejects_legacy_control_plane_conflicts() {
+        let base = temp_path("codewiki-legacy-control");
+        let repo = base.join("repo");
+        fs::create_dir_all(repo.join(".codewiki")).expect("mkdir legacy control");
+        let context = RuntimeContext {
+            cwd: repo.clone(),
+            app_data_base: base.join("app-data"),
+            cache_base: base.join("cache"),
+            sqlite_executable: PathBuf::from("sqlite3"),
+        };
+
+        let output = run_with_context(["init"], &context);
+
+        assert_eq!(output.exit_code, 1);
+        assert!(output.stderr.contains("legacy_control_plane"));
+        assert!(!repo.join(".agents/skills/codewiki/project").exists());
+        let _ = fs::remove_dir_all(base);
+    }
+
+    #[test]
+    fn sync_preserves_and_enriches_v1_plan() {
+        let sqlite = if Path::new("/usr/bin/sqlite3").exists() {
+            PathBuf::from("/usr/bin/sqlite3")
+        } else {
+            PathBuf::from("sqlite3")
+        };
+        let base = temp_path("codewiki-plan-v1");
+        let repo = base.join("repo");
+        fs::create_dir_all(repo.join("src")).expect("mkdir src");
+        fs::write(repo.join("src/main.rs"), "fn main() {}\n").expect("write source");
+        let context = RuntimeContext {
+            cwd: repo.clone(),
+            app_data_base: base.join("app-data"),
+            cache_base: base.join("cache"),
+            sqlite_executable: sqlite,
+        };
+        assert_eq!(run_with_context(["init"], &context).exit_code, 0);
+        let project = repo.join(".agents/skills/codewiki/project");
+        let legacy = "schema_version: 1\nstatus: planned\npages:\n  - path: docs/QUICKSTART.md\n";
+        fs::write(project.join("plan.yml"), legacy).expect("write v1 plan");
+
+        let output = run_with_context(["sync"], &context);
+
+        assert_eq!(output.exit_code, 0, "{}", output.stderr);
+        assert!(output.stdout.contains("preserved-legacy-plan"));
+        assert_eq!(
+            fs::read_to_string(project.join("plan.v1.legacy.yml")).expect("legacy backup"),
+            legacy
+        );
+        let plan = fs::read_to_string(project.join("plan.yml")).expect("v2 plan");
+        assert!(plan.contains("schema_version: 2"));
+        assert!(plan.contains("preserved plan.v1.legacy.yml"));
+        let _ = fs::remove_dir_all(base);
     }
 
     #[test]
@@ -778,14 +1427,19 @@ mod tests {
             repo.join(".agents/skills/codewiki/project/sources.yml")
                 .exists()
         );
-        assert!(repo.join("docs/QUICKSTART.md").exists());
-        assert!(repo.join("docs/SOURCE-MAP.md").exists());
-        assert!(repo.join("docs/architecture/OVERVIEW.md").exists());
-        assert!(repo.join("docs/conventions/OVERVIEW.md").exists());
+        assert!(!repo.join("docs/QUICKSTART.md").exists());
+        assert!(!repo.join("docs/SOURCE-MAP.md").exists());
+        assert!(!repo.join("docs/architecture/OVERVIEW.md").exists());
+        assert!(!repo.join("docs/conventions/OVERVIEW.md").exists());
         assert!(repo.join("docs/evidence/CLAIMS.md").exists());
         assert!(!has_exact_file_name(&repo.join("docs/quickstart.md")).expect("inspect legacy"));
         assert!(output.stdout.contains("migration_version: 1"));
         assert!(output.stdout.contains("claims_persisted:"));
+        assert!(
+            output
+                .stdout
+                .contains("generation_status: synthesis_incomplete")
+        );
         assert!(
             fs::read_to_string(repo.join(".agents/skills/codewiki/project/plan.yml"))
                 .expect("read plan")
@@ -797,9 +1451,9 @@ mod tests {
                 .contains("claim:")
         );
         assert!(
-            fs::read_to_string(repo.join("docs/SOURCE-MAP.md"))
-                .expect("read map")
-                .contains("Semantic Structure")
+            fs::read_to_string(repo.join("docs/evidence/SOURCES.md"))
+                .expect("read sources")
+                .contains("src/lib.rs")
         );
         assert!(
             sqlite_count(
@@ -867,26 +1521,58 @@ mod tests {
         };
         assert_eq!(run_with_context(["init"], &context).exit_code, 0);
 
+        let run_path = repo.join(".agents/skills/codewiki/project/run.yml");
+        let ready_run = fs::read_to_string(&run_path).expect("run status").replace(
+            "generation_status: synthesis_incomplete",
+            "generation_status: reader_docs_ready",
+        );
+        fs::write(&run_path, ready_run).expect("mark prior synthesis ready");
+        let quality_path = repo.join(".agents/skills/codewiki/project/quality-report.yml");
+        fs::write(&quality_path, "model_synthesis: pass\n").expect("mark prior quality pass");
+
         let no_op = run_with_context(["sync"], &context);
         assert_eq!(no_op.exit_code, 0, "{}", no_op.stderr);
         assert!(no_op.stdout.contains("no-op"));
         assert!(no_op.stdout.contains("claims_persisted:"));
+        assert!(
+            fs::read_to_string(&run_path)
+                .expect("preserved ready status")
+                .contains("generation_status: reader_docs_ready")
+        );
 
-        let existing_map = fs::read_to_string(repo.join("docs/SOURCE-MAP.md")).expect("map");
+        let claims_path = repo.join("docs/evidence/CLAIMS.md");
+        let existing_map = fs::read_to_string(&claims_path).expect("claims");
         fs::write(
-            repo.join("docs/SOURCE-MAP.md"),
+            &claims_path,
             format!("human preface\n{existing_map}\nhuman notes\n"),
         )
-        .expect("edit map");
+        .expect("edit claims");
         fs::write(repo.join("src/main.rs"), "use std::fs;\nfn main() {}\n").expect("mutate source");
         let synced = run_with_context(["sync"], &context);
         assert_eq!(synced.exit_code, 0, "{}", synced.stderr);
         assert!(synced.stdout.contains("updated-generated-region:"));
-        let map = fs::read_to_string(repo.join("docs/SOURCE-MAP.md")).expect("read map");
+        assert!(
+            fs::read_to_string(&run_path)
+                .expect("downgraded status")
+                .contains("generation_status: synthesis_incomplete")
+        );
+        assert!(
+            fs::read_to_string(&quality_path)
+                .expect("reset quality")
+                .contains("model_synthesis: pending")
+        );
+        let map = fs::read_to_string(&claims_path).expect("read claims");
         assert!(map.contains("human preface"));
         assert!(map.contains("human notes"));
-        assert!(map.contains("Repository Map"));
-        assert!(map.contains("Dependency Hints"));
+        assert!(map.contains("# Claims"));
+        let qa = codewiki_store::render_qa_context_with_sqlite(
+            &context.sqlite_executable,
+            find_state_db(&context),
+            "std::fs",
+            10,
+        )
+        .expect("dependency evidence query");
+        assert!(qa.markdown.contains("std::fs"), "{}", qa.markdown);
         assert!(
             sqlite_count(
                 &context.sqlite_executable,
@@ -895,12 +1581,8 @@ mod tests {
             ) >= 2
         );
 
-        let manually_edited = map.replace(
-            "## Dependency Hints",
-            "## Dependency Insights (human correction)",
-        );
-        fs::write(repo.join("docs/SOURCE-MAP.md"), &manually_edited)
-            .expect("write manual generated-region edit");
+        let manually_edited = map.replace("# Claims", "# Verified Claims (human correction)");
+        fs::write(&claims_path, &manually_edited).expect("write manual generated-region edit");
         fs::write(
             repo.join("src/main.rs"),
             "use std::{fs, path::Path};\nfn main() {}\n",
@@ -914,7 +1596,7 @@ mod tests {
                 .contains("preserved-human-edited-generated-region:")
         );
         assert_eq!(
-            fs::read_to_string(repo.join("docs/SOURCE-MAP.md")).expect("read preserved map"),
+            fs::read_to_string(&claims_path).expect("read preserved claims"),
             manually_edited
         );
 
@@ -996,11 +1678,11 @@ mod tests {
                 .join(".agents/skills/codewiki/project/sources.yml")
                 .exists()
         );
-        assert!(workspace.join("docs/QUICKSTART.md").exists());
-        assert!(workspace.join("docs/conventions/OVERVIEW.md").exists());
+        assert!(!workspace.join("docs/QUICKSTART.md").exists());
+        assert!(!workspace.join("docs/conventions/OVERVIEW.md").exists());
         assert!(
-            fs::read_to_string(workspace.join("docs/SOURCE-MAP.md"))
-                .expect("read map")
+            fs::read_to_string(workspace.join("docs/evidence/SOURCES.md"))
+                .expect("read sources")
                 .contains("src/main.rs")
         );
         assert!(
@@ -1066,6 +1748,96 @@ mod tests {
             .expect("state dir entry")
             .path();
         repo_dir.join("state.sqlite3")
+    }
+
+    fn synthesized_test_plan() -> String {
+        r#"schema_version: 2
+status: synthesized
+planner_contract_version: reader-first-v2
+source_commit: "test"
+source_dirty: false
+visible_docs:
+  []
+repository_mental_model:
+  systems:
+    - "Application runtime"
+  actors:
+    - "Developer"
+pages:
+  - path: docs/QUICKSTART.md
+    title: "Quickstart"
+    page_type: overview
+    section_id: quickstart
+    parent_page: null
+    order: 10
+    importance: critical
+    reader_job: "Understand the application"
+    scope: "System entrypoint"
+    out_of_scope: "Implementation reference"
+    audiences:
+      - "new_developer"
+    prerequisites:
+      []
+    reader_questions:
+      - "How does it work?"
+    required_sections:
+      - "purpose"
+      - "mental_model"
+    diagram_slots:
+      []
+    topic_ids:
+      - "quickstart"
+    source_anchors:
+      - selector: "src/lib.rs"
+        reason: "Runtime owner"
+    evidence_gaps:
+      []
+    related_pages:
+      - "docs/conventions/OVERVIEW.md"
+    open_questions:
+      []
+    refresh_triggers:
+      - "supporting_file_changed"
+    acceptance_checks:
+      - "Question answered"
+  - path: docs/conventions/OVERVIEW.md
+    title: "Conventions"
+    page_type: reference
+    section_id: conventions
+    parent_page: docs/QUICKSTART.md
+    order: 20
+    importance: supporting
+    reader_job: "Change code consistently"
+    scope: "Repository conventions"
+    out_of_scope: "Generic language advice"
+    audiences:
+      - "new_developer"
+    prerequisites:
+      - "docs/QUICKSTART.md"
+    reader_questions:
+      - "Which rules govern changes?"
+    required_sections:
+      - "purpose"
+      - "change_guide"
+    diagram_slots:
+      []
+    topic_ids:
+      - "conventions"
+    source_anchors:
+      - selector: "Cargo.toml"
+        reason: "Explicit build policy"
+    evidence_gaps:
+      []
+    related_pages:
+      - "docs/QUICKSTART.md"
+    open_questions:
+      []
+    refresh_triggers:
+      - "supporting_file_changed"
+    acceptance_checks:
+      - "Rules include scope and evidence"
+"#
+        .to_string()
     }
 
     fn sqlite_count(sqlite: &Path, db: &Path, table: &str) -> usize {

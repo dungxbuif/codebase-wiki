@@ -23,9 +23,11 @@ CodeWiki is a skill-first Codex system with a small core:
 Repository or source workspace
   -> detection and semantic exploration
   -> evidence and fact model
-  -> repository convention discovery
-  -> WikiPlan
-  -> generated docs in repo-local or external wiki workspace
+  -> required LLM repository mental model
+  -> WikiPlan v2 and per-page contracts
+  -> required LLM reader-doc synthesis
+  -> deterministic and semantic quality gates
+  -> reader docs in repo-local or external wiki workspace
   -> sync and Q&A
 ```
 
@@ -41,14 +43,14 @@ The core should not hard-code language/framework adapters. It should combine rep
 | Module | Responsibility | Key Files | Notes |
 | --- | --- | --- | --- |
 | CodeWiki skill | Own agent workflow for init, sync, Q&A, evidence, and docs | `skill/codewiki/SKILL.md` | Primary product surface |
-| Skill installer | Install the skill into Codex home from this repo | `scripts/install-codewiki-skill.sh` | One-command install path |
-| Rust companion tool | Provide deterministic helper commands for repo inspection/config/state when needed | `crates/codewiki-cli` | Companion surface, not the product |
-| Core engine | Parse commands and orchestrate internal boundaries | `crates/codewiki-core` | Owns `help`, `version`, `status`, `init`, and `sync` behavior |
+| Skill installer | Atomically install a versioned skill/companion package and preserve declared project state | `scripts/install-codewiki-skill.sh`, `skill/codewiki/package.yml` | Writes `INSTALLATION.yml`; doctor verifies managed content and compatibility |
+| Rust companion tool | Discover/persist evidence and validate synthesized output | `crates/codewiki-cli` | Evidence/validation boundary, never the reader-prose producer |
+| Core engine | Parse commands and orchestrate deterministic boundaries | `crates/codewiki-core` | Owns `doctor`, `init`, `sync`, `validate`, run states, and provenance |
 | Repo detector | Detect languages, frameworks, package managers, entrypoints, test/build tools, and docs | `crates/codewiki-detect` | Dynamic detection only; no core adapters |
 | Explorer | Select files/symbols/docs to inspect and record evidence | `crates/codewiki-explore` | Deterministic semantic snapshot v1; lexical hints are evidence, not final claims |
 | Evidence store | Persist facts, hypotheses, claims, source references, and claim/evidence links | `crates/codewiki-store` | SQLite local runtime state with migration and persistence helpers |
-| WikiPlan generator | Produce page plan, scope, confidence, open questions, and refresh strategy | `crates/codewiki-store`, `crates/codewiki-core` | Committed summary under `.agents/skills/codewiki/project/plan.yml` |
-| Doc generator | Write human/agent-readable wiki docs | `crates/codewiki-docs` | Canonical generated docs root is `docs/**` |
+| WikiPlan contract | Persist the repository mental model, hierarchy, reader jobs/questions, anchors, diagrams, and acceptance checks | `crates/codewiki-store`, `skill/codewiki/references/reader-first.md` | Schema v2 under `.agents/skills/codewiki/project/plan.yml`; model synthesis is required |
+| Docs boundary and validator | Write deterministic evidence pages and reject invalid reader-doc output | `crates/codewiki-docs` | Reader prose is synthesized by the skill/model; `validate` gates success |
 | Sync engine | Detect stale docs and update safely | `crates/codewiki-core`, `crates/codewiki-docs`, `crates/codewiki-store` | Respects human-owned edits via generated-region markers |
 | Q&A engine | Answer from docs first, then evidence/source when needed | `crates/codewiki-store`, `skill/codewiki/references/qa.md` | Renders active/stale claim context and requires evidence citations |
 | Provider boundary | Wrap optional code-intelligence providers | `crates/codewiki-provider` | Provider selection is target-repo specific |
@@ -77,10 +79,13 @@ CodeWiki uses three distinct wiki workspace layers. The workspace may be the sou
   plan.yml        # committed semantic WikiPlan and sync plan
   AGENTS.md       # committed local CodeWiki agent guidance
   sources.yml     # primary Git source and optional source skill declarations
+  run.yml         # stage states plus installed skill identity
+  quality-report.yml # contract/evidence/diagram/cross-page/docs-only results
 
 docs/
-  QUICKSTART.md   # required generated wiki entrypoint
-  ...             # canonical generated semantic docs
+  evidence/       # deterministic discovery/claim artifacts from companion init/sync
+  QUICKSTART.md   # required only after successful model synthesis
+  ...             # concept-first reader docs selected by WikiPlan v2
 ```
 
 `docs/**` is the human/agent knowledge surface and the first source for Q&A. `.agents/skills/codewiki/project/**` is the committed control plane. SQLite state and rebuildable caches live outside the repository/workspace in platform app-data/cache directories.
@@ -91,13 +96,13 @@ Claim persistence v1 promotes deterministic source-backed structure claims from 
 
 Staleness v1 compares new semantic file content hashes against existing evidence hashes. When supporting file evidence changes, linked active claims are marked `stale` before new evidence is persisted. Q&A retrieval renders active and stale SQLite claims separately so agents can answer from fresh docs/state first and inspect stale source paths narrowly when needed.
 
-Production fixture coverage now exercises TypeScript app, Python service, and Rust workspace-shaped repositories through init, generated docs, semantic claims, SQLite Q&A context, and stale sync behavior.
+Production fixture coverage exercises TypeScript app, Python service, and Rust workspace-shaped repositories through evidence-only init, semantic claims/symbols, SQLite Q&A context, and stale sync behavior. Reader-doc benchmark coverage is tracked separately in PHASE-002.
 
 Generated docs use explicit `<!-- codewiki:generated:start -->` / `<!-- codewiki:generated:end -->` regions plus a portable generated-body integrity hash. Sync refreshes a region automatically only when its current body matches that baseline. Manual edits inside or outside the region are preserved; inside-region conflicts and legacy hashless regions are routed to LLM semantic reconciliation. Unmarked pages remain human-owned.
 
-Synthesis pages are generated for canonical wiki slots including domains, workflows, data, interfaces, operations, testing, conventions, decisions, glossary, open questions, and observed areas. These pages are deterministic evidence summaries: when evidence is thin, they record gaps rather than claiming complete understanding.
+The companion no longer emits deterministic synthesis pages. `init` and `sync` refresh `docs/evidence/**`, set `generation_status: synthesis_incomplete`, and stop. The skill/model must create the repository mental model, replace the WikiPlan scaffold, synthesize reader pages, run isolated reviews, and call `validate`. Only validation may promote the run to `reader_docs_ready`.
 
-The canonical generated docs slots are defined by ADR-0005 with filename casing refined by ADR-0007 and conventions added by ADR-0008: `QUICKSTART.md`, `SOURCE-MAP.md`, lowercase section directories such as `architecture/`, `domain/`, `workflows/`, `data-models/`, `api/`, `operations/`, `testing/`, and `conventions/`, uppercase Markdown basenames such as `OVERVIEW.md`, top-level `GLOSSARY.md` and `OPEN-QUESTIONS.md`, `evidence/**`, and optional `areas/<area-slug>/OVERVIEW.md`.
+ADR-0010 refines the canonical slots from ADR-0005: `QUICKSTART.md` and `conventions/OVERVIEW.md` are unconditional reader pages after success; other pages exist only for evidence-backed reader jobs. Dynamic pages live under semantic owners such as `components/`, `architecture/`, or `workflows/`. `areas/**` is legacy input only and is not regenerated from top-level paths.
 
 ## Runtime Flow
 
@@ -111,9 +116,12 @@ Skill workflow: CodeWiki init
   -> discover explicit and inferred repository conventions with scope and exceptions
   -> persist files, symbols, evidence, and promoted claims in SQLite
   -> mark claims stale when supporting evidence changes
-  -> create WikiPlan
-  -> generate docs
-  -> write checkpoints for future sync
+  -> write evidence pages and WikiPlan v2 scaffold
+  -> report synthesis_incomplete
+  -> skill/model builds mental model and complete WikiPlan
+  -> skill/model synthesizes reader pages and one bounded revision if needed
+  -> companion validates plan, provenance, pages, links, and declared quality reviews
+  -> report reader_docs_ready only after all gates pass
 ```
 
 ## Dependencies
@@ -133,6 +141,7 @@ Skill workflow: CodeWiki init
 - SQLite migrations must exist early because durable state is a product promise.
 - The reference submodules should inform design, but CodeWiki should not inherit their runtime architecture wholesale.
 - Rust companion tooling must not displace the skill as the primary UX.
+- Missing, legacy, drifted, or incompatible installed skill identities must not report reader-doc success.
 
 ## Linked Decisions
 
@@ -145,3 +154,5 @@ Skill workflow: CodeWiki init
 - `docs/decisions/ADR-0007-uppercase-generated-markdown-filenames.md`
 - `docs/decisions/ADR-0008-code-conventions-documentation.md`
 - `docs/decisions/ADR-0009-manual-doc-edits-win-during-sync.md`
+- `docs/decisions/ADR-0010-reader-first-information-architecture.md`
+- `docs/decisions/ADR-0011-skill-distribution-version-integrity.md`

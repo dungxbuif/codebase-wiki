@@ -15,7 +15,7 @@ ai_fields:
 shared_fields:
   - queue_items
   - status
-updated: 2026-07-13
+updated: 2026-07-14
 ---
 
 # Backlog
@@ -96,3 +96,4 @@ Mark risk flags in the `Risk Flags` column when relevant:
 | 15 | BL-015 | contract | normal | Uppercase generated Markdown filenames | High | done | `docs/work/tickets/TICKET-026-uppercase-generated-markdown-filenames.md`, `docs/work/designs/DESIGN-026-uppercase-generated-markdown-filenames.md`, `docs/decisions/ADR-0007-uppercase-generated-markdown-filenames.md` | Public contract/API, Existing behavior | done | Generated Markdown basenames are uppercase; marker-owned lowercase pages migrate safely and human-owned pages remain untouched. |
 | 16 | BL-016 | feature | normal | Discover and document code conventions | High | done | `docs/work/tickets/TICKET-027-code-conventions-documentation.md`, `docs/work/designs/DESIGN-027-code-conventions-documentation.md`, `docs/decisions/ADR-0008-code-conventions-documentation.md` | Public contract/API, Weak proof | done | Evidence-derived project/language/framework conventions are generated without core adapters or generic best-practice filler. |
 | 17 | BL-017 | sync-safety | normal | Preserve manual documentation edits during sync | High | done | `docs/work/tickets/TICKET-028-preserve-manual-doc-edits.md`, `docs/work/designs/DESIGN-028-preserve-manual-doc-edits.md`, `docs/decisions/ADR-0009-manual-doc-edits-win-during-sync.md` | Public contract/API, Existing behavior, Data loss | done | Portable generated-body integrity detects manual edits and routes conflicts to LLM semantic reconciliation without overwriting current docs. |
+| 18 | BL-018 | phase + bugs | high-risk | Deliver reader-first developer-onboarding documentation quality | High | in_review | `docs/work/phases/PHASE-002-reader-first-docs-quality.md`, `docs/work/benchmarks/MEZON-DESKTOP-9D7BA65.md`, `docs/work/bugs/BUG-001-companion-bypasses-reader-synthesis.md`, `docs/work/bugs/BUG-002-installed-skill-version-drift.md`, `docs/work/research/READER-FIRST-DOCS-AUDIT.md`, `docs/work/research/REFERENCE-DOCS-QUALITY-RESEARCH.md`, `docs/work/research/GROK-WIKI-MEZON-AUDIT.md`, `docs/work/tickets/TICKET-029-wikiplan-v2-topic-taxonomy.md`, `docs/work/tickets/TICKET-030-reader-first-synthesis-and-diagrams.md`, `docs/work/tickets/TICKET-031-onboarding-quality-evals.md` | Public contract/API, Existing behavior, Weak proof, Multi-domain, Standards change | human UAT + broader benchmark comparison | Implementation, installed-skill validation, and the pinned Mezon docs-only/source audit pass; human sign-off and accepted cross-model/TypeScript/Python comparison scope remain. |

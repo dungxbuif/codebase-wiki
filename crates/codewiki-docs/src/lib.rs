@@ -1,7 +1,8 @@
 //! Generated wiki document boundary.
 
 use codewiki_explore::{ExplorationSnapshot, promote_claims_from_snapshot};
-use std::collections::BTreeMap;
+use std::fs;
+use std::path::{Path, PathBuf};
 
 /// Start marker for generated page regions.
 pub const GENERATED_REGION_START: &str = "<!-- codewiki:generated:start -->";
@@ -26,42 +27,6 @@ pub struct GeneratedPage {
     pub content: String,
 }
 
-/// Render the initial generated CodeWiki entrypoint.
-pub fn render_initial_index(repo_label: &str) -> String {
-    format!(
-        "# {repo_label} quickstart\n\n\
-         This is the generated CodeWiki entrypoint for this repository. \
-         It is the human and future-agent starting point for understanding what the project does, how the wiki is organized, and where to go next.\n\n\
-         ## Status\n\n\
-         - State: initialized\n\
-         - Semantic exploration: pending\n\
-         - Full WikiPlan: pending\n\n\
-         ## Start Here\n\n\
-         CodeWiki answers should use `docs/**` first, then `.agents/skills/codewiki/project/plan.yml`, \
-         `.agents/skills/codewiki/project/AGENTS.md`, local SQLite evidence, source files, Git history, and optional providers only when needed.\n\n\
-         - [Source map](./SOURCE-MAP.md)\n\
-         - [Architecture overview](./architecture/OVERVIEW.md)\n\
-         - [Domain overview](./domain/OVERVIEW.md)\n\
-         - [Workflows](./workflows/OVERVIEW.md)\n\
-         - [Data models](./data-models/OVERVIEW.md)\n\
-         - [API and interfaces](./api/OVERVIEW.md)\n\
-         - [Operations runbook](./operations/RUNBOOK.md)\n\
-         - [Testing strategy](./testing/STRATEGY.md)\n\n\
-         - [Code conventions](./conventions/OVERVIEW.md)\n\n\
-         ## Current Coverage\n\n\
-         - Initial control files are present.\n\
-         - Durable local SQLite state is initialized.\n\
-         - Repository detection and semantic documentation are not complete yet.\n\n\
-         ## Notes For Future Agents\n\n\
-         - Treat this wiki as a synthesis layer, not a raw file inventory.\n\
-         - Prefer updating the canonical page for a concept instead of duplicating the same explanation elsewhere.\n\
-         - Preserve human-owned content around CodeWiki generated regions.\n\
-         - If a page would be a stub, keep the item in the backlog instead of creating a thin file.\n\n\
-         ## Backlog\n\n\
-         - Deeper semantic synthesis is pending first full exploration.\n\n"
-    )
-}
-
 /// Render the canonical initial page set.
 pub fn render_initial_pages(repo_label: &str, detection_markdown: &str) -> Vec<GeneratedPage> {
     render_initial_pages_with_exploration(repo_label, detection_markdown, None)
@@ -77,73 +42,14 @@ pub fn render_semantic_pages(
 }
 
 fn render_initial_pages_with_exploration(
-    repo_label: &str,
+    _repo_label: &str,
     detection_markdown: &str,
     exploration: Option<&ExplorationSnapshot>,
 ) -> Vec<GeneratedPage> {
-    let semantic_markdown = exploration.map(ExplorationSnapshot::to_markdown);
-    let semantic_markdown = semantic_markdown.as_deref();
-
-    let pages = vec![
-        GeneratedPage {
-            path: "docs/QUICKSTART.md".to_string(),
-            content: render_initial_index_with_detection(
-                repo_label,
-                detection_markdown,
-                semantic_markdown,
-            ),
-        },
-        GeneratedPage {
-            path: "docs/SOURCE-MAP.md".to_string(),
-            content: render_map_page(detection_markdown, semantic_markdown),
-        },
-        GeneratedPage {
-            path: "docs/architecture/OVERVIEW.md".to_string(),
-            content: render_architecture_page(semantic_markdown),
-        },
-        GeneratedPage {
-            path: "docs/domain/OVERVIEW.md".to_string(),
-            content: render_domains_page(exploration),
-        },
-        GeneratedPage {
-            path: "docs/workflows/OVERVIEW.md".to_string(),
-            content: render_workflows_page(exploration),
-        },
-        GeneratedPage {
-            path: "docs/data-models/OVERVIEW.md".to_string(),
-            content: render_data_page(exploration),
-        },
-        GeneratedPage {
-            path: "docs/api/OVERVIEW.md".to_string(),
-            content: render_interfaces_page(exploration),
-        },
-        GeneratedPage {
-            path: "docs/operations/RUNBOOK.md".to_string(),
-            content: render_operations_page(exploration),
-        },
-        GeneratedPage {
-            path: "docs/testing/STRATEGY.md".to_string(),
-            content: render_testing_page(exploration),
-        },
-        GeneratedPage {
-            path: "docs/conventions/OVERVIEW.md".to_string(),
-            content: render_conventions_page(exploration),
-        },
-        GeneratedPage {
-            path: "docs/architecture/DECISIONS.md".to_string(),
-            content: render_decisions_page(exploration),
-        },
-        GeneratedPage {
-            path: "docs/GLOSSARY.md".to_string(),
-            content: render_glossary_page(exploration),
-        },
-        GeneratedPage {
-            path: "docs/OPEN-QUESTIONS.md".to_string(),
-            content: render_open_questions_page(exploration),
-        },
+    [
         GeneratedPage {
             path: "docs/evidence/README.md".to_string(),
-            content: "# Evidence\n\nThis directory records how generated CodeWiki claims are supported.\n\n- `SOURCES.md`: inspected source/docs/provider artifacts.\n- `CLAIMS.md`: durable claims and confidence.\n- `COMMANDS.md`: verification commands and summarized results.\n".to_string(),
+            content: "# Evidence\n\nThis directory contains deterministic discovery artifacts. It is not the reader-facing wiki. The CodeWiki skill must create the repository mental model, WikiPlan, and reader pages before generation can be marked ready.\n\n- `SOURCES.md`: inspected source/docs/provider artifacts.\n- `CLAIMS.md`: durable evidence-backed structure claims.\n- `COMMANDS.md`: verification commands and summarized results.\n".to_string(),
         },
         GeneratedPage {
             path: "docs/evidence/SOURCES.md".to_string(),
@@ -157,125 +63,636 @@ fn render_initial_pages_with_exploration(
             path: "docs/evidence/COMMANDS.md".to_string(),
             content: "# Commands\n\nNo repository verification commands have been recorded yet.\n".to_string(),
         },
-    ];
-    let mut pages = pages;
-    if let Some(snapshot) = exploration {
-        for area in &snapshot.areas {
-            pages.push(GeneratedPage {
-                path: format!("docs/areas/{}/OVERVIEW.md", slugify(&area.name)),
-                content: render_area_page(snapshot, &area.name),
-            });
-        }
-    }
-    pages
+    ]
         .into_iter()
         .map(|page| GeneratedPage {
             path: page.path.clone(),
-            content: wrap_generated_region(&add_relevant_source_files(
-                page.path.as_str(),
-                &page.content,
-                exploration,
-            )),
+            content: wrap_generated_region(&page.content),
         })
         .collect()
 }
 
-fn add_relevant_source_files(
-    page_path: &str,
-    content: &str,
-    exploration: Option<&ExplorationSnapshot>,
-) -> String {
-    if page_path.starts_with("docs/evidence/") {
-        return content.to_string();
-    }
-
-    let Some(snapshot) = exploration else {
-        return content.to_string();
-    };
-
-    let paths = relevant_paths_for_page(page_path, snapshot);
-    if paths.is_empty() {
-        return content.to_string();
-    }
-
-    let mut out = "<details>\n<summary>Relevant source files</summary>\n\n".to_string();
-    out.push_str("The following files were used as context for generating this wiki page:\n\n");
-    for path in paths {
-        out.push_str(&format!("- `{path}`\n"));
-    }
-    out.push_str("</details>\n\n");
-    out.push_str(content);
-    out
+/// Result of deterministic reader-document validation.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ReaderDocsQualityReport {
+    /// Whether all deterministic and declared semantic gates passed.
+    pub ready: bool,
+    /// Named failures that prevent reader-doc success.
+    pub errors: Vec<String>,
+    /// Reader pages inspected, excluding evidence pages.
+    pub reader_pages_checked: usize,
 }
 
-fn relevant_paths_for_page(page_path: &str, snapshot: &ExplorationSnapshot) -> Vec<String> {
-    let mut paths: Vec<String> = snapshot
-        .files
+/// Validate a synthesized CodeWiki workspace before it can report reader-doc success.
+pub fn validate_reader_workspace(workspace_root: &Path) -> ReaderDocsQualityReport {
+    let mut errors = Vec::new();
+    let control_root = workspace_root.join(".agents/skills/codewiki/project");
+    let plan_path = control_root.join("plan.yml");
+    let quality_path = control_root.join("quality-report.yml");
+    let run_path = control_root.join("run.yml");
+
+    let plan = fs::read_to_string(&plan_path).unwrap_or_else(|_| {
+        errors.push(format!("missing WikiPlan: {}", plan_path.display()));
+        String::new()
+    });
+    for required in [
+        "schema_version: 2",
+        "planner_contract_version: reader-first-v2",
+        "source_commit:",
+        "source_dirty:",
+        "visible_docs:",
+        "repository_mental_model:",
+        "page_type:",
+        "reader_job:",
+        "reader_questions:",
+        "source_anchors:",
+        "diagram_slots:",
+        "acceptance_checks:",
+    ] {
+        if !plan.contains(required) {
+            errors.push(format!(
+                "WikiPlan missing required contract field `{required}`"
+            ));
+        }
+    }
+    if plan.contains("pending-llm-selection") || plan.contains("llm_semantic_planning_pending") {
+        errors.push("WikiPlan still contains deterministic planning placeholders".to_string());
+    }
+    if plan.contains("source_commit: \"unknown\"") {
+        errors.push("WikiPlan lacks a reproducible source revision".to_string());
+    }
+    let planned_pages = validate_wikiplan_structure(&plan, &mut errors);
+
+    let run = fs::read_to_string(&run_path).unwrap_or_else(|_| {
+        errors.push(format!("missing run provenance: {}", run_path.display()));
+        String::new()
+    });
+    for required in [
+        "companion_interface_version: 2",
+        "skill_installation:\n  state: verified",
+        "discovery: complete",
+        "evidence_persistence: complete",
+    ] {
+        if !run.contains(required) {
+            errors.push(format!("run provenance missing `{required}`"));
+        }
+    }
+
+    let quality = fs::read_to_string(&quality_path).unwrap_or_else(|_| {
+        errors.push(format!(
+            "missing quality report: {}",
+            quality_path.display()
+        ));
+        String::new()
+    });
+    for required in [
+        "model_synthesis: pass",
+        "contract_coverage: pass",
+        "source_audit: pass",
+        "diagram_audit: pass",
+        "cross_page_review: pass",
+        "docs_only_onboarding: pass",
+        "reader_context: docs_only",
+        "source_auditor_context: source_and_evidence",
+        "critical_failures: 0",
+    ] {
+        if !quality.contains(required) {
+            errors.push(format!("quality report missing `{required}`"));
+        }
+    }
+    for required in [
+        "generation_model:",
+        "evaluation_model:",
+        "revision_attempts:",
+    ] {
+        if !quality.contains(required) {
+            errors.push(format!("quality report missing `{required}`"));
+        }
+    }
+    if quality.contains("generation_model: \"unrecorded\"")
+        || quality.contains("evaluation_model: \"unrecorded\"")
+    {
+        errors.push("quality report lacks model provenance".to_string());
+    }
+    if let Some(attempts) = yaml_scalar(&quality, "revision_attempts") {
+        match attempts.parse::<u32>() {
+            Ok(0 | 1) => {}
+            Ok(value) => errors.push(format!(
+                "quality report exceeds one bounded revision attempt: {value}"
+            )),
+            Err(_) => errors.push("quality report revision_attempts is not an integer".to_string()),
+        }
+    }
+
+    for required in [
+        workspace_root.join("docs/QUICKSTART.md"),
+        workspace_root.join("docs/conventions/OVERVIEW.md"),
+    ] {
+        if !required.exists() {
+            errors.push(format!(
+                "missing required reader page: {}",
+                required.display()
+            ));
+        }
+    }
+
+    let mut reader_pages = Vec::new();
+    collect_markdown_files(&workspace_root.join("docs"), &mut reader_pages);
+    reader_pages.retain(|path| !path.starts_with(workspace_root.join("docs/evidence")));
+    let mut page_contents = Vec::new();
+    for path in &reader_pages {
+        match fs::read_to_string(path) {
+            Ok(content) => {
+                validate_reader_page(workspace_root, path, &content, &mut errors);
+                page_contents.push((path.clone(), content));
+            }
+            Err(error) => errors.push(format!("cannot read {}: {error}", path.display())),
+        }
+    }
+    validate_plan_page_coverage(workspace_root, &planned_pages, &reader_pages, &mut errors);
+    validate_cross_page_navigation(workspace_root, &page_contents, &mut errors);
+
+    ReaderDocsQualityReport {
+        ready: errors.is_empty(),
+        errors,
+        reader_pages_checked: reader_pages.len(),
+    }
+}
+
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
+struct ParsedPlanPage {
+    path: String,
+    page_type: String,
+    parent_page: Option<String>,
+    prerequisites: Vec<String>,
+    topic_ids: Vec<String>,
+}
+
+fn validate_wikiplan_structure(plan: &str, errors: &mut Vec<String>) -> Vec<ParsedPlanPage> {
+    let lines: Vec<_> = plan.lines().collect();
+    let mental_model = section_lines(&lines, "repository_mental_model:", "pages:");
+    if !mental_model
         .iter()
-        .filter(|file| matches_page_focus(page_path, file))
-        .take(12)
-        .map(|file| file.path.clone())
-        .collect();
-
-    if paths.len() < 5 {
-        for file in snapshot.files.iter().take(12) {
-            if !paths.contains(&file.path) {
-                paths.push(file.path.clone());
-            }
-            if paths.len() >= 5 {
-                break;
-            }
-        }
+        .any(|line| line.trim_start().starts_with("- "))
+    {
+        errors.push("WikiPlan repository mental model is empty".to_string());
     }
 
-    paths
+    let mut blocks: Vec<Vec<&str>> = Vec::new();
+    for line in &lines {
+        if line.starts_with("  - path:") {
+            blocks.push(vec![line]);
+        } else if let Some(block) = blocks.last_mut()
+            && (line.starts_with("    ") || line.trim().is_empty())
+        {
+            block.push(line);
+        }
+    }
+    if blocks.is_empty() {
+        errors.push("WikiPlan contains no page contracts".to_string());
+        return Vec::new();
+    }
+
+    let mut pages = Vec::new();
+    let mut paths = std::collections::BTreeSet::new();
+    let mut topics = std::collections::BTreeMap::new();
+    for block in blocks {
+        let path = block_scalar(&block, "path").unwrap_or_default();
+        let page_type = block_scalar(&block, "page_type").unwrap_or_default();
+        let label = if path.is_empty() {
+            "<missing-path>"
+        } else {
+            &path
+        };
+        for field in [
+            "title",
+            "page_type",
+            "section_id",
+            "parent_page",
+            "order",
+            "importance",
+            "reader_job",
+            "scope",
+            "out_of_scope",
+            "diagram_slots",
+            "source_anchors",
+            "prerequisites",
+            "evidence_gaps",
+            "related_pages",
+            "open_questions",
+        ] {
+            if !block_has_field(&block, field) {
+                errors.push(format!("WikiPlan page `{label}` missing `{field}`"));
+            }
+        }
+        for field in [
+            "audiences",
+            "reader_questions",
+            "required_sections",
+            "topic_ids",
+            "refresh_triggers",
+            "acceptance_checks",
+        ] {
+            if block_list(&block, field).is_empty() {
+                errors.push(format!("WikiPlan page `{label}` has empty `{field}`"));
+            }
+        }
+        let selectors = block
+            .iter()
+            .filter(|line| line.trim_start().starts_with("- selector:"))
+            .count();
+        let reasons = block
+            .iter()
+            .filter(|line| line.trim_start().starts_with("reason:"))
+            .count();
+        if selectors == 0 || reasons < selectors {
+            errors.push(format!(
+                "WikiPlan page `{label}` source anchors require a relevance reason"
+            ));
+        }
+        let diagram_kinds = block
+            .iter()
+            .filter(|line| line.trim_start().starts_with("- kind:"))
+            .count();
+        let diagram_questions = block
+            .iter()
+            .filter(|line| line.trim_start().starts_with("question:"))
+            .count();
+        if diagram_questions < diagram_kinds {
+            errors.push(format!(
+                "WikiPlan page `{label}` diagram slots require a reader question"
+            ));
+        }
+        if path.is_empty() {
+            continue;
+        }
+        if !paths.insert(path.clone()) {
+            errors.push(format!("WikiPlan duplicates page path `{path}`"));
+        }
+        let topic_ids = block_list(&block, "topic_ids");
+        for topic in &topic_ids {
+            if let Some(owner) = topics.insert(topic.clone(), path.clone()) {
+                errors.push(format!(
+                    "WikiPlan topic `{topic}` has multiple canonical owners: `{owner}` and `{path}`"
+                ));
+            }
+        }
+        let parent_page = block_scalar(&block, "parent_page").and_then(|value| {
+            if value == "null" || value.is_empty() {
+                None
+            } else {
+                Some(value)
+            }
+        });
+        pages.push(ParsedPlanPage {
+            path,
+            page_type,
+            parent_page,
+            prerequisites: block_list(&block, "prerequisites"),
+            topic_ids,
+        });
+    }
+
+    if !paths.contains("docs/QUICKSTART.md") {
+        errors.push("WikiPlan lacks canonical docs/QUICKSTART.md contract".to_string());
+    }
+    if !paths.contains("docs/conventions/OVERVIEW.md") {
+        errors.push("WikiPlan lacks canonical docs/conventions/OVERVIEW.md contract".to_string());
+    }
+    for page in &pages {
+        if let Some(parent) = &page.parent_page
+            && !paths.contains(parent)
+        {
+            errors.push(format!(
+                "WikiPlan page `{}` references missing parent `{parent}`",
+                page.path
+            ));
+        }
+        for prerequisite in &page.prerequisites {
+            if !paths.contains(prerequisite) {
+                errors.push(format!(
+                    "WikiPlan page `{}` references missing prerequisite `{prerequisite}`",
+                    page.path
+                ));
+            }
+        }
+        if page.path != "docs/QUICKSTART.md"
+            && page.page_type != "evidence"
+            && page.parent_page.is_none()
+        {
+            errors.push(format!(
+                "WikiPlan reader page `{}` is orphaned from the hierarchy",
+                page.path
+            ));
+        }
+    }
+    validate_prerequisite_cycles(&pages, errors);
+    pages
 }
 
-fn matches_page_focus(page_path: &str, file: &codewiki_explore::ExploredFile) -> bool {
-    let lower = file.path.to_lowercase();
-    match page_path {
-        "docs/QUICKSTART.md" | "docs/SOURCE-MAP.md" => true,
-        "docs/architecture/OVERVIEW.md" => {
-            file.role.as_str() == "source" || file.role.as_str() == "config"
+fn section_lines<'a>(lines: &'a [&'a str], start: &str, end: &str) -> Vec<&'a str> {
+    let Some(start_index) = lines.iter().position(|line| *line == start) else {
+        return Vec::new();
+    };
+    let end_index = lines[start_index + 1..]
+        .iter()
+        .position(|line| *line == end)
+        .map_or(lines.len(), |index| start_index + 1 + index);
+    lines[start_index + 1..end_index].to_vec()
+}
+
+fn block_has_field(block: &[&str], key: &str) -> bool {
+    block.iter().any(|line| {
+        line.trim_start()
+            .strip_prefix(key)
+            .is_some_and(|rest| rest.starts_with(':'))
+    })
+}
+
+fn block_scalar(block: &[&str], key: &str) -> Option<String> {
+    block.iter().find_map(|line| {
+        let trimmed = line.trim_start();
+        let prefix = if key == "path" {
+            "- path:".to_string()
+        } else {
+            format!("{key}:")
+        };
+        trimmed
+            .strip_prefix(&prefix)
+            .map(|value| value.trim().trim_matches('"').to_string())
+    })
+}
+
+fn block_list(block: &[&str], key: &str) -> Vec<String> {
+    let Some(start) = block
+        .iter()
+        .position(|line| line.trim_start() == format!("{key}:"))
+    else {
+        return Vec::new();
+    };
+    let key_indent = block[start].len() - block[start].trim_start().len();
+    let mut values = Vec::new();
+    for line in &block[start + 1..] {
+        if line.trim().is_empty() {
+            continue;
         }
-        "docs/domain/OVERVIEW.md" => {
-            lower.contains("domain") || lower.contains("model") || lower.contains("service")
+        let indent = line.len() - line.trim_start().len();
+        if indent <= key_indent {
+            break;
         }
-        "docs/workflows/OVERVIEW.md" => {
-            lower.contains("workflow")
-                || lower.contains("job")
-                || lower.contains("event")
-                || lower.contains("main")
-                || lower.contains("app")
-                || lower.contains("index")
+        let trimmed = line.trim_start();
+        if let Some(value) = trimmed.strip_prefix("- ") {
+            let value = value.trim().trim_matches('"');
+            if value != "[]" && !value.contains(':') {
+                values.push(value.to_string());
+            }
         }
-        "docs/data-models/OVERVIEW.md" => {
-            lower.contains("schema")
-                || lower.contains("model")
-                || lower.contains("migration")
-                || lower.ends_with(".sql")
-                || lower.contains("data")
-        }
-        "docs/api/OVERVIEW.md" => {
-            !file.symbols.is_empty() || lower.contains("api") || lower.contains("route")
-        }
-        "docs/operations/RUNBOOK.md" => {
-            file.role.as_str() == "config" || file.role.as_str() == "documentation"
-        }
-        "docs/testing/STRATEGY.md" => file.role.as_str() == "test",
-        "docs/conventions/OVERVIEW.md" => is_convention_source(file),
-        "docs/architecture/DECISIONS.md" => {
-            file.role.as_str() == "documentation" || lower.contains("adr")
-        }
-        "docs/GLOSSARY.md" | "docs/OPEN-QUESTIONS.md" => true,
-        path if path.starts_with("docs/areas/") => {
-            let area = path
-                .trim_start_matches("docs/areas/")
-                .trim_end_matches("/OVERVIEW.md");
-            slugify(file.path.split('/').next().unwrap_or_default()) == area
-        }
-        _ => true,
     }
+    values
+}
+
+fn validate_prerequisite_cycles(pages: &[ParsedPlanPage], errors: &mut Vec<String>) {
+    let graph: std::collections::BTreeMap<_, _> = pages
+        .iter()
+        .map(|page| (page.path.as_str(), page.prerequisites.as_slice()))
+        .collect();
+    for page in pages {
+        let mut visiting = std::collections::BTreeSet::new();
+        if has_prerequisite_cycle(&page.path, &graph, &mut visiting) {
+            errors.push(format!(
+                "WikiPlan prerequisite cycle includes `{}`",
+                page.path
+            ));
+        }
+    }
+}
+
+fn has_prerequisite_cycle<'a>(
+    path: &'a str,
+    graph: &std::collections::BTreeMap<&'a str, &'a [String]>,
+    visiting: &mut std::collections::BTreeSet<&'a str>,
+) -> bool {
+    if !visiting.insert(path) {
+        return true;
+    }
+    let cycle = graph.get(path).is_some_and(|prerequisites| {
+        prerequisites.iter().any(|prerequisite| {
+            graph.contains_key(prerequisite.as_str())
+                && has_prerequisite_cycle(prerequisite, graph, visiting)
+        })
+    });
+    visiting.remove(path);
+    cycle
+}
+
+fn validate_plan_page_coverage(
+    workspace_root: &Path,
+    planned_pages: &[ParsedPlanPage],
+    reader_pages: &[PathBuf],
+    errors: &mut Vec<String>,
+) {
+    let planned_reader_paths: std::collections::BTreeSet<_> = planned_pages
+        .iter()
+        .filter(|page| page.page_type != "evidence")
+        .map(|page| page.path.as_str())
+        .collect();
+    for page in planned_pages
+        .iter()
+        .filter(|page| page.page_type != "evidence")
+    {
+        if !workspace_root.join(&page.path).exists() {
+            errors.push(format!(
+                "WikiPlan reader page `{}` was not synthesized",
+                page.path
+            ));
+        }
+    }
+    for path in reader_pages {
+        let Ok(relative) = path.strip_prefix(workspace_root) else {
+            continue;
+        };
+        let relative = relative.to_string_lossy();
+        if !planned_reader_paths.contains(relative.as_ref()) {
+            errors.push(format!("reader page `{relative}` has no WikiPlan contract"));
+        }
+    }
+}
+
+fn collect_markdown_files(root: &Path, out: &mut Vec<PathBuf>) {
+    let Ok(entries) = fs::read_dir(root) else {
+        return;
+    };
+    for entry in entries.flatten() {
+        let path = entry.path();
+        if path.is_dir() {
+            collect_markdown_files(&path, out);
+        } else if path.extension().and_then(|ext| ext.to_str()) == Some("md") {
+            out.push(path);
+        }
+    }
+    out.sort();
+}
+
+fn validate_reader_page(
+    workspace_root: &Path,
+    path: &Path,
+    content: &str,
+    errors: &mut Vec<String>,
+) {
+    let label = path.display();
+    for forbidden in [
+        "file://",
+        "/Users/",
+        "/private/tmp/",
+        "/var/folders/",
+        "Error generating content:",
+        "## Semantic Snapshot",
+        "## Dependency Hints",
+        "discovered symbols",
+        "lexical-import",
+        "<CardGroup",
+        "<ResponseField",
+        "<Steps",
+        "<Info",
+    ] {
+        if content.contains(forbidden) {
+            errors.push(format!(
+                "{label}: forbidden generated artifact `{forbidden}`"
+            ));
+        }
+    }
+    if content.matches("## Related pages").count() > 1 {
+        errors.push(format!("{label}: duplicate Related pages sections"));
+    }
+    let mut headings = std::collections::BTreeSet::new();
+    for heading in content.lines().filter(|line| line.starts_with("## ")) {
+        let normalized = heading.trim().to_ascii_lowercase();
+        if !headings.insert(normalized) {
+            errors.push(format!("{label}: duplicate canonical section `{heading}`"));
+        }
+    }
+    if has_duplicate_frontmatter(content) {
+        errors.push(format!("{label}: duplicate frontmatter blocks"));
+    }
+    if !content.lines().any(|line| line.starts_with("# ")) {
+        errors.push(format!("{label}: missing page title"));
+    }
+    if !content.to_ascii_lowercase().contains("## purpose") {
+        errors.push(format!("{label}: missing reader purpose"));
+    }
+    if path.ends_with("QUICKSTART.md") && !content.to_ascii_lowercase().contains("## mental model")
+    {
+        errors.push(format!("{label}: Quickstart missing mental model"));
+    }
+    if let Some(index) = content.find("<summary>Relevant source files</summary>")
+        && index < 600
+    {
+        errors.push(format!(
+            "{label}: source inventory precedes the reader mental model"
+        ));
+    }
+    let mermaid_starts = content.matches("```mermaid").count();
+    let all_fences = content.matches("```").count();
+    if mermaid_starts > 0 && (all_fences < mermaid_starts * 2 || !all_fences.is_multiple_of(2)) {
+        errors.push(format!("{label}: malformed Mermaid/code fence structure"));
+    }
+    for target in markdown_link_targets(content) {
+        if target.starts_with('#')
+            || target.starts_with("http://")
+            || target.starts_with("https://")
+            || target.starts_with("mailto:")
+        {
+            continue;
+        }
+        let target = target.split('#').next().unwrap_or_default();
+        if target.is_empty() {
+            continue;
+        }
+        let resolved = path.parent().unwrap_or(workspace_root).join(target);
+        let workspace_canonical = fs::canonicalize(workspace_root).ok();
+        let resolved_canonical = fs::canonicalize(&resolved).ok();
+        if !matches!(
+            (&workspace_canonical, &resolved_canonical),
+            (Some(root), Some(target)) if target.starts_with(root)
+        ) {
+            errors.push(format!("{label}: unresolved local link `{target}`"));
+        }
+    }
+}
+
+fn markdown_link_targets(content: &str) -> Vec<String> {
+    let mut targets = Vec::new();
+    let mut rest = content;
+    while let Some(index) = rest.find("](") {
+        rest = &rest[index + 2..];
+        let Some(end) = rest.find(')') else {
+            break;
+        };
+        targets.push(
+            rest[..end]
+                .trim()
+                .trim_matches('<')
+                .trim_matches('>')
+                .to_string(),
+        );
+        rest = &rest[end + 1..];
+    }
+    targets
+}
+
+fn validate_cross_page_navigation(
+    workspace_root: &Path,
+    pages: &[(PathBuf, String)],
+    errors: &mut Vec<String>,
+) {
+    let mut incoming = std::collections::BTreeSet::new();
+    let workspace_canonical =
+        fs::canonicalize(workspace_root).unwrap_or_else(|_| workspace_root.to_path_buf());
+    for (source, content) in pages {
+        for target in markdown_link_targets(content) {
+            if target.starts_with('#')
+                || target.starts_with("http://")
+                || target.starts_with("https://")
+                || target.starts_with("mailto:")
+            {
+                continue;
+            }
+            let target = target.split('#').next().unwrap_or_default();
+            let resolved = source.parent().unwrap_or(workspace_root).join(target);
+            let Ok(resolved) = fs::canonicalize(resolved) else {
+                continue;
+            };
+            if let Ok(relative) = resolved.strip_prefix(&workspace_canonical) {
+                incoming.insert(relative.to_path_buf());
+            }
+        }
+    }
+    for (page, _) in pages {
+        let canonical_page = fs::canonicalize(page).unwrap_or_else(|_| page.clone());
+        let Ok(relative) = canonical_page.strip_prefix(&workspace_canonical) else {
+            continue;
+        };
+        if relative != Path::new("docs/QUICKSTART.md") && !incoming.contains(relative) {
+            errors.push(format!("{}: orphan reader page", page.display()));
+        }
+    }
+}
+
+fn has_duplicate_frontmatter(content: &str) -> bool {
+    let Some(rest) = content.strip_prefix("---\n") else {
+        return false;
+    };
+    let Some(end) = rest.find("\n---\n") else {
+        return false;
+    };
+    rest[end + 5..].trim_start().starts_with("---\n")
+}
+
+fn yaml_scalar<'a>(yaml: &'a str, key: &str) -> Option<&'a str> {
+    yaml.lines().find_map(|line| {
+        let (candidate, value) = line.split_once(':')?;
+        (candidate.trim() == key).then(|| value.trim().trim_matches('"'))
+    })
 }
 
 /// Wrap generated content in markers so sync can preserve human-owned text around it.
@@ -295,54 +712,6 @@ pub fn generated_region_hash(content: &str) -> String {
         hash = hash.wrapping_mul(0x100000001b3);
     }
     format!("fnv1a64:{hash:016x}")
-}
-
-fn render_initial_index_with_detection(
-    repo_label: &str,
-    detection_markdown: &str,
-    semantic_markdown: Option<&str>,
-) -> String {
-    let mut index = render_initial_index(repo_label);
-    if semantic_markdown.is_some() {
-        index = index
-            .replace("- Semantic exploration: pending", "- Semantic exploration: initialized")
-            .replace(
-                "- Repository detection and semantic documentation are not complete yet.",
-                "- Repository detection and semantic snapshot are initialized; deeper synthesis remains evidence-gated.",
-            );
-    }
-    index.push_str("## Detected Repository Signals\n\n");
-    index.push_str(detection_markdown);
-    if let Some(semantic_markdown) = semantic_markdown {
-        index.push_str("\n## Semantic Snapshot\n\n");
-        index.push_str(semantic_markdown);
-    }
-    index
-}
-
-fn render_map_page(detection_markdown: &str, semantic_markdown: Option<&str>) -> String {
-    let mut content = format!("# Repository Map\n\n## Detected Signals\n\n{detection_markdown}");
-    if let Some(semantic_markdown) = semantic_markdown {
-        content.push_str("\n## Semantic Structure\n\n");
-        content.push_str(semantic_markdown);
-        content.push_str("\n\n## Notes\n\nThis page is generated from bounded filesystem exploration. Treat dependency rows as hints until promoted into durable claims.\n");
-    } else {
-        content.push_str("\n## Notes\n\nFull semantic area mapping is pending. This page is the canonical home for package, service, app, and bounded-context navigation.\n");
-    }
-    content
-}
-
-fn render_architecture_page(semantic_markdown: Option<&str>) -> String {
-    let mut content = "# Architecture\n\n".to_string();
-    if let Some(semantic_markdown) = semantic_markdown {
-        content.push_str("Architecture synthesis starts from the semantic snapshot below. Future sync runs should promote stable structure into explicit claims with confidence and evidence.\n\n");
-        content.push_str("## Current Semantic Evidence\n\n");
-        content.push_str(semantic_markdown);
-        content.push_str("\n\n## Interpretation Status\n\n- Component boundaries: evidence-backed hints, not final claims.\n- Dependency direction: lexical import hints only.\n- Runtime behavior: pending deeper exploration and/or provider activation when needed.\n");
-    } else {
-        content.push_str("Architecture synthesis is pending. Future sync runs should record runtime components, dependency direction, constraints, and change risks here.\n\n## Current Evidence\n\nSee `evidence/SOURCES.md` and `.agents/skills/codewiki/project/plan.yml` for detected repository signals.\n");
-    }
-    content
 }
 
 fn render_sources_page(
@@ -405,329 +774,11 @@ fn render_claims_page(exploration: Option<&ExplorationSnapshot>) -> String {
     content
 }
 
-fn render_domains_page(exploration: Option<&ExplorationSnapshot>) -> String {
-    let mut out = "# Domains\n\n".to_string();
-    match exploration {
-        Some(snapshot) if !snapshot.areas.is_empty() => {
-            out.push_str("Top-level repository areas are treated as initial domain or subsystem candidates. These are structural hints until promoted by deeper analysis.\n\n");
-            for area in &snapshot.areas {
-                out.push_str(&format!(
-                    "- `{}`: {} files, {} symbols; roles: {}\n",
-                    area.name,
-                    area.file_count,
-                    area.symbol_count,
-                    area.roles
-                        .iter()
-                        .map(|role| role.as_str())
-                        .collect::<Vec<_>>()
-                        .join(", ")
-                ));
-            }
+impl Default for WikiDocsLayout {
+    fn default() -> Self {
+        Self {
+            generated_docs_root: "docs",
         }
-        _ => out.push_str("No domain candidates were detected yet.\n"),
-    }
-    out
-}
-
-fn render_workflows_page(exploration: Option<&ExplorationSnapshot>) -> String {
-    let mut out = "# Workflows\n\n".to_string();
-    match exploration {
-        Some(snapshot) => {
-            out.push_str("Workflow seeds are inferred from entry-like files, tests, and dependency hints. Runtime flow remains pending until verified by source reading or commands.\n\n");
-            for file in snapshot.files.iter().filter(|file| {
-                file.path.contains("main")
-                    || file.path.contains("app")
-                    || file.path.contains("index")
-                    || file.role.as_str() == "test"
-            }) {
-                out.push_str(&format!(
-                    "- `{}`: {} symbols, {} import/dependency hints; evidence `{}`\n",
-                    file.path,
-                    file.symbols.len(),
-                    file.imports.len(),
-                    file.evidence_id
-                ));
-            }
-        }
-        None => out.push_str("Workflow synthesis is pending semantic exploration.\n"),
-    }
-    out
-}
-
-fn render_data_page(exploration: Option<&ExplorationSnapshot>) -> String {
-    let mut out = "# Data\n\n".to_string();
-    match exploration {
-        Some(snapshot) => {
-            let mut matched = false;
-            for file in snapshot.files.iter().filter(|file| {
-                let path = file.path.to_lowercase();
-                path.contains("schema")
-                    || path.contains("model")
-                    || path.contains("migration")
-                    || path.ends_with(".sql")
-                    || path.contains("data")
-            }) {
-                matched = true;
-                out.push_str(&format!(
-                    "- `{}`: data-related candidate; evidence `{}`\n",
-                    file.path, file.evidence_id
-                ));
-            }
-            if !matched {
-                out.push_str("No explicit data/schema files were detected. Data model remains an open question.\n");
-            }
-        }
-        None => out.push_str("Data synthesis is pending semantic exploration.\n"),
-    }
-    out
-}
-
-fn render_interfaces_page(exploration: Option<&ExplorationSnapshot>) -> String {
-    let mut out = "# Interfaces\n\n".to_string();
-    match exploration {
-        Some(snapshot) => {
-            out.push_str(
-                "Interface candidates come from exported/public symbols and dependency hints.\n\n",
-            );
-            for file in snapshot.files.iter().take(50) {
-                let public_symbols: Vec<_> = file
-                    .symbols
-                    .iter()
-                    .filter(|symbol| {
-                        matches!(
-                            symbol.kind.as_str(),
-                            "function" | "class" | "interface" | "type" | "struct" | "trait"
-                        )
-                    })
-                    .take(10)
-                    .collect();
-                if public_symbols.is_empty() && file.imports.is_empty() {
-                    continue;
-                }
-                out.push_str(&format!("- `{}`\n", file.path));
-                for symbol in public_symbols {
-                    out.push_str(&format!(
-                        "  - symbol `{}` ({}) at line {}\n",
-                        symbol.name, symbol.kind, symbol.line
-                    ));
-                }
-                for import in file.imports.iter().take(5) {
-                    out.push_str(&format!("  - dependency hint `{import}`\n"));
-                }
-            }
-        }
-        None => out.push_str("Interface synthesis is pending semantic exploration.\n"),
-    }
-    out
-}
-
-fn render_operations_page(exploration: Option<&ExplorationSnapshot>) -> String {
-    let mut out = "# Operations\n\n".to_string();
-    match exploration {
-        Some(snapshot) => {
-            out.push_str("Operational evidence is inferred from manifests, configs, build files, and docs.\n\n");
-            for file in snapshot.files.iter().filter(|file| {
-                file.role.as_str() == "config" || file.role.as_str() == "documentation"
-            }) {
-                out.push_str(&format!(
-                    "- `{}`: {} evidence `{}`\n",
-                    file.path,
-                    file.role.as_str(),
-                    file.evidence_id
-                ));
-            }
-        }
-        None => out.push_str("Operations synthesis is pending semantic exploration.\n"),
-    }
-    out
-}
-
-fn render_testing_page(exploration: Option<&ExplorationSnapshot>) -> String {
-    let mut out = "# Testing\n\n".to_string();
-    match exploration {
-        Some(snapshot) => {
-            let tests: Vec<_> = snapshot
-                .files
-                .iter()
-                .filter(|file| file.role.as_str() == "test")
-                .collect();
-            if tests.is_empty() {
-                out.push_str("No test files were detected in the bounded exploration snapshot.\n");
-            } else {
-                for file in tests {
-                    out.push_str(&format!(
-                        "- `{}`: {} symbols; evidence `{}`\n",
-                        file.path,
-                        file.symbols.len(),
-                        file.evidence_id
-                    ));
-                }
-            }
-        }
-        None => out.push_str("Testing synthesis is pending semantic exploration.\n"),
-    }
-    out
-}
-
-fn render_conventions_page(exploration: Option<&ExplorationSnapshot>) -> String {
-    let mut out = "# Code Conventions\n\n".to_string();
-    out.push_str("This page records repository-specific conventions discovered from configuration, documentation, repeated code patterns, tests, and explicit exceptions. Ecosystem defaults are not project conventions unless repository evidence shows adoption.\n\n");
-    out.push_str("## Evidence Standard\n\n- `explicit`: enforced or stated by authoritative repository configuration or documentation.\n- `inferred`: supported by at least two independent examples in the inspected scope.\n- `hypothesis`: plausible but supported by one example or incomplete coverage.\n- `exception`: a deliberate or legacy deviation from a supported convention.\n\n");
-
-    let Some(snapshot) = exploration else {
-        out.push_str("## Convention Discovery Status\n\nSemantic exploration has not run yet. Inspect explicit convention sources and representative code before promoting repository conventions.\n");
-        return out;
-    };
-
-    out.push_str("## Explicit Convention Sources\n\n");
-    let explicit_sources: Vec<_> = snapshot
-        .files
-        .iter()
-        .filter(|file| is_convention_source(file))
-        .take(50)
-        .collect();
-    if explicit_sources.is_empty() {
-        out.push_str("- No explicit convention source was detected in the bounded snapshot.\n");
-    } else {
-        for file in explicit_sources {
-            out.push_str(&format!(
-                "- `{}`: {} candidate; evidence `{}`\n",
-                file.path,
-                file.role.as_str(),
-                file.evidence_id
-            ));
-        }
-    }
-
-    out.push_str("\n## Repeated Pattern Candidates\n\nThese candidates require LLM source inspection, counterexample search, scope classification, and confidence before they become conventions.\n\n");
-    let mut dependency_counts: BTreeMap<&str, usize> = BTreeMap::new();
-    for hint in &snapshot.dependency_hints {
-        *dependency_counts.entry(hint.target.as_str()).or_default() += 1;
-    }
-    let repeated_dependencies: Vec<_> = dependency_counts
-        .into_iter()
-        .filter(|(_, count)| *count >= 2)
-        .take(20)
-        .collect();
-    if repeated_dependencies.is_empty() {
-        out.push_str("- No repeated dependency hint reached the two-file candidate threshold.\n");
-    } else {
-        for (target, count) in repeated_dependencies {
-            out.push_str(&format!(
-                "- `{target}` appears in {count} inspected files; verify whether its usage pattern forms a scoped convention.\n"
-            ));
-        }
-    }
-    for area in snapshot.areas.iter().filter(|area| area.file_count >= 2) {
-        out.push_str(&format!(
-            "- Area `{}` contains {} inspected files and may have area-specific conventions requiring representative sampling.\n",
-            area.name, area.file_count
-        ));
-    }
-
-    out.push_str("\n## Required LLM Synthesis\n\nFor each confirmed convention, record scope, classification, evidence paths/symbols or commands, confidence, exceptions, and change impact. Cover project structure, language and framework usage, naming, errors, async/state/data, dependencies, APIs, tests, configuration, security, and documentation only where evidence exists. Do not convert a single example or generic best practice into a repository rule.\n");
-    out
-}
-
-fn is_convention_source(file: &codewiki_explore::ExploredFile) -> bool {
-    let path = file.path.to_lowercase();
-    file.role.as_str() == "config"
-        || file.role.as_str() == "documentation"
-        || file.role.as_str() == "test"
-        || path.contains("lint")
-        || path.contains("format")
-        || path.contains("style")
-        || path.contains("convention")
-        || path.contains("contributing")
-        || path.contains("editorconfig")
-        || path.contains("clippy")
-        || path.contains("eslint")
-        || path.contains("prettier")
-        || path.contains("biome")
-}
-
-fn render_decisions_page(_exploration: Option<&ExplorationSnapshot>) -> String {
-    "# Decisions\n\nNo repository-specific architecture decisions have been promoted yet. Record future decisions here only when they are backed by source evidence, existing docs, or explicit human input.\n".to_string()
-}
-
-fn render_glossary_page(exploration: Option<&ExplorationSnapshot>) -> String {
-    let mut out = "# Glossary\n\n".to_string();
-    match exploration {
-        Some(snapshot) => {
-            for area in &snapshot.areas {
-                out.push_str(&format!("- `{}`: top-level area candidate\n", area.name));
-            }
-            for file in snapshot.files.iter().take(50) {
-                for symbol in file.symbols.iter().take(10) {
-                    out.push_str(&format!(
-                        "- `{}`: {} from `{}` line {}\n",
-                        symbol.name, symbol.kind, file.path, symbol.line
-                    ));
-                }
-            }
-        }
-        None => out.push_str("Glossary generation is pending semantic exploration.\n"),
-    }
-    out
-}
-
-fn render_open_questions_page(exploration: Option<&ExplorationSnapshot>) -> String {
-    let mut out = "# Open Questions\n\n".to_string();
-    match exploration {
-        Some(snapshot) => {
-            if snapshot.truncated {
-                out.push_str("- Exploration hit the file limit; coverage is incomplete.\n");
-            }
-            if snapshot
-                .files
-                .iter()
-                .all(|file| file.role.as_str() != "test")
-            {
-                out.push_str("- No tests were detected; verification strategy is unknown.\n");
-            }
-            out.push_str("- Runtime behavior needs command evidence or deeper source analysis before being treated as confirmed.\n");
-            out.push_str("- Domain boundaries are inferred from paths and should be reviewed during deeper synthesis.\n");
-        }
-        None => out.push_str("- Semantic exploration has not run yet.\n"),
-    }
-    out
-}
-
-fn render_area_page(snapshot: &ExplorationSnapshot, area_name: &str) -> String {
-    let mut out = format!("# Area: `{area_name}`\n\n");
-    out.push_str("This area page is generated from bounded semantic exploration evidence.\n\n");
-    for file in snapshot
-        .files
-        .iter()
-        .filter(|file| file.path.split('/').next() == Some(area_name))
-        .take(50)
-    {
-        out.push_str(&format!(
-            "- `{}`: {}, {} symbols, {} imports; evidence `{}`\n",
-            file.path,
-            file.role.as_str(),
-            file.symbols.len(),
-            file.imports.len(),
-            file.evidence_id
-        ));
-    }
-    out
-}
-
-fn slugify(value: &str) -> String {
-    let mut slug = String::new();
-    for ch in value.chars().flat_map(char::to_lowercase) {
-        if ch.is_ascii_alphanumeric() {
-            slug.push(ch);
-        } else if !slug.ends_with('-') {
-            slug.push('-');
-        }
-    }
-    let slug = slug.trim_matches('-');
-    if slug.is_empty() {
-        "area".to_string()
-    } else {
-        slug.to_string()
     }
 }
 
@@ -736,33 +787,14 @@ mod tests {
     use super::*;
 
     #[test]
-    fn initial_index_mentions_docs_first_order() {
-        let index = render_initial_index("example");
-
-        assert!(index.contains("# example quickstart"));
-        assert!(index.contains("docs/**"));
-        assert!(index.contains("Semantic exploration: pending"));
-    }
-
-    #[test]
-    fn initial_pages_include_canonical_evidence_pages() {
+    fn initial_companion_pages_are_evidence_only() {
         let pages = render_initial_pages("example", "### Languages\n\n- Rust\n");
         let paths: Vec<_> = pages.iter().map(|page| page.path.as_str()).collect();
 
-        assert!(paths.contains(&"docs/QUICKSTART.md"));
-        assert!(paths.contains(&"docs/SOURCE-MAP.md"));
-        assert!(paths.contains(&"docs/architecture/OVERVIEW.md"));
-        assert!(paths.contains(&"docs/domain/OVERVIEW.md"));
-        assert!(paths.contains(&"docs/workflows/OVERVIEW.md"));
-        assert!(paths.contains(&"docs/api/OVERVIEW.md"));
-        assert!(paths.contains(&"docs/conventions/OVERVIEW.md"));
-        assert!(paths.contains(&"docs/OPEN-QUESTIONS.md"));
+        assert!(!paths.contains(&"docs/QUICKSTART.md"));
+        assert!(!paths.contains(&"docs/SOURCE-MAP.md"));
+        assert!(!paths.contains(&"docs/architecture/OVERVIEW.md"));
         assert!(paths.contains(&"docs/evidence/CLAIMS.md"));
-        assert!(!paths.iter().any(|path| path.ends_with("quickstart.md")));
-        assert!(pages.iter().any(|page| {
-            page.content
-                .contains("Full semantic area mapping is pending")
-        }));
         assert!(
             pages
                 .iter()
@@ -786,7 +818,7 @@ mod tests {
     }
 
     #[test]
-    fn semantic_pages_include_exploration_snapshot() {
+    fn semantic_companion_output_is_evidence_only() {
         let snapshot = ExplorationSnapshot {
             schema_version: 1,
             files: vec![codewiki_explore::ExploredFile {
@@ -825,9 +857,13 @@ mod tests {
 
         let pages = render_semantic_pages("example", "### Languages\n\n- Rust\n", &snapshot);
 
-        assert!(pages.iter().any(|page| {
-            page.path == "docs/SOURCE-MAP.md" && page.content.contains("Semantic Structure")
-        }));
+        assert!(!pages.iter().any(|page| page.path == "docs/QUICKSTART.md"));
+        assert!(!pages.iter().any(|page| page.path == "docs/SOURCE-MAP.md"));
+        assert!(
+            !pages
+                .iter()
+                .any(|page| page.path == "docs/architecture/OVERVIEW.md")
+        );
         assert!(pages.iter().any(|page| {
             page.path == "docs/evidence/SOURCES.md" && page.content.contains("file:test")
         }));
@@ -836,32 +872,183 @@ mod tests {
                 && page.content.contains("claim:")
                 && page.content.contains("evidence: `file:test`")
         }));
-        assert!(pages.iter().any(|page| {
-            page.path == "docs/areas/src/OVERVIEW.md" && page.content.contains("src/lib.rs")
-        }));
-        assert!(pages.iter().any(|page| {
-            page.path == "docs/api/OVERVIEW.md"
-                && page
-                    .content
-                    .contains("<summary>Relevant source files</summary>")
-        }));
-        assert!(pages.iter().any(|page| {
-            page.path == "docs/conventions/OVERVIEW.md"
-                && page.content.contains("## Evidence Standard")
-                && page.content.contains("Required LLM Synthesis")
-        }));
         assert!(
-            pages.iter().any(|page| {
-                page.path == "docs/api/OVERVIEW.md" && page.content.contains("build")
-            })
+            !pages
+                .iter()
+                .any(|page| page.path.starts_with("docs/areas/"))
         );
     }
-}
 
-impl Default for WikiDocsLayout {
-    fn default() -> Self {
-        Self {
-            generated_docs_root: "docs",
-        }
+    #[test]
+    fn reader_validation_rejects_grok_export_artifacts() {
+        let root = temp_path("codewiki-docs-invalid-reader");
+        fs::create_dir_all(root.join("docs/conventions")).expect("mkdir docs");
+        fs::create_dir_all(root.join(".agents/skills/codewiki/project")).expect("mkdir control");
+        fs::write(
+            root.join(".agents/skills/codewiki/project/plan.yml"),
+            "schema_version: 2\nrepository_mental_model:\nreader_questions:\nsource_anchors:\nacceptance_checks:\n",
+        )
+        .expect("write plan");
+        fs::write(
+            root.join(".agents/skills/codewiki/project/quality-report.yml"),
+            "model_synthesis: pass\ncontract_coverage: pass\nsource_audit: pass\ndiagram_audit: pass\ncross_page_review: pass\ndocs_only_onboarding: pass\n",
+        )
+        .expect("write quality");
+        fs::write(
+            root.join("docs/QUICKSTART.md"),
+            "---\ntitle: One\n---\n---\ntitle: Two\n---\n# Quickstart\n\n[Source](file:///var/folders/tmp/repo/src.rs)\n\n[Escape](./escape.md)\n\n## Related pages\n\n## Related pages\n",
+        )
+        .expect("write quickstart");
+        #[cfg(unix)]
+        let outside = {
+            let outside = root.with_extension("outside.md");
+            fs::write(&outside, "# Outside\n").expect("write outside file");
+            std::os::unix::fs::symlink(&outside, root.join("docs/escape.md"))
+                .expect("link outside workspace");
+            outside
+        };
+        fs::write(
+            root.join("docs/conventions/OVERVIEW.md"),
+            "# Conventions\n\n<CardGroup>unsupported</CardGroup>\n",
+        )
+        .expect("write conventions");
+
+        let report = validate_reader_workspace(&root);
+
+        assert!(!report.ready);
+        assert!(report.errors.iter().any(|error| error.contains("file://")));
+        assert!(
+            report
+                .errors
+                .iter()
+                .any(|error| error.contains("duplicate frontmatter"))
+        );
+        assert!(
+            report
+                .errors
+                .iter()
+                .any(|error| error.contains("duplicate Related"))
+        );
+        assert!(
+            report
+                .errors
+                .iter()
+                .any(|error| error.contains("<CardGroup"))
+        );
+        #[cfg(unix)]
+        assert!(
+            report
+                .errors
+                .iter()
+                .any(|error| error.contains("unresolved local link `./escape.md`"))
+        );
+        let _ = fs::remove_dir_all(root);
+        #[cfg(unix)]
+        let _ = fs::remove_file(outside);
+    }
+
+    #[test]
+    fn wikiplan_validation_rejects_duplicate_ownership_and_cycles() {
+        let plan = r#"schema_version: 2
+repository_mental_model:
+  systems:
+    - "Runtime"
+pages:
+  - path: docs/QUICKSTART.md
+    title: "Quickstart"
+    page_type: overview
+    section_id: quickstart
+    parent_page: docs/conventions/OVERVIEW.md
+    order: 10
+    importance: critical
+    reader_job: "Start"
+    scope: "Runtime"
+    out_of_scope: "Reference"
+    audiences:
+      - "developer"
+    prerequisites:
+      - "docs/conventions/OVERVIEW.md"
+    reader_questions:
+      - "Where do I start?"
+    required_sections:
+      - "purpose"
+    diagram_slots:
+      []
+    topic_ids:
+      - "runtime"
+    source_anchors:
+      - selector: "src/main.rs"
+        reason: "Entrypoint"
+    evidence_gaps:
+      []
+    related_pages:
+      []
+    open_questions:
+      []
+    refresh_triggers:
+      - "source_changed"
+    acceptance_checks:
+      - "Start is clear"
+  - path: docs/conventions/OVERVIEW.md
+    title: "Conventions"
+    page_type: reference
+    section_id: conventions
+    parent_page: docs/QUICKSTART.md
+    order: 20
+    importance: supporting
+    reader_job: "Change safely"
+    scope: "Rules"
+    out_of_scope: "Generic advice"
+    audiences:
+      - "developer"
+    prerequisites:
+      - "docs/QUICKSTART.md"
+    reader_questions:
+      - "What rules apply?"
+    required_sections:
+      - "purpose"
+    diagram_slots:
+      []
+    topic_ids:
+      - "runtime"
+    source_anchors:
+      - selector: "Cargo.toml"
+        reason: "Explicit policy"
+    evidence_gaps:
+      []
+    related_pages:
+      []
+    open_questions:
+      []
+    refresh_triggers:
+      - "source_changed"
+    acceptance_checks:
+      - "Rules are evidenced"
+"#;
+        let mut errors = Vec::new();
+
+        validate_wikiplan_structure(plan, &mut errors);
+
+        assert!(
+            errors
+                .iter()
+                .any(|error| error.contains("multiple canonical owners"))
+        );
+        assert!(
+            errors
+                .iter()
+                .any(|error| error.contains("prerequisite cycle"))
+        );
+    }
+
+    fn temp_path(prefix: &str) -> PathBuf {
+        let suffix = format!(
+            "{}-{:?}",
+            std::process::id(),
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .expect("time")
+        );
+        std::env::temp_dir().join(format!("{prefix}-{suffix}"))
     }
 }

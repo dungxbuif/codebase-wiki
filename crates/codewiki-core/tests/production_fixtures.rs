@@ -1,3 +1,5 @@
+//! Cross-language production-shape fixtures for CodeWiki evidence initialization and sync.
+
 use codewiki_core::{RuntimeContext, run_with_context};
 use codewiki_store::render_qa_context_with_sqlite;
 use std::fs;
@@ -28,24 +30,13 @@ fn production_fixtures_initialize_docs_state_and_qa_context() {
             repo.join(".agents/skills/codewiki/project/sources.yml")
                 .exists()
         );
-        assert!(repo.join("docs/QUICKSTART.md").exists());
-        assert!(repo.join("docs/SOURCE-MAP.md").exists());
-        assert!(repo.join("docs/domain/OVERVIEW.md").exists());
-        assert!(repo.join("docs/api/OVERVIEW.md").exists());
-        assert!(repo.join("docs/conventions/OVERVIEW.md").exists());
-        assert!(repo.join("docs/OPEN-QUESTIONS.md").exists());
+        assert!(!repo.join("docs/QUICKSTART.md").exists());
+        assert!(!repo.join("docs/SOURCE-MAP.md").exists());
         assert!(repo.join("docs/evidence/CLAIMS.md").exists());
 
-        let map = fs::read_to_string(repo.join("docs/SOURCE-MAP.md")).expect("read map");
-        assert!(map.contains("Semantic Structure"));
-        assert!(map.contains("Dependency Hints"));
-        assert!(map.contains(fixture.expected_signal()));
-        let interfaces = fs::read_to_string(repo.join("docs/api/OVERVIEW.md")).expect("interfaces");
-        assert!(interfaces.contains(fixture.expected_interface_signal()));
-        let conventions =
-            fs::read_to_string(repo.join("docs/conventions/OVERVIEW.md")).expect("conventions");
-        assert!(conventions.contains("## Evidence Standard"));
-        assert!(conventions.contains("Required LLM Synthesis"));
+        let sources =
+            fs::read_to_string(repo.join("docs/evidence/SOURCES.md")).expect("read sources");
+        assert!(sources.contains(fixture.expected_signal()));
 
         let claims = fs::read_to_string(repo.join("docs/evidence/CLAIMS.md")).expect("claims");
         assert!(claims.contains("claim:"));
@@ -60,6 +51,15 @@ fn production_fixtures_initialize_docs_state_and_qa_context() {
         .expect("qa context");
         assert!(qa.active_claims_seen >= 1, "{}", qa.markdown);
         assert!(qa.markdown.contains("Active Claims"));
+        assert!(
+            sqlite_has_symbol(
+                &context.sqlite_executable,
+                &find_state_db(&context),
+                fixture.expected_interface_signal()
+            ),
+            "missing persisted symbol {}",
+            fixture.expected_interface_signal()
+        );
 
         let _ = fs::remove_dir_all(base);
     }
@@ -212,6 +212,18 @@ fn find_state_db(context: &RuntimeContext) -> PathBuf {
         .expect("state dir entry")
         .path();
     repo_dir.join("state.sqlite3")
+}
+
+fn sqlite_has_symbol(sqlite: &Path, database: &Path, symbol: &str) -> bool {
+    let escaped = symbol.replace('\'', "''");
+    let output = std::process::Command::new(sqlite)
+        .arg(database)
+        .arg(format!(
+            "SELECT COUNT(*) FROM symbols WHERE name = '{escaped}';"
+        ))
+        .output()
+        .expect("query symbols");
+    output.status.success() && String::from_utf8_lossy(&output.stdout).trim() == "1"
 }
 
 fn temp_path(prefix: &str) -> PathBuf {

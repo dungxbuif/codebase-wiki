@@ -6,8 +6,12 @@ use std::io::Write as _;
 use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
 
-/// Default CodeWiki schema version for committed project files.
+/// Default CodeWiki config schema version.
 pub const CODEWIKI_SCHEMA_VERSION: u32 = 1;
+/// Current committed WikiPlan schema version.
+pub const WIKIPLAN_SCHEMA_VERSION: u32 = 2;
+/// Current reader-planning contract version.
+pub const PLANNER_CONTRACT_VERSION: &str = "reader-first-v2";
 
 /// First durable local-state migration SQL.
 pub const INITIAL_STATE_MIGRATION_SQL: &str = include_str!("../migrations/001_initial_state.sql");
@@ -706,8 +710,18 @@ pub struct WikiPlan {
     pub status: String,
     /// Evidence policy for generated docs.
     pub evidence_policy: String,
+    /// Contract used to create and validate the page plan.
+    pub planner_contract_version: String,
+    /// Source revision captured for reproducibility.
+    pub source_commit: String,
+    /// Whether the source worktree was dirty at planning time.
+    pub source_dirty: bool,
+    /// Existing documentation visible to the planner.
+    pub visible_docs: Vec<String>,
     /// Detected stack signals.
     pub detected: DetectedStack,
+    /// Evidence-backed repository mental model created before page drafting.
+    pub repository_mental_model: RepositoryMentalModel,
     /// Planned generated pages.
     pub pages: Vec<PlannedPage>,
     /// Open questions that affect future understanding.
@@ -719,12 +733,17 @@ pub struct WikiPlan {
 impl Default for WikiPlan {
     fn default() -> Self {
         Self {
-            schema_version: CODEWIKI_SCHEMA_VERSION,
-            status: "draft".to_string(),
+            schema_version: WIKIPLAN_SCHEMA_VERSION,
+            status: "evidence_ready".to_string(),
             evidence_policy:
                 "claims must cite files, symbols, commands, docs, or explicit hypotheses"
                     .to_string(),
+            planner_contract_version: PLANNER_CONTRACT_VERSION.to_string(),
+            source_commit: "unknown".to_string(),
+            source_dirty: false,
+            visible_docs: Vec::new(),
             detected: DetectedStack::default(),
+            repository_mental_model: RepositoryMentalModel::default(),
             pages: PlannedPage::canonical_defaults(),
             open_questions: Vec::new(),
             stale_claims: Vec::new(),
@@ -741,15 +760,38 @@ impl WikiPlan {
         }
     }
 
+    /// Attach immutable source provenance used by planning and benchmarks.
+    pub fn with_provenance(
+        mut self,
+        source_commit: impl Into<String>,
+        source_dirty: bool,
+        visible_docs: Vec<String>,
+    ) -> Self {
+        self.source_commit = source_commit.into();
+        self.source_dirty = source_dirty;
+        self.visible_docs = visible_docs;
+        self
+    }
+
+    /// Record a planning question that must survive into model enrichment.
+    pub fn with_open_question(mut self, question: impl Into<String>) -> Self {
+        self.open_questions.push(question.into());
+        self
+    }
+
     /// Render the plan skeleton as stable YAML.
     pub fn to_yaml(&self) -> String {
         let mut yaml = format!(
-            "schema_version: {}\nstatus: {}\nevidence_policy: {}\nconfidence_default: {}\n",
+            "schema_version: {}\nstatus: {}\nplanner_contract_version: {}\nevidence_policy: {}\nconfidence_default: {}\nsource_commit: \"{}\"\nsource_dirty: {}\n",
             self.schema_version,
             self.status,
+            self.planner_contract_version,
             self.evidence_policy,
             Confidence::SourceBacked.as_str(),
+            yaml_escape(&self.source_commit),
+            self.source_dirty,
         );
+        push_yaml_list(&mut yaml, "visible_docs", &self.visible_docs, 0);
         yaml.push_str("detected:\n");
         push_yaml_list(&mut yaml, "languages", &self.detected.languages, 2);
         push_yaml_list(
@@ -762,16 +804,109 @@ impl WikiPlan {
         push_yaml_list(&mut yaml, "entrypoints", &self.detected.entrypoints, 2);
         push_yaml_list(&mut yaml, "tests", &self.detected.tests, 2);
         push_yaml_list(&mut yaml, "docs", &self.detected.docs, 2);
+        yaml.push_str("repository_mental_model:\n");
+        push_yaml_list(
+            &mut yaml,
+            "systems",
+            &self.repository_mental_model.systems,
+            2,
+        );
+        push_yaml_list(&mut yaml, "actors", &self.repository_mental_model.actors, 2);
+        push_yaml_list(
+            &mut yaml,
+            "boundaries",
+            &self.repository_mental_model.boundaries,
+            2,
+        );
+        push_yaml_list(
+            &mut yaml,
+            "runtimes",
+            &self.repository_mental_model.runtimes,
+            2,
+        );
+        push_yaml_list(
+            &mut yaml,
+            "workflows",
+            &self.repository_mental_model.workflows,
+            2,
+        );
+        push_yaml_list(
+            &mut yaml,
+            "state_ownership",
+            &self.repository_mental_model.state_ownership,
+            2,
+        );
+        push_yaml_list(
+            &mut yaml,
+            "integrations",
+            &self.repository_mental_model.integrations,
+            2,
+        );
+        push_yaml_list(
+            &mut yaml,
+            "change_risks",
+            &self.repository_mental_model.change_risks,
+            2,
+        );
+        push_yaml_list(
+            &mut yaml,
+            "known_unknowns",
+            &self.repository_mental_model.known_unknowns,
+            2,
+        );
         yaml.push_str("pages:\n");
         for page in &self.pages {
             yaml.push_str(&format!(
-                "  - path: {}\n    title: \"{}\"\n    slot: {}\n    status: {}\n    confidence: {}\n",
+                "  - path: {}\n    title: \"{}\"\n    page_type: {}\n    section_id: {}\n    parent_page: {}\n    order: {}\n    importance: {}\n    slot: {}\n    status: {}\n    confidence: {}\n    reader_job: \"{}\"\n    scope: \"{}\"\n    out_of_scope: \"{}\"\n",
                 page.path,
                 yaml_escape(&page.title),
+                page.page_type,
+                page.section_id,
+                page.parent_page.as_deref().unwrap_or("null"),
+                page.order,
+                page.importance,
                 page.slot,
                 page.status,
                 page.confidence.as_str(),
+                yaml_escape(&page.reader_job),
+                yaml_escape(&page.scope),
+                yaml_escape(&page.out_of_scope),
             ));
+            push_yaml_list(&mut yaml, "audiences", &page.audiences, 4);
+            push_yaml_list(&mut yaml, "prerequisites", &page.prerequisites, 4);
+            push_yaml_list(&mut yaml, "reader_questions", &page.reader_questions, 4);
+            push_yaml_list(&mut yaml, "required_sections", &page.required_sections, 4);
+            yaml.push_str("    diagram_slots:\n");
+            if page.diagram_slots.is_empty() {
+                yaml.push_str("      []\n");
+            } else {
+                for slot in &page.diagram_slots {
+                    yaml.push_str(&format!(
+                        "      - kind: {}\n        question: \"{}\"\n",
+                        slot.kind,
+                        yaml_escape(&slot.question)
+                    ));
+                }
+            }
+            push_yaml_list(&mut yaml, "topic_ids", &page.topic_ids, 4);
+            yaml.push_str("    source_anchors:\n");
+            if page.source_anchors.is_empty() {
+                yaml.push_str("      []\n");
+            } else {
+                for anchor in &page.source_anchors {
+                    yaml.push_str(&format!(
+                        "      - selector: \"{}\"\n        reason: \"{}\"\n",
+                        yaml_escape(&anchor.selector),
+                        yaml_escape(&anchor.reason)
+                    ));
+                    push_yaml_list(&mut yaml, "expected_claims", &anchor.expected_claims, 8);
+                }
+            }
+            push_yaml_list(&mut yaml, "evidence_gaps", &page.evidence_gaps, 4);
+            push_yaml_list(&mut yaml, "related_pages", &page.related_pages, 4);
+            push_yaml_list(&mut yaml, "open_questions", &page.open_questions, 4);
+            push_yaml_list(&mut yaml, "refresh_triggers", &page.refresh_triggers, 4);
+            push_yaml_list(&mut yaml, "acceptance_checks", &page.acceptance_checks, 4);
         }
         push_yaml_list(&mut yaml, "open_questions", &self.open_questions, 0);
         push_yaml_list(&mut yaml, "stale_claims", &self.stale_claims, 0);
@@ -879,6 +1014,49 @@ pub struct DetectedStack {
     pub docs: Vec<String>,
 }
 
+/// Evidence-backed system model that must precede page architecture.
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
+pub struct RepositoryMentalModel {
+    /// Major systems or products.
+    pub systems: Vec<String>,
+    /// Human or system actors.
+    pub actors: Vec<String>,
+    /// Responsibility and dependency boundaries.
+    pub boundaries: Vec<String>,
+    /// Runtime and executor contexts.
+    pub runtimes: Vec<String>,
+    /// Important end-to-end workflows.
+    pub workflows: Vec<String>,
+    /// Persistent and in-memory state owners.
+    pub state_ownership: Vec<String>,
+    /// External systems and platform integrations.
+    pub integrations: Vec<String>,
+    /// High-risk change surfaces.
+    pub change_risks: Vec<String>,
+    /// Important unresolved questions.
+    pub known_unknowns: Vec<String>,
+}
+
+/// A question-driven diagram requirement for a page.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct DiagramSlot {
+    /// Diagram kind such as component, sequence, state, flowchart, or ERD.
+    pub kind: String,
+    /// Reader question answered by the diagram.
+    pub question: String,
+}
+
+/// A selected evidence source with an explicit relevance reason.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct SourceAnchor {
+    /// File, symbol, command, documentation, Git range, or hypothesis selector.
+    pub selector: String,
+    /// Why the source is necessary for this page.
+    pub reason: String,
+    /// Claims expected from this evidence source.
+    pub expected_claims: Vec<String>,
+}
+
 /// Planned generated page.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct PlannedPage {
@@ -886,8 +1064,48 @@ pub struct PlannedPage {
     pub path: String,
     /// Human-readable title.
     pub title: String,
+    /// Semantic page type.
+    pub page_type: String,
+    /// Owning semantic section.
+    pub section_id: String,
+    /// Parent reader page, when any.
+    pub parent_page: Option<String>,
+    /// Stable reading order within the section.
+    pub order: u32,
+    /// Reader importance.
+    pub importance: String,
     /// Canonical page slot.
     pub slot: String,
+    /// Intended audiences.
+    pub audiences: Vec<String>,
+    /// Unique job this page performs for its reader.
+    pub reader_job: String,
+    /// Prerequisite pages.
+    pub prerequisites: Vec<String>,
+    /// Questions the page must answer directly.
+    pub reader_questions: Vec<String>,
+    /// Semantic scope.
+    pub scope: String,
+    /// Explicit non-scope.
+    pub out_of_scope: String,
+    /// Required reader-facing sections.
+    pub required_sections: Vec<String>,
+    /// Question-driven diagram slots.
+    pub diagram_slots: Vec<DiagramSlot>,
+    /// Canonical concept ownership identifiers.
+    pub topic_ids: Vec<String>,
+    /// Selected evidence with relevance reasons.
+    pub source_anchors: Vec<SourceAnchor>,
+    /// Known missing evidence.
+    pub evidence_gaps: Vec<String>,
+    /// Lateral related pages.
+    pub related_pages: Vec<String>,
+    /// Page-local unresolved questions.
+    pub open_questions: Vec<String>,
+    /// Events that make this page stale.
+    pub refresh_triggers: Vec<String>,
+    /// Observable page acceptance checks.
+    pub acceptance_checks: Vec<String>,
     /// Planning status.
     pub status: String,
     /// Page confidence.
@@ -898,25 +1116,63 @@ impl PlannedPage {
     /// Return canonical default page plan.
     pub fn canonical_defaults() -> Vec<Self> {
         [
-            ("docs/QUICKSTART.md", "CodeWiki Quickstart", "quickstart"),
-            ("docs/SOURCE-MAP.md", "Source Map", "source-map"),
-            (
-                "docs/architecture/OVERVIEW.md",
-                "Architecture",
-                "architecture",
-            ),
+            ("docs/QUICKSTART.md", "CodeWiki Quickstart", "quickstart", "overview"),
             (
                 "docs/conventions/OVERVIEW.md",
                 "Code Conventions",
                 "conventions",
+                "reference",
             ),
-            ("docs/evidence/CLAIMS.md", "Claims", "evidence.claims"),
+            ("docs/evidence/CLAIMS.md", "Claims", "evidence.claims", "evidence"),
         ]
         .into_iter()
-        .map(|(path, title, slot)| Self {
+        .enumerate()
+        .map(|(index, (path, title, slot, page_type))| Self {
             path: path.to_string(),
             title: title.to_string(),
+            page_type: page_type.to_string(),
+            section_id: slot.split('.').next().unwrap_or(slot).to_string(),
+            parent_page: None,
+            order: (index as u32 + 1) * 10,
+            importance: if slot == "quickstart" { "critical" } else { "supporting" }.to_string(),
             slot: slot.to_string(),
+            audiences: vec!["new_developer".to_string(), "maintainer".to_string()],
+            reader_job: match slot {
+                "quickstart" => "Form a five-minute system mental model and choose a task-oriented reading path.",
+                "conventions" => "Change the repository using its evidence-backed conventions and exceptions.",
+                _ => "Audit the evidence supporting generated documentation claims.",
+            }
+            .to_string(),
+            prerequisites: Vec::new(),
+            reader_questions: vec![match slot {
+                "quickstart" => "What does this repository do and where should a new developer start?",
+                "conventions" => "Which repository-specific rules and exceptions govern a safe change?",
+                _ => "Which evidence supports the reader-facing claims?",
+            }
+            .to_string()],
+            scope: "Evidence-backed reader guidance for this canonical page.".to_string(),
+            out_of_scope: "Raw exhaustive file, symbol, or lexical-import inventory.".to_string(),
+            required_sections: vec![
+                "purpose".to_string(),
+                "mental_model".to_string(),
+                "change_guide".to_string(),
+                "evidence".to_string(),
+            ],
+            diagram_slots: Vec::new(),
+            topic_ids: vec![slot.to_string()],
+            source_anchors: vec![SourceAnchor {
+                selector: "pending-llm-selection".to_string(),
+                reason: "The LLM planner must replace this scaffold with relevant evidence and a reason.".to_string(),
+                expected_claims: Vec::new(),
+            }],
+            evidence_gaps: vec!["llm_semantic_planning_pending".to_string()],
+            related_pages: Vec::new(),
+            open_questions: Vec::new(),
+            refresh_triggers: vec!["supporting_file_changed".to_string()],
+            acceptance_checks: vec![
+                "Every reader question has a direct answer and claim-local evidence.".to_string(),
+                "The page names a safe change starting point, risks, and verification path.".to_string(),
+            ],
             status: "planned".to_string(),
             confidence: Confidence::SourceBacked,
         })
@@ -929,14 +1185,22 @@ pub fn render_target_agents_md() -> String {
     [
         "# CodeWiki Local Agent Guidance",
         "",
-        "Use docs-first lazy activation:",
+        "A companion `init` or `sync` refreshes evidence only. It leaves `run.yml` at `synthesis_incomplete`; do not present the workspace as onboarding-ready yet.",
         "",
-        "1. Read `docs/**`.",
-        "2. Read `.agents/skills/codewiki/project/plan.yml`.",
-        "3. Read `.agents/skills/codewiki/project/AGENTS.md`.",
-        "4. Query local CodeWiki SQLite facts/evidence/claims when available.",
-        "5. Inspect source files and Git history when docs are missing or stale.",
-        "6. Activate external runtime tools only when evidence quality requires it.",
+        "Complete the reader-first synthesis workflow:",
+        "",
+        "1. Build and record the repository mental model from source-backed evidence.",
+        "2. Replace the scaffold with a complete WikiPlan v2 whose pages name reader jobs, questions, source anchors, diagrams, and acceptance checks.",
+        "3. Synthesize reader docs in purpose -> mental model -> flow -> change guidance -> evidence order. Do not copy evidence inventories into reader pages.",
+        "4. Run isolated contract, source, diagram, cross-page, and docs-only onboarding reviews; record results in `quality-report.yml`.",
+        "5. Run `codewiki validate <workspace>` and require `generation_status: reader_docs_ready` before claiming completion.",
+        "",
+        "For normal code changes after synthesis, use docs-first lazy activation:",
+        "",
+        "1. Read the relevant reader docs and WikiPlan page contract.",
+        "2. Query local CodeWiki SQLite facts/evidence/claims when available.",
+        "3. Inspect source files and Git history when docs are missing or stale.",
+        "4. Activate external runtime tools only when evidence quality requires it.",
         "",
         "Before changing code, read `docs/conventions/OVERVIEW.md` and verify that cited convention evidence is current for the affected area.",
         "",
@@ -1023,8 +1287,12 @@ mod tests {
     fn plan_yaml_records_evidence_policy() {
         let yaml = WikiPlan::default().to_yaml();
 
-        assert!(yaml.contains("schema_version: 1"));
+        assert!(yaml.contains("schema_version: 2"));
         assert!(yaml.contains("claims must cite files"));
+        assert!(yaml.contains("repository_mental_model:"));
+        assert!(yaml.contains("reader_questions:"));
+        assert!(yaml.contains("source_anchors:"));
+        assert!(yaml.contains("acceptance_checks:"));
         assert!(yaml.contains("docs/QUICKSTART.md"));
         assert!(yaml.contains("docs/conventions/OVERVIEW.md"));
         assert!(!yaml.contains("docs/quickstart.md"));

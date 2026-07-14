@@ -70,6 +70,16 @@ CodeWiki is a Codex skill that builds and maintains a semantic wiki for software
 - Q&A should answer from generated docs first, then source evidence when docs are insufficient.
 - Q&A should activate external runtime tools only after docs, plan, agent instructions, local SQLite evidence, and source/Git inspection are insufficient for the requested answer.
 - Sync detects stale docs, records portable generated-body integrity, refreshes only verified-unchanged generated bodies automatically, and preserves manual edits for semantic reconciliation.
+- WikiPlan records an evidence-backed repository mental model before creating a hierarchy, canonical concept ownership, reading order, and per-page contracts.
+- WikiPlan page contracts record reader job, audience, prerequisites, reader questions, semantic scope/non-scope, required sections, question-driven diagram slots, evidence anchors with relevance reasons, related pages, open questions, refresh triggers, and acceptance checks.
+- Canonical pages remain stable entrypoints while dynamic pages may be created for evidence-backed systems, components, workflows, platform boundaries, and framework concepts.
+- Reader-facing docs explain system concepts, responsibilities, boundaries, interactions, workflows, change risks, and verification guidance before presenting source symbols or evidence details.
+- Raw file/symbol/import inventories remain in evidence or planning layers rather than becoming the primary reader-facing content.
+- Reader-facing pages begin with purpose, scope, and mental model; claim-local citations follow the explanation, while source inventories are optional appendices or evidence-page content.
+- Generated documentation passes static quality checks and docs-only developer-onboarding evaluation before a high-quality init or sync is considered complete.
+- Quality evaluation includes contract coverage, evidence relevance, diagram validity/information gain, cross-page ownership/overlap, docs-only onboarding tasks, and human UAT; arbitrary file/page/citation/diagram counts are not quality proxies.
+- The installed skill, references, helper, and companion expose versioned package/install provenance, managed-content integrity, and compatibility status.
+- Every generation and benchmark records the resolved skill root, installed content identity, contract versions, and companion compatibility; legacy, drifted, or incompatible installations cannot report high-quality reader-doc completion.
 
 ## Non-Functional Requirements
 
@@ -82,6 +92,8 @@ CodeWiki is a Codex skill that builds and maintains a semantic wiki for software
 - The tool remains usable after session reset or model change.
 - The generated wiki should be readable by humans and useful to agents.
 - Manual documentation contributions remain durable across sync, machine, session, and model changes.
+- Generated documentation quality is model-independent: the same reader, evidence, diagram, and onboarding contracts apply across model providers.
+- New developers should be able to form a system mental model and begin a bounded first change from the generated docs without source-first repository exploration.
 
 ## Constraints
 
@@ -104,6 +116,12 @@ CodeWiki is a Codex skill that builds and maintains a semantic wiki for software
 - Re-running with an existing config/state reuses prior facts and checkpoints.
 - Changing model/provider does not require discarding durable state.
 - Detection behavior is validated on at least several different repository shapes before release.
+- Critical onboarding questions are answerable from generated docs alone with evidence and without critical architecture or ownership hallucinations.
+- Benchmark comparisons pin source commit, dirty/submodule state, visible existing docs, evidence scope, and generation/evaluation contract versions.
+- Generated topic pages reflect semantic responsibilities and workflows rather than top-level filesystem paths.
+- Architecture, workflow, state, and data pages include the appropriate diagram when the documented relationships materially benefit from one.
+- A pinned install smoke proves managed skill/reference/helper/companion integrity, deliberate drift is detected, incompatible contracts block reader-doc success, and declared project state survives replacement.
+- Benchmark results contain immutable installed-skill and companion identity captured at run time rather than inferred later.
 
 ## Linked Decisions
 
@@ -116,3 +134,5 @@ CodeWiki is a Codex skill that builds and maintains a semantic wiki for software
 - `docs/decisions/ADR-0007-uppercase-generated-markdown-filenames.md`
 - `docs/decisions/ADR-0008-code-conventions-documentation.md`
 - `docs/decisions/ADR-0009-manual-doc-edits-win-during-sync.md`
+- `docs/decisions/ADR-0010-reader-first-information-architecture.md`
+- `docs/decisions/ADR-0011-skill-distribution-version-integrity.md`

@@ -26,22 +26,43 @@ if [[ "${1:-}" == "-h" || "${1:-}" == "--help" ]]; then
   exit 0
 fi
 
+script_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+skill_root="$(cd -- "$script_dir/.." && pwd)"
+
+exec_companion() {
+  local binary="$1"
+  shift
+  case "${1:-}" in
+    status|init|sync|validate)
+      if [[ -f "$skill_root/INSTALLATION.yml" ]]; then
+        "$binary" doctor "$skill_root" >/dev/null
+      elif [[ "${1:-}" == "validate" || "${1:-}" == "status" ]]; then
+        echo "CodeWiki installation is legacy_unverified; reinstall before marking reader docs ready" >&2
+        exit 1
+      else
+        echo "warning: CodeWiki installation provenance is unavailable; generation cannot become reader_docs_ready until reinstalled" >&2
+      fi
+      ;;
+  esac
+  export CODEWIKI_SKILL_ROOT="$skill_root"
+  exec "$binary" "$@"
+}
+
 if [[ -n "${CODEWIKI_COMPANION_BIN:-}" ]]; then
   if [[ ! -x "$CODEWIKI_COMPANION_BIN" ]]; then
     echo "CODEWIKI_COMPANION_BIN is set but is not executable: $CODEWIKI_COMPANION_BIN" >&2
     exit 127
   fi
-  exec "$CODEWIKI_COMPANION_BIN" "$@"
+  exec_companion "$CODEWIKI_COMPANION_BIN" "$@"
 fi
 
-script_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 bundled_bin="$script_dir/../bin/codewiki"
 if [[ -x "$bundled_bin" ]]; then
-  exec "$bundled_bin" "$@"
+  exec_companion "$bundled_bin" "$@"
 fi
 
 if command -v codewiki >/dev/null 2>&1; then
-  exec codewiki "$@"
+  exec_companion "$(command -v codewiki)" "$@"
 fi
 
 run_from_repo() {
@@ -49,11 +70,12 @@ run_from_repo() {
   shift
   if [[ -f "$repo/Cargo.toml" && -d "$repo/crates/codewiki-cli" ]]; then
     if [[ -x "$repo/target/release/codewiki" ]]; then
-      exec "$repo/target/release/codewiki" "$@"
+      exec_companion "$repo/target/release/codewiki" "$@"
     fi
     if [[ -x "$repo/target/debug/codewiki" ]]; then
-      exec "$repo/target/debug/codewiki" "$@"
+      exec_companion "$repo/target/debug/codewiki" "$@"
     fi
+    export CODEWIKI_SKILL_ROOT="$skill_root"
     exec cargo run --manifest-path "$repo/Cargo.toml" -p codewiki-cli -- "$@"
   fi
 }

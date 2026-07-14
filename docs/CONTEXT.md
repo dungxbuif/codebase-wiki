@@ -32,19 +32,39 @@ updated: 2026-07-14
 
 ## Current Status
 
-- Status: CodeWiki foundation production baseline is complete and verified.
+- Status: Reader-first PHASE-002 is in review; implementation, distribution integrity, and the pinned Mezon synthesis benchmark pass.
 - Active backlog: `docs/work/BACKLOG.md`
-- Current queue focus: no active implementation item; await the next user priority.
-- Active phase: None; `docs/work/phases/PHASE-001-codewiki-foundation.md` is done.
-- Active ticket: None; `docs/work/tickets/TICKET-028-preserve-manual-doc-edits.md` is done.
-- Active bug: None.
+- Current queue focus: obtain human onboarding UAT and execute the accepted independent/cross-model TypeScript/Python comparison scope without weakening quality gates.
+- Active phase: `docs/work/phases/PHASE-002-reader-first-docs-quality.md` (in_review).
+- Active ticket: `docs/work/tickets/TICKET-031-onboarding-quality-evals.md` (in_review); TICKET-029/030 implementation is complete.
+- Active bugs: BUG-001 and BUG-002 are fixed and regression-verified, pending final phase/UAT review.
 
 ## Current Focus
 
-Maintain CodeWiki as a complete repo-native Codex skill for semantic wiki generation, sync, and docs-first Q&A across arbitrary repositories.
+Make CodeWiki-generated docs sufficient for a new developer to understand the system and begin a safe bounded change, while preserving evidence, portability, sync safety, and cross-model behavior.
 
 ## Recently Touched Areas
 
+- `docs/work/research/READER-FIRST-DOCS-AUDIT.md`
+- `docs/work/research/REFERENCE-DOCS-QUALITY-RESEARCH.md`
+- `docs/work/research/GROK-WIKI-MEZON-AUDIT.md`
+- `docs/work/bugs/BUG-001-companion-bypasses-reader-synthesis.md`
+- `docs/work/bugs/BUG-002-installed-skill-version-drift.md`
+- `docs/work/phases/PHASE-002-reader-first-docs-quality.md`
+- `docs/work/tickets/TICKET-029-wikiplan-v2-topic-taxonomy.md`
+- `docs/work/tickets/TICKET-030-reader-first-synthesis-and-diagrams.md`
+- `docs/work/tickets/TICKET-031-onboarding-quality-evals.md`
+- `docs/work/designs/DESIGN-029-wikiplan-v2-topic-taxonomy.md`
+- `docs/work/designs/DESIGN-030-reader-first-synthesis-and-diagrams.md`
+- `docs/work/designs/DESIGN-031-onboarding-quality-evals.md`
+- `docs/work/designs/DESIGN-032-skill-install-version-integrity.md`
+- `docs/decisions/ADR-0010-reader-first-information-architecture.md`
+- `docs/decisions/ADR-0011-skill-distribution-version-integrity.md`
+- `skill/codewiki/package.yml`
+- `skill/codewiki/references/reader-first.md`
+- `crates/codewiki-core/src/lib.rs`
+- `crates/codewiki-docs/src/lib.rs`
+- `crates/codewiki-store/src/lib.rs`
 - `AGENTS.md`
 - `README.md`
 - `.gitmodules`
@@ -127,6 +147,18 @@ Maintain CodeWiki as a complete repo-native Codex skill for semantic wiki genera
 
 ## Recent Decisions
 
+- Capture source provenance before repo-local initialization writes control files, so a clean benchmark remains `source_dirty: false`.
+- Preserve v1 plans as `plan.v1.legacy.yml` and require explicit v2 enrichment; reject conflicting legacy control planes instead of silently coexisting.
+- Require plan hierarchy, unique canonical topic ownership, valid prerequisites, acyclic dependencies, and one plan contract for every reader page.
+- Record the pinned Mezon `9d7ba65` six-page `reader_docs_ready` benchmark and same-model evaluator caveat in `docs/work/benchmarks/MEZON-DESKTOP-9D7BA65.md`.
+- Grok-Wiki/Gemini output from the local Mezon repository confirmed that source/model capability was not the primary blocker; BUG-001's companion bypass is now removed.
+- ADR-0011 is accepted and implemented: package/install manifests, doctor, managed digest, interface/schema compatibility, helper preflight, and run provenance make skill drift observable.
+- ADR-0010 is accepted and implemented at the orchestration boundary: deterministic discovery/persistence -> required model mental-model/WikiPlan/page synthesis/bounded revision -> deterministic/semantic validation. Missing synthesis reports incomplete.
+- WikiPlan v2 now persists repository mental-model and typed per-page reader/evidence/diagram/refresh/acceptance contracts before drafting.
+- Keep OpenWiki's targeted exploration and surgical update discipline; adopt deepwiki-open's hierarchy/per-page/related-page mechanisms; reject arbitrary page, file, citation, and diagram quotas from either prompt/output style.
+- ADR-0010 supersedes ADR-0005's source-list-first default: reader pages begin with purpose/scope/mental model, use claim-local citations, and keep source inventories optional or under `docs/evidence/**`.
+- `areas/**` is v1 compatibility only; dynamic pages belong to semantic owners such as architecture, workflows, components, or data models.
+- Require fair onboarding benchmarks to pin source commit, dirty/submodule state, visible existing docs, evidence scope, and generator/eval contract versions.
 - Keep `AGENTS.md` at the repository root for agent discovery and include the local RTK rule.
 - Use Harness markdown docs as the project control framework.
 - Track OpenWiki and deepwiki-open as reference submodules under `references/`.
@@ -153,10 +185,10 @@ Maintain CodeWiki as a complete repo-native Codex skill for semantic wiki genera
 - Keep `skill/codewiki/SKILL.md` as a compact router and put mode-specific workflow detail in `skill/codewiki/references/`.
 - Start SQLite durable state with an executor-agnostic migration registry in `codewiki-store`.
 - Resolve local state/cache paths from repository identity and apply migrations through the local `sqlite3` executable.
-- Add `codewiki init [path]` to create target `.agents/skills/codewiki/project/**`, `docs/QUICKSTART.md`, and initialize local SQLite state.
+- `codewiki init [path]` creates target control files, `docs/evidence/**`, and local SQLite state, then stops at `synthesis_incomplete`.
 - Add repository detection v1 for languages, package managers, framework hints, entrypoints, tests, and docs signals.
 - Add typed WikiPlan v1, planned pages, confidence, evidence, and claim models.
-- Generate canonical starter docs for `QUICKSTART.md`, `SOURCE-MAP.md`, OpenWiki-style section directories, and evidence pages during init.
+- Historical PHASE-001 behavior generated canonical starter pages during init; ADR-0010 retired that deterministic reader-page behavior.
 - Add `codewiki sync [path]` compare/update/no-op skeleton and ignore only generated CodeWiki canonical pages during detection, not all human-authored `docs/**`.
 - Support repo-local and external/personal wiki workspace placement; ask before writing when ambiguous.
 - Treat Git as the default source and support non-Git sources only through user-provided source extension skills.
@@ -168,23 +200,27 @@ Maintain CodeWiki as a complete repo-native Codex skill for semantic wiki genera
 - Mark claims stale when supporting file evidence changes and render SQLite-backed Q&A context with active/stale claim separation.
 - Verify init, docs, semantic claims, SQLite Q&A context, and stale sync across TypeScript, Python, and Rust-shaped production fixtures.
 - Add generated-region markers and sync merge behavior so human-owned text around generated docs is preserved.
-- Generate canonical synthesis pages and area pages from semantic evidence while recording gaps explicitly.
+- Historical PHASE-001 deterministic synthesis/area pages were removed by BUG-001/ADR-0010; semantic snapshots now remain evidence only.
 - Reconcile release-readiness docs, roadmap, traceability, README, installer syntax, companion status, and validation evidence.
 - Finalize CodeWiki-specific product/evidence/sync/tool standards and implemented requirement statuses.
 - Add `skill/codewiki/scripts/codewiki-helper.sh`; make the installer build `bin/codewiki` for binary-first companion usage and keep copied Rust companion source as fallback.
-- Copy OpenWiki/DeepWiki docs quality patterns into CodeWiki: `QUICKSTART.md` entrypoint, section directories only for real areas, `## Backlog` instead of stubs, and DeepWiki-style relevant-source-files blocks.
+- Historical PHASE-001 decision copied quickstart/section/source-block patterns; ADR-0010 supersedes the source-block-first rule and makes page creation evidence/job driven.
 - Keep generated wiki directories lowercase and every generated Markdown basename uppercase; safely migrate only marker-owned legacy lowercase pages.
 - Record reference baselines for future updates: OpenWiki `2fb44a876db8cca461ad1c0767931d95495763a3`; deepwiki-open `16f35a0fc0284e99b7963bbf4e8585e9957e2fe1`.
 - Source/change providers currently follow a registry + source-skill contract: Git is default, `.agents/skills/codewiki/project/sources.yml` records sources, and non-Git systems are user-provided source skills that emit evidence packets. CodeWiki core does not bundle OpenWiki-style connectors.
 - CodeWiki no longer creates a root `.codewiki/` directory. The only project-local control plane is `.agents/skills/codewiki/project/`, and the installer preserves that `project/` directory when updating the skill package.
-- Require `docs/conventions/OVERVIEW.md` after init and discover actual repository conventions from explicit configuration plus repeated source evidence, with explicit/inferred/hypothesis/exception classification and documented counterexamples.
+- Require `docs/conventions/OVERVIEW.md` after successful model synthesis and derive conventions from explicit configuration plus repeated evidence, with classification and counterexamples.
 - Treat current docs as durable user input during sync: portable generated-body hashes allow safe refresh of unchanged content, while manual edits inside or outside generated regions and legacy hashless content are preserved for LLM semantic reconciliation.
 
 ## Next Steps
 
-- Optional future work requires a new phase/ticket: publish/push release, marketplace packaging, or advanced provider-backed synthesis.
+- Ask for human UAT on the pinned Mezon reader surface.
+- Execute genuinely independent/cross-model evaluation and complete TypeScript/Python docs-only benchmark questions.
+- Reconcile PHASE-002 to verified/done only after the remaining accepted UAT/comparison gates pass.
 - Keep source integrations skill-based unless a later ADR explicitly changes that boundary.
 
 ## Open Questions
 
+- Calibrate the `0..3` semantic rubric across the three repository shapes; critical questions and critical misconceptions remain binary blockers regardless of average score.
+- Should eval results remain command artifacts or gain a durable local-state schema after the first implementation proves the need?
 - Marketplace/distribution beyond the direct repository installer is optional future work, not part of the completed foundation baseline.

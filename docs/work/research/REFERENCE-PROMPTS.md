@@ -8,6 +8,7 @@ ai_fields: [analysis, recommendation, evidence]
 shared_fields: [status]
 links:
   backlog: docs/work/BACKLOG.md#backlog-queue
+  follow_up: docs/work/research/REFERENCE-DOCS-QUALITY-RESEARCH.md
   references:
     - references/openwiki/src/agent/prompt.ts
     - references/deepwiki-open/api/prompts.py
@@ -16,12 +17,15 @@ links:
 
 # Reference Prompt Analysis
 
+> Scope correction (2026-07-14): this note originally analyzed deepwiki-open's Q&A prompts in `api/prompts.py` but did not inspect its actual wiki structure and page-generation prompts. Those prompts live in `src/app/[owner]/[repo]/page.tsx`. The broader pipeline, renderer, validation gaps, live DeepWiki output, and updated adoption decisions are documented in [REFERENCE-DOCS-QUALITY-RESEARCH.md](REFERENCE-DOCS-QUALITY-RESEARCH.md). This note remains useful for Q&A and control-prompt architecture but is not a complete generated-docs quality analysis.
+
 This note compares prompt and wiki-control patterns from the two reference repositories and records how CodeWiki should combine them without inheriting their product assumptions.
 
 ## Scope
 
 - OpenWiki prompt source: `references/openwiki/src/agent/prompt.ts`
 - DeepWiki prompt source: `references/deepwiki-open/api/prompts.py`
+- DeepWiki wiki structure/page source: `references/deepwiki-open/src/app/[owner]/[repo]/page.tsx`
 - DeepWiki cache/export behavior: `references/deepwiki-open/api/api.py`
 - Reference baseline commits recorded on 2026-07-13:
   - OpenWiki: `2fb44a876db8cca461ad1c0767931d95495763a3` (`references/openwiki`, `0.1.1-9-g2fb44a8`)
