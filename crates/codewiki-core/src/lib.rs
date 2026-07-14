@@ -2,7 +2,8 @@
 
 use codewiki_detect::{DetectionCapabilities, detect_repository};
 use codewiki_docs::{
-    GENERATED_REGION_END, GENERATED_REGION_START, WikiDocsLayout, render_semantic_pages,
+    GENERATED_REGION_END, GENERATED_REGION_HASH_PREFIX, GENERATED_REGION_START, WikiDocsLayout,
+    generated_region_hash, render_semantic_pages,
 };
 use codewiki_explore::explore_repository;
 use codewiki_store::{
@@ -381,14 +382,31 @@ fn write_if_changed(path: &Path, content: &str, actions: &mut Vec<String>) -> Re
         if existing == content {
             return Ok(());
         }
-        if let Some(merged) = merge_generated_region(&existing, content) {
-            if merged == existing {
+        match merge_generated_region(&existing, content) {
+            GeneratedRegionMerge::Merged(merged) => {
+                if merged == existing {
+                    return Ok(());
+                }
+                fs::write(path, merged)
+                    .map_err(|error| format!("failed to write `{}`: {error}", path.display()))?;
+                actions.push(format!("updated-generated-region: {}", path.display()));
                 return Ok(());
             }
-            fs::write(path, merged)
-                .map_err(|error| format!("failed to write `{}`: {error}", path.display()))?;
-            actions.push(format!("updated-generated-region: {}", path.display()));
-            return Ok(());
+            GeneratedRegionMerge::HumanEdited => {
+                actions.push(format!(
+                    "preserved-human-edited-generated-region: {}",
+                    path.display()
+                ));
+                return Ok(());
+            }
+            GeneratedRegionMerge::LegacyUnverified => {
+                actions.push(format!(
+                    "preserved-unverified-legacy-generated-region: {}",
+                    path.display()
+                ));
+                return Ok(());
+            }
+            GeneratedRegionMerge::NoRegion => {}
         }
         actions.push(format!(
             "preserved-human-owned-unmarked: {}",
@@ -406,17 +424,77 @@ fn write_if_changed(path: &Path, content: &str, actions: &mut Vec<String>) -> Re
     Ok(())
 }
 
-fn merge_generated_region(existing: &str, generated: &str) -> Option<String> {
-    let start = existing.find(GENERATED_REGION_START)?;
-    let after_start = start + GENERATED_REGION_START.len();
-    let relative_end = existing[after_start..].find(GENERATED_REGION_END)?;
-    let end = after_start + relative_end + GENERATED_REGION_END.len();
+#[derive(Debug, Clone, PartialEq, Eq)]
+enum GeneratedRegionMerge {
+    Merged(String),
+    HumanEdited,
+    LegacyUnverified,
+    NoRegion,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+struct ParsedGeneratedRegion<'a> {
+    start: usize,
+    end: usize,
+    body: &'a str,
+    recorded_hash: Option<&'a str>,
+}
+
+fn merge_generated_region(existing: &str, generated: &str) -> GeneratedRegionMerge {
+    let Some(region) = parse_generated_region(existing) else {
+        return GeneratedRegionMerge::NoRegion;
+    };
+    let Some(recorded_hash) = region.recorded_hash else {
+        return GeneratedRegionMerge::LegacyUnverified;
+    };
+    if recorded_hash != generated_region_hash(region.body) {
+        return GeneratedRegionMerge::HumanEdited;
+    }
+
     let mut merged = String::new();
-    merged.push_str(&existing[..start]);
+    merged.push_str(&existing[..region.start]);
     merged.push_str(generated.trim_end());
     merged.push('\n');
-    merged.push_str(&existing[end..]);
-    Some(merged)
+    merged.push_str(&existing[region.end..]);
+    GeneratedRegionMerge::Merged(merged)
+}
+
+fn parse_generated_region(content: &str) -> Option<ParsedGeneratedRegion<'_>> {
+    let start = content.find(GENERATED_REGION_START)?;
+    let after_start = start + GENERATED_REGION_START.len();
+    let after_start = consume_line_ending(content, after_start)?;
+    let (recorded_hash, body_start) =
+        if content[after_start..].starts_with(GENERATED_REGION_HASH_PREFIX) {
+            let hash_end = content[after_start..].find(" -->")? + after_start;
+            let hash = &content[after_start + GENERATED_REGION_HASH_PREFIX.len()..hash_end];
+            let marker_end = hash_end + " -->".len();
+            (Some(hash), consume_line_ending(content, marker_end)?)
+        } else {
+            (None, after_start)
+        };
+    let end_marker = content[body_start..].find(GENERATED_REGION_END)? + body_start;
+    let raw_body = &content[body_start..end_marker];
+    let body = raw_body
+        .strip_suffix("\r\n")
+        .or_else(|| raw_body.strip_suffix('\n'))
+        .unwrap_or(raw_body);
+    let end = end_marker + GENERATED_REGION_END.len();
+    Some(ParsedGeneratedRegion {
+        start,
+        end,
+        body,
+        recorded_hash,
+    })
+}
+
+fn consume_line_ending(content: &str, offset: usize) -> Option<usize> {
+    if content[offset..].starts_with("\r\n") {
+        Some(offset + 2)
+    } else if content[offset..].starts_with('\n') {
+        Some(offset + 1)
+    } else {
+        None
+    }
 }
 
 const LEGACY_GENERATED_DOC_PATHS: &[(&str, &str)] = &[
@@ -817,7 +895,73 @@ mod tests {
             ) >= 2
         );
 
+        let manually_edited = map.replace(
+            "## Dependency Hints",
+            "## Dependency Insights (human correction)",
+        );
+        fs::write(repo.join("docs/SOURCE-MAP.md"), &manually_edited)
+            .expect("write manual generated-region edit");
+        fs::write(
+            repo.join("src/main.rs"),
+            "use std::{fs, path::Path};\nfn main() {}\n",
+        )
+        .expect("mutate source again");
+        let conflict = run_with_context(["sync"], &context);
+        assert_eq!(conflict.exit_code, 0, "{}", conflict.stderr);
+        assert!(
+            conflict
+                .stdout
+                .contains("preserved-human-edited-generated-region:")
+        );
+        assert_eq!(
+            fs::read_to_string(repo.join("docs/SOURCE-MAP.md")).expect("read preserved map"),
+            manually_edited
+        );
+
         let _ = fs::remove_dir_all(base);
+    }
+
+    #[test]
+    fn generated_region_merge_preserves_manual_body_edits() {
+        let existing_generated = codewiki_docs::wrap_generated_region(
+            "# Source Map\n\nHuman-correctable generated statement.",
+        );
+        let refreshed =
+            codewiki_docs::wrap_generated_region("# Source Map\n\nRefreshed generated statement.");
+        let with_surrounding_human_text =
+            format!("Human preface.\n\n{existing_generated}\nHuman notes.\n");
+
+        let merged = merge_generated_region(&with_surrounding_human_text, &refreshed);
+        let GeneratedRegionMerge::Merged(merged) = merged else {
+            panic!("unchanged generated body should refresh");
+        };
+        assert!(merged.contains("Human preface."));
+        assert!(merged.contains("Human notes."));
+        assert!(merged.contains("Refreshed generated statement."));
+
+        let manually_edited = existing_generated.replace(
+            "Human-correctable generated statement.",
+            "User-authored correction that must win.",
+        );
+        assert_eq!(
+            merge_generated_region(&manually_edited, &refreshed),
+            GeneratedRegionMerge::HumanEdited
+        );
+    }
+
+    #[test]
+    fn generated_region_merge_preserves_hashless_legacy_regions() {
+        let legacy = format!("{GENERATED_REGION_START}\n# Legacy body\n{GENERATED_REGION_END}\n");
+        let refreshed = codewiki_docs::wrap_generated_region("# Refreshed body");
+
+        assert_eq!(
+            merge_generated_region(&legacy, &refreshed),
+            GeneratedRegionMerge::LegacyUnverified
+        );
+        assert_eq!(
+            merge_generated_region("# Human page\n", &refreshed),
+            GeneratedRegionMerge::NoRegion
+        );
     }
 
     #[test]

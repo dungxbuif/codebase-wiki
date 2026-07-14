@@ -5,6 +5,8 @@ use std::collections::BTreeMap;
 
 /// Start marker for generated page regions.
 pub const GENERATED_REGION_START: &str = "<!-- codewiki:generated:start -->";
+/// Prefix for the portable integrity hash of the last CodeWiki-owned body.
+pub const GENERATED_REGION_HASH_PREFIX: &str = "<!-- codewiki:generated:hash ";
 /// End marker for generated page regions.
 pub const GENERATED_REGION_END: &str = "<!-- codewiki:generated:end -->";
 
@@ -278,7 +280,21 @@ fn matches_page_focus(page_path: &str, file: &codewiki_explore::ExploredFile) ->
 
 /// Wrap generated content in markers so sync can preserve human-owned text around it.
 pub fn wrap_generated_region(content: &str) -> String {
-    format!("{GENERATED_REGION_START}\n{content}\n{GENERATED_REGION_END}\n")
+    let body = content.trim_end();
+    let hash = generated_region_hash(body);
+    format!(
+        "{GENERATED_REGION_START}\n{GENERATED_REGION_HASH_PREFIX}{hash} -->\n{body}\n{GENERATED_REGION_END}\n"
+    )
+}
+
+/// Return a stable portable hash for a generated region body.
+pub fn generated_region_hash(content: &str) -> String {
+    let mut hash = 0xcbf29ce484222325_u64;
+    for byte in content.as_bytes() {
+        hash ^= u64::from(*byte);
+        hash = hash.wrapping_mul(0x100000001b3);
+    }
+    format!("fnv1a64:{hash:016x}")
 }
 
 fn render_initial_index_with_detection(
@@ -752,6 +768,21 @@ mod tests {
                 .iter()
                 .all(|page| page.content.contains(GENERATED_REGION_START))
         );
+        assert!(pages.iter().all(|page| {
+            page.content
+                .contains("<!-- codewiki:generated:hash fnv1a64:")
+        }));
+    }
+
+    #[test]
+    fn generated_region_hash_is_stable_and_tracks_body_changes() {
+        let first = wrap_generated_region("# Page\n\nGenerated body.\n");
+        let same = wrap_generated_region("# Page\n\nGenerated body.");
+        let changed = wrap_generated_region("# Page\n\nHuman correction.");
+
+        assert_eq!(first, same);
+        assert_ne!(first, changed);
+        assert!(first.contains(&generated_region_hash("# Page\n\nGenerated body.")));
     }
 
     #[test]

@@ -23,6 +23,7 @@ trace:
     - docs/decisions/ADR-0004-runtime-optional-code-intelligence-tools.md
     - docs/decisions/ADR-0007-uppercase-generated-markdown-filenames.md
     - docs/decisions/ADR-0008-code-conventions-documentation.md
+    - docs/decisions/ADR-0009-manual-doc-edits-win-during-sync.md
 ---
 
 # ADR-0005: CodeWiki Generated Docs Structure
@@ -133,7 +134,9 @@ The role of each layer is:
 - Each durable claim must be connected to file, symbol, command, existing doc, Git evidence, provider evidence, or explicit hypothesis.
 - Existing unmarked human-authored `docs/**` files remain source evidence and must not be overwritten by CodeWiki.
 - CodeWiki may write direct `docs/` pages only when a canonical page is missing or already contains CodeWiki generated-region markers.
-- Sync should preserve human-owned sections and avoid formatting-only rewrites.
+- New generated regions carry a portable body hash. Sync may automatically replace a region only when its current body matches that baseline.
+- Sync preserves manual edits inside and outside generated regions, preserves legacy hashless regions conservatively, and routes conflicts to LLM semantic reconciliation per ADR-0009.
+- Sync should avoid formatting-only rewrites.
 - Q&A must read `docs/**` before falling back to `.agents/skills/codewiki/project/plan.yml`, `.agents/skills/codewiki/project/AGENTS.md`, local SQLite evidence, source/Git, or optional providers.
 - If source repo and wiki workspace differ, Q&A must treat `.agents/skills/codewiki/project/sources.yml` as the map from workspace to source evidence.
 

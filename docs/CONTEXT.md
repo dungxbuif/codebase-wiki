@@ -36,7 +36,7 @@ updated: 2026-07-14
 - Active backlog: `docs/work/BACKLOG.md`
 - Current queue focus: no active implementation item; await the next user priority.
 - Active phase: None; `docs/work/phases/PHASE-001-codewiki-foundation.md` is done.
-- Active ticket: None; `docs/work/tickets/TICKET-027-code-conventions-documentation.md` is done.
+- Active ticket: None; `docs/work/tickets/TICKET-028-preserve-manual-doc-edits.md` is done.
 - Active bug: None.
 
 ## Current Focus
@@ -178,10 +178,10 @@ Maintain CodeWiki as a complete repo-native Codex skill for semantic wiki genera
 - Source/change providers currently follow a registry + source-skill contract: Git is default, `.agents/skills/codewiki/project/sources.yml` records sources, and non-Git systems are user-provided source skills that emit evidence packets. CodeWiki core does not bundle OpenWiki-style connectors.
 - CodeWiki no longer creates a root `.codewiki/` directory. The only project-local control plane is `.agents/skills/codewiki/project/`, and the installer preserves that `project/` directory when updating the skill package.
 - Require `docs/conventions/OVERVIEW.md` after init and discover actual repository conventions from explicit configuration plus repeated source evidence, with explicit/inferred/hypothesis/exception classification and documented counterexamples.
+- Treat current docs as durable user input during sync: portable generated-body hashes allow safe refresh of unchanged content, while manual edits inside or outside generated regions and legacy hashless content are preserved for LLM semantic reconciliation.
 
 ## Next Steps
 
-- Complete TICKET-027 and verify the conventions page, exploration contract, WikiPlan registration, and generated-source exclusion.
 - Optional future work requires a new phase/ticket: publish/push release, marketplace packaging, or advanced provider-backed synthesis.
 - Keep source integrations skill-based unless a later ADR explicitly changes that boundary.
 

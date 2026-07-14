@@ -27,7 +27,7 @@ Document HTTP endpoints, RPC methods, events, CLI commands, or any other public 
 | `codewiki version` / `codewiki --version` | companion command | none | implemented | Prints current package version. |
 | `codewiki status` | companion command | none | implemented | Prints Rust companion status, command list, detection capabilities, config path, local state summary, and docs root. |
 | `codewiki init [path]` | companion command | local filesystem | implemented | Creates missing `.agents/skills/codewiki/project/config.yml`, `.agents/skills/codewiki/project/plan.yml`, `.agents/skills/codewiki/project/AGENTS.md`, canonical uppercase Markdown pages beginning with `docs/QUICKSTART.md` and `docs/conventions/OVERVIEW.md`, and applies local SQLite migrations. Marker-owned legacy lowercase generated pages are migrated safely. Defaults to the current directory when `path` is omitted. |
-| `codewiki sync [path]` | companion command | local filesystem | implemented | Re-detects repository signals, compares generated plan/docs to desired output, updates changed/missing generated files, and no-ops when current. |
+| `codewiki sync [path]` | companion command | local filesystem | implemented | Re-detects repository signals, compares generated plan/docs to desired output, refreshes only generated bodies whose integrity hash proves they are unchanged, preserves manual or legacy-unverified content for LLM reconciliation, creates missing pages, and no-ops when current. |
 
 ## Errors
 
@@ -47,3 +47,4 @@ Pre-1.0 skill and companion-tool surfaces are unstable. The skill install comman
 - `docs/decisions/ADR-0002-rust-cli-and-reference-submodule-strategy.md`
 - `docs/decisions/ADR-0003-skill-first-product-and-rust-companion-tool.md`
 - `docs/decisions/ADR-0005-codewiki-generated-docs-structure.md`
+- `docs/decisions/ADR-0009-manual-doc-edits-win-during-sync.md`

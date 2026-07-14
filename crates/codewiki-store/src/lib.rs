@@ -940,6 +940,8 @@ pub fn render_target_agents_md() -> String {
         "",
         "Before changing code, read `docs/conventions/OVERVIEW.md` and verify that cited convention evidence is current for the affected area.",
         "",
+        "During CodeWiki sync, current docs are durable user input. Preserve manual edits inside or outside generated regions and semantically merge them with refreshed source evidence; never replace a conflict with a whole regenerated page.",
+        "",
         "Runtime tool policy:",
         "",
         "- Octocode is the first-choice code-intelligence provider when a provider is needed.",

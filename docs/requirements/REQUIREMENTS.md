@@ -31,6 +31,7 @@ shared_fields: [functional_requirements, non_functional_requirements]
 | REQ-010 | CodeWiki must synchronize generated regions safely, preserve human-owned content, and surface stale evidence. | high | User direction | implemented |
 | REQ-011 | CodeWiki must use Git as the default change source while allowing user-provided source extension skills and external wiki workspaces. | high | User direction | implemented |
 | REQ-012 | CodeWiki must discover and document repository-specific project, language, framework/library, and area conventions from explicit and repeated code evidence. | high | User direction | implemented |
+| REQ-013 | CodeWiki sync must preserve manual documentation edits inside and outside generated regions and reconcile them semantically with refreshed evidence. | high | User direction | implemented |
 
 ## Non-Functional Requirements
 
@@ -45,3 +46,4 @@ shared_fields: [functional_requirements, non_functional_requirements]
 | NFR-007 | Optional provider guidance must live in the skill and target-repo CodeWiki agent instructions, not as mandatory bundled dependencies. | portability | implemented |
 | NFR-008 | Generated documentation layout must be stable enough for sync and docs-first Q&A across model/session changes. | maintainability | implemented |
 | NFR-009 | Convention documentation must describe observed repository practice, including scope and exceptions, rather than generic ecosystem best practices. | product_quality | implemented |
+| NFR-010 | Generated-document ownership metadata must remain portable across machines, sessions, and model changes. | reliability | implemented |

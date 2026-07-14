@@ -21,6 +21,7 @@ All notable changes should be recorded here.
 
 ### Changed
 
+- Changed sync ownership semantics so manual edits inside generated regions win: new regions carry portable integrity hashes, unchanged bodies refresh safely, and edited or legacy-unverified bodies are preserved for LLM semantic reconciliation.
 - Standardized every CodeWiki-generated Markdown basename as uppercase while keeping wiki directories lowercase, made `docs/QUICKSTART.md` the sole entrypoint, and added marker-aware migration for legacy lowercase generated pages.
 
 ### Added

@@ -93,7 +93,7 @@ Staleness v1 compares new semantic file content hashes against existing evidence
 
 Production fixture coverage now exercises TypeScript app, Python service, and Rust workspace-shaped repositories through init, generated docs, semantic claims, SQLite Q&A context, and stale sync behavior.
 
-Generated docs use explicit `<!-- codewiki:generated:start -->` / `<!-- codewiki:generated:end -->` regions. Sync updates only those regions and preserves human-owned text outside them. If an existing changed page has no generated markers, sync preserves it instead of overwriting it.
+Generated docs use explicit `<!-- codewiki:generated:start -->` / `<!-- codewiki:generated:end -->` regions plus a portable generated-body integrity hash. Sync refreshes a region automatically only when its current body matches that baseline. Manual edits inside or outside the region are preserved; inside-region conflicts and legacy hashless regions are routed to LLM semantic reconciliation. Unmarked pages remain human-owned.
 
 Synthesis pages are generated for canonical wiki slots including domains, workflows, data, interfaces, operations, testing, conventions, decisions, glossary, open questions, and observed areas. These pages are deterministic evidence summaries: when evidence is thin, they record gaps rather than claiming complete understanding.
 
@@ -144,3 +144,4 @@ Skill workflow: CodeWiki init
 - `docs/decisions/ADR-0006-workspace-placement-and-source-extension-skills.md`
 - `docs/decisions/ADR-0007-uppercase-generated-markdown-filenames.md`
 - `docs/decisions/ADR-0008-code-conventions-documentation.md`
+- `docs/decisions/ADR-0009-manual-doc-edits-win-during-sync.md`

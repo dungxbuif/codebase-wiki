@@ -25,6 +25,7 @@ Use this skill when the user asks to:
 - Do not require approval during `init`; the agent should explore source code autonomously and produce a WikiPlan.
 - Do not build core language/framework adapters. Detect repository stack signals dynamically.
 - Keep claims evidence-backed. Every durable claim should trace to files, symbols, commands, existing docs, or explicit hypotheses.
+- Treat current documentation as durable user input. Never silently overwrite manual edits, including edits inside a generated region; preserve and semantically reconcile them with refreshed evidence.
 - Keep committed project config/docs separate from local persistent state and rebuildable cache.
 - Git is the default source for code changes. Do not bundle Jira/Figma/etc. providers in CodeWiki core.
 - If the output location is ambiguous, confirm whether to write docs in the source repo or in an external/personal workspace before writing files.
@@ -145,10 +146,12 @@ This means ordinary Q&A about documented architecture should not activate Octoco
 ## Sync Workflow
 
 1. Compare Git state, known evidence, generated pages, and changed files.
-2. Mark stale pages and stale claims before rewriting.
-3. Preserve human-owned edits unless the generated region is explicit.
-4. Refresh evidence and update pages.
-5. Record what changed and why.
+2. Read the current affected docs and detect manual changes before generating replacements.
+3. Mark stale pages and stale claims before rewriting.
+4. Refresh unchanged generated regions automatically only when their recorded integrity hash still matches.
+5. If a generated body was manually edited, preserve it and semantically merge refreshed evidence around the user's contribution; do not restore old machine wording.
+6. Preserve unmarked and legacy hashless pages unless the user explicitly authorizes replacement.
+7. Record what changed, what was preserved, and why.
 
 ## Q&A Workflow
 

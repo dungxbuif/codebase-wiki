@@ -24,7 +24,7 @@ Implemented foundation capabilities:
 - semantic exploration snapshots for files, areas, symbols, imports, evidence, and claims;
 - SQLite durable state for files, symbols, evidence, claims, claim/evidence links, stale claims, and Q&A context;
 - generated `docs/**` pages for canonical wiki slots and observed areas;
-- sync safety with generated-region markers that preserve human edits;
+- sync safety with portable generated-body integrity that preserves manual edits inside and outside generated regions for semantic reconciliation;
 - production fixture tests for TypeScript, Python, and Rust-shaped repositories.
 - binary-first installed Rust companion helper at `skills/codewiki/bin/codewiki`, with copied source fallback.
 

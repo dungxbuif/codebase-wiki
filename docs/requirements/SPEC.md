@@ -69,7 +69,7 @@ CodeWiki is a Codex skill that builds and maintains a semantic wiki for software
 - Rebuildable cache is separated from durable runtime state.
 - Q&A should answer from generated docs first, then source evidence when docs are insufficient.
 - Q&A should activate external runtime tools only after docs, plan, agent instructions, local SQLite evidence, and source/Git inspection are insufficient for the requested answer.
-- Sync should detect stale docs and avoid silently overwriting human-owned content.
+- Sync detects stale docs, records portable generated-body integrity, refreshes only verified-unchanged generated bodies automatically, and preserves manual edits for semantic reconciliation.
 
 ## Non-Functional Requirements
 
@@ -81,6 +81,7 @@ CodeWiki is a Codex skill that builds and maintains a semantic wiki for software
 - Convention documentation must describe the repository's actual practices rather than generic ecosystem best practices.
 - The tool remains usable after session reset or model change.
 - The generated wiki should be readable by humans and useful to agents.
+- Manual documentation contributions remain durable across sync, machine, session, and model changes.
 
 ## Constraints
 
@@ -113,3 +114,5 @@ CodeWiki is a Codex skill that builds and maintains a semantic wiki for software
 - `docs/decisions/ADR-0005-codewiki-generated-docs-structure.md`
 - `docs/decisions/ADR-0006-workspace-placement-and-source-extension-skills.md`
 - `docs/decisions/ADR-0007-uppercase-generated-markdown-filenames.md`
+- `docs/decisions/ADR-0008-code-conventions-documentation.md`
+- `docs/decisions/ADR-0009-manual-doc-edits-win-during-sync.md`
