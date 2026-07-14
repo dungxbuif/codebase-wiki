@@ -34,6 +34,7 @@ shared_fields: [functional_requirements, non_functional_requirements]
 | REQ-013 | CodeWiki sync must preserve manual documentation edits inside and outside generated regions and reconcile them semantically with refreshed evidence. | high | User direction | implemented |
 | REQ-014 | CodeWiki must generate reader-first, concept-oriented documentation that enables developer onboarding, uses diagrams when relationships or flows require them, and passes docs-only onboarding quality evaluation. | high | User direction, 2026-07-14 docs-quality review | in_review |
 | REQ-015 | CodeWiki must version the installed skill, references, and companion as one inspectable distribution, detect drift/incompatibility, and record the resolved artifact identity in generation and benchmark results. | high | User direction and BUG-002 investigation, 2026-07-14 | implemented |
+| REQ-016 | CodeWiki must expose repository-scoped local SQLite memory through deterministic read-only companion commands, separate active/stale claims, retrieve matching files/symbols/evidence, and invalidate claims backed by changed or deleted source without requiring ad-hoc SQL. | high | User-approved tools/memory assessment, 2026-07-14 | implemented |
 
 ## Non-Functional Requirements
 

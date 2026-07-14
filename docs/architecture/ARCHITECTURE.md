@@ -45,14 +45,14 @@ The core should not hard-code language/framework adapters. It should combine rep
 | CodeWiki skill | Own agent workflow for init, sync, Q&A, evidence, and docs | `skill/codewiki/SKILL.md` | Primary product surface |
 | Skill installer | Atomically install a versioned skill/companion package and preserve declared project state | `scripts/install-codewiki-skill.sh`, `skill/codewiki/package.yml` | Writes `INSTALLATION.yml`; doctor verifies managed content and compatibility |
 | Rust companion tool | Discover/persist evidence and validate synthesized output | `crates/codewiki-cli` | Evidence/validation boundary, never the reader-prose producer |
-| Core engine | Parse commands and orchestrate deterministic boundaries | `crates/codewiki-core` | Owns `doctor`, `init`, `sync`, `validate`, run states, and provenance |
+| Core engine | Parse commands and orchestrate deterministic boundaries | `crates/codewiki-core` | Owns `doctor`, `init`, `sync`, `validate`, read-only `query`/`claims`, run states, and provenance |
 | Repo detector | Detect languages, frameworks, package managers, entrypoints, test/build tools, and docs | `crates/codewiki-detect` | Dynamic detection only; no core adapters |
 | Explorer | Select files/symbols/docs to inspect and record evidence | `crates/codewiki-explore` | Deterministic semantic snapshot v1; lexical hints are evidence, not final claims |
 | Evidence store | Persist facts, hypotheses, claims, source references, and claim/evidence links | `crates/codewiki-store` | SQLite local runtime state with migration and persistence helpers |
 | WikiPlan contract | Persist the repository mental model, hierarchy, reader jobs/questions, anchors, diagrams, and acceptance checks | `crates/codewiki-store`, `skill/codewiki/references/reader-first.md` | Schema v2 under `.agents/skills/codewiki/project/plan.yml`; model synthesis is required |
 | Docs boundary and validator | Write deterministic evidence pages and reject invalid reader-doc output | `crates/codewiki-docs` | Reader prose is synthesized by the skill/model; `validate` gates success |
 | Sync engine | Detect stale docs and update safely | `crates/codewiki-core`, `crates/codewiki-docs`, `crates/codewiki-store` | Respects human-owned edits via generated-region markers |
-| Q&A engine | Answer from docs first, then evidence/source when needed | `crates/codewiki-store`, `skill/codewiki/references/qa.md` | Renders active/stale claim context and requires evidence citations |
+| Q&A engine | Answer from docs first, then local SQLite evidence/source when needed | `crates/codewiki-core`, `crates/codewiki-store`, `skill/codewiki/references/qa.md` | `query` retrieves claims/files/symbols/evidence; `claims` inspects active/stale state without ad-hoc SQL |
 | Provider boundary | Wrap optional code-intelligence providers | `crates/codewiki-provider` | Provider selection is target-repo specific |
 | Source extension skills | User-authored skills that emit bounded evidence packets for non-Git sources | skill references/templates | Not bundled providers |
 
@@ -61,12 +61,13 @@ The core should not hard-code language/framework adapters. It should combine rep
 ```text
 Git repo + files + existing docs + optional source skill evidence
   -> stack detection
-  -> deterministic semantic exploration
-  -> evidence/fact/hypothesis records
-  -> WikiPlan
-  -> generated docs
+  -> deterministic semantic ExplorationSnapshot
+       |-> local SQLite files/symbols/evidence/active+stale claims
+       |     -> codewiki query / codewiki claims
+       |-> docs/evidence/** generated independently from the snapshot
+  -> model mental model + WikiPlan + reader docs
   -> sync checkpoints
-  -> docs-first Q&A
+  -> docs-first Q&A -> SQLite retrieval -> narrow source/provider fallback
 ```
 
 ## Wiki Workspace Documentation Structure
@@ -90,11 +91,13 @@ docs/
 
 `docs/**` is the human/agent knowledge surface and the first source for Q&A. `.agents/skills/codewiki/project/**` is the committed control plane. SQLite state and rebuildable caches live outside the repository/workspace in platform app-data/cache directories.
 
+Repository-scoped state identity lexically normalizes command paths so `.` and safe `..` aliases resolve the same key. It deliberately does not canonicalize filesystem symlinks: this preserves existing path-derived state keys and avoids silently migrating or merging independently addressed workspaces.
+
 Semantic exploration v1 records bounded file, area, symbol, import/dependency-hint, and evidence-reference snapshots. These hints seed generated docs and future claim promotion, but they are not treated as fully resolved architecture without additional evidence. In project-local mode, detector/explorer traversal excludes the managed `.agents/skills/codewiki/**` runtime so installed skill references and copied companion source cannot become target-repository evidence.
 
-Claim persistence v1 promotes deterministic source-backed structure claims from semantic snapshots and writes repository, run, file, symbol, evidence, claim, and claim/evidence-link rows into local SQLite. Generated `docs/evidence/CLAIMS.md` mirrors those promoted claims so docs-first Q&A and SQLite-backed Q&A can share the same evidence base.
+Claim persistence promotes deterministic file-level source-backed structure claims from semantic snapshots and writes repository, run, file, symbol, evidence, claim, and claim/evidence-link rows into local SQLite. Top-level traversal `areas` remain internal exploration metadata and are not promoted as durable claims. `docs/evidence/CLAIMS.md` and SQLite are separate outputs derived from the same snapshot: the Markdown page presents current deterministic claims, while SQLite preserves active/stale history and queryable inventory.
 
-Staleness v1 compares new semantic file content hashes against existing evidence hashes. When supporting file evidence changes, linked active claims are marked `stale` before new evidence is persisted. Q&A retrieval renders active and stale SQLite claims separately so agents can answer from fresh docs/state first and inspect stale source paths narrowly when needed.
+Staleness compares new semantic file content hashes against existing evidence hashes. Changed evidence invalidates linked claims before fresh evidence is persisted; a regenerated identical deterministic claim returns to active, while superseded statements remain stale. A complete snapshot also invalidates claims backed by deleted files and removes their current file/symbol inventory. A truncated snapshot never infers deletion. `codewiki query` renders active/stale claims plus matching files, symbols, and evidence; `codewiki claims` supports status/path inspection.
 
 Production fixture coverage exercises TypeScript app, Python service, and Rust workspace-shaped repositories through evidence-only init, semantic claims/symbols, SQLite Q&A context, and stale sync behavior. Reader-doc benchmark coverage is tracked separately in PHASE-002.
 

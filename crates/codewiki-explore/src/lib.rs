@@ -105,29 +105,6 @@ pub struct PromotedClaim {
 pub fn promote_claims_from_snapshot(snapshot: &ExplorationSnapshot) -> Vec<PromotedClaim> {
     let mut claims = Vec::new();
 
-    for area in &snapshot.areas {
-        let evidence_ids: Vec<_> = snapshot
-            .files
-            .iter()
-            .filter(|file| file.path.split('/').next() == Some(area.name.as_str()))
-            .take(10)
-            .map(|file| file.evidence_id.clone())
-            .collect();
-        if evidence_ids.is_empty() {
-            continue;
-        }
-        let statement = format!(
-            "Area `{}` contains {} inspected files and {} discovered symbols.",
-            area.name, area.file_count, area.symbol_count
-        );
-        claims.push(PromotedClaim {
-            id: stable_claim_id(&statement),
-            statement,
-            confidence: "source-backed".to_string(),
-            evidence_ids,
-        });
-    }
-
     for file in snapshot.files.iter().take(100) {
         let statement = format!(
             "File `{}` is a {} file with {} discovered symbols and {} import/dependency hints.",
@@ -734,7 +711,8 @@ mod tests {
         assert!(
             claims
                 .iter()
-                .any(|claim| claim.statement.contains("Area `src`"))
+                .all(|claim| !claim.statement.starts_with("Area `")),
+            "top-level traversal areas must not become durable reader claims"
         );
         assert!(claims.iter().any(|claim| {
             claim.statement.contains("File `src/lib.rs`") && !claim.evidence_ids.is_empty()

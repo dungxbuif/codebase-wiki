@@ -32,11 +32,11 @@ updated: 2026-07-14
 
 ## Current Status
 
-- Status: Reader-first PHASE-002 is in review; package 0.2.2 hardens current-working-tree exploration, reader/eval contracts, and project-local discovery isolation.
+- Status: Reader-first PHASE-002 is in review; package 0.3.0 retrieval, freshness, lexical repository identity, and no-areas skill contract are verified for downstream user testing.
 - Active backlog: `docs/work/BACKLOG.md`
 - Current queue focus: obtain human onboarding UAT and execute the accepted independent/cross-model TypeScript/Python comparison scope without weakening quality gates.
 - Active phase: `docs/work/phases/PHASE-002-reader-first-docs-quality.md` (in_review).
-- Active ticket: `docs/work/tickets/TICKET-031-onboarding-quality-evals.md` (in_review); TICKET-029/030 implementation is complete.
+- Active ticket: `docs/work/tickets/TICKET-031-onboarding-quality-evals.md` (in_review); TICKET-035 SQLite retrieval V2 is done and verified.
 - Active bugs: BUG-001 and BUG-002 are fixed and regression-verified, pending final phase/UAT review.
 - Active bug: BUG-003 is fixed and regression-verified after the verified 0.2.0 skill bypassed init during the user's Mezon run.
 - Active bug: BUG-004 is fixed and regression-verified after a fresh package forward test found installed CodeWiki skill/companion files contaminating target detection and evidence.
@@ -47,6 +47,13 @@ Make CodeWiki-generated docs sufficient for a new developer to understand the sy
 
 ## Recently Touched Areas
 
+- `docs/work/tickets/TICKET-035-sqlite-retrieval-surface-v2.md`
+- `docs/work/designs/DESIGN-035-sqlite-retrieval-surface-v2.md`
+- `docs/work/verifications/TEST-035-sqlite-retrieval-surface-v2.md`
+- `docs/work/reviews/DOCS-REVIEW-035-sqlite-retrieval-surface-v2.md`
+- `crates/codewiki-{core,store,explore}`
+- `skill/codewiki/references/qa.md`
+- `docs/architecture/{ARCHITECTURE,API,ERD}.md`
 - `docs/work/research/READER-FIRST-DOCS-AUDIT.md`
 - `docs/work/research/REFERENCE-DOCS-QUALITY-RESEARCH.md`
 - `docs/work/research/GROK-WIKI-MEZON-AUDIT.md`
@@ -151,6 +158,10 @@ Make CodeWiki-generated docs sufficient for a new developer to understand the sy
 
 ## Recent Decisions
 
+- Expose local memory through read-only `codewiki query` and `codewiki claims` commands before direct SQL/source fallback; keep vector/FTS/provider work out of this slice.
+- Treat `docs/evidence/CLAIMS.md` and SQLite as independent outputs of the same exploration snapshot; only SQLite owns active/stale history.
+- Do not promote top-level traversal areas as durable claims; complete snapshots invalidate deleted-source claims, while truncated snapshots never infer deletion.
+- Normalize repository command paths lexically (`.` and safe `..`) without resolving filesystem symlinks, preserving existing path-derived SQLite identities.
 - Make the installed `codewiki-preflight.sh init|sync` command the first filesystem mutation for generation, and require helper validation as the final workflow command before any success claim.
 - Keep reader prose model-driven; do not move synthesis into the companion merely to enforce orchestration.
 - Capture source provenance before repo-local initialization writes control files, so a clean benchmark remains `source_dirty: false`.
@@ -220,6 +231,7 @@ Make CodeWiki-generated docs sufficient for a new developer to understand the sy
 
 ## Next Steps
 
+- Let the user rerun package `0.3.0` against Mezon Desktop and report docs/retrieval quality after the verified push.
 - Ask for human UAT on the pinned Mezon reader surface.
 - Execute genuinely independent/cross-model evaluation and complete TypeScript/Python docs-only benchmark questions.
 - Reconcile PHASE-002 to verified/done only after the remaining accepted UAT/comparison gates pass.

@@ -23,6 +23,7 @@ Implemented foundation capabilities:
 - dynamic repository detection without core framework adapters;
 - semantic exploration snapshots for files, areas, symbols, imports, evidence, and claims;
 - SQLite durable state for files, symbols, evidence, claims, claim/evidence links, stale claims, and Q&A context;
+- read-only `codewiki query` and `codewiki claims` commands so agents can consume that state without ad-hoc SQL;
 - evidence-only companion init/sync plus required model-driven repository mental model, WikiPlan v2, and concept-first reader synthesis;
 - deterministic reader-doc validation for provenance, contracts, portable links, artifact hygiene, navigation, and declared isolated quality reviews;
 - sync safety with portable generated-body integrity that preserves manual edits inside and outside generated regions for semantic reconciliation;
@@ -55,13 +56,20 @@ To install globally into `$CODEX_HOME/skills/codewiki`, opt in explicitly:
 curl -fsSL https://raw.githubusercontent.com/dungxbuif/codebase-wiki/master/scripts/install-codewiki-skill.sh | CODEWIKI_INSTALL_SCOPE=global bash
 ```
 
-The installer stages and validates `skill/codewiki`, builds `bin/codewiki` when compatible Cargo/Rust is available, preserves declared `project/**` state, writes `INSTALLATION.yml`, and activates the package with a rollback-safe rename. The helper verifies the installed digest and interface before status/init/sync/validate.
+The installer stages and validates `skill/codewiki`, builds `bin/codewiki` when compatible Cargo/Rust is available, preserves declared `project/**` state, writes `INSTALLATION.yml`, and activates the package with a rollback-safe rename. The helper verifies the installed digest and interface before deterministic companion operations, including init/sync/validate/query/claims.
 
 Useful diagnostics:
 
 ```bash
 .agents/skills/codewiki/scripts/codewiki-helper.sh status
 .agents/skills/codewiki/bin/codewiki doctor .agents/skills/codewiki
+```
+
+After init/sync has created local state, inspect it deterministically:
+
+```bash
+.agents/skills/codewiki/bin/codewiki query --text "authentication flow" --repo .
+.agents/skills/codewiki/bin/codewiki claims --repo . --status stale
 ```
 
 ## Product Direction

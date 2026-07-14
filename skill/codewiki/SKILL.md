@@ -124,12 +124,9 @@ docs/
     SOURCES.md
     COMMANDS.md
     CLAIMS.md
-  areas/
-    <area-slug>/
-      OVERVIEW.md
 ```
 
-`docs/QUICKSTART.md` and `docs/conventions/OVERVIEW.md` are required after a successful synthesized init. Keep generated Markdown filenames uppercase while keeping directories lowercase. Other pages are canonical slots, not mandatory stubs: create them only when the repository has enough evidence-backed content. Dynamic pages live under their semantic owner; `areas/**` is legacy compatibility input, not a default generation target.
+This tree shows possible semantic slots, not a page checklist. `docs/QUICKSTART.md` and `docs/conventions/OVERVIEW.md` are the only required reader pages after a successful synthesized init. Keep generated Markdown filenames uppercase while keeping directories lowercase. Create every other page only when the repository has an evidence-backed reader job for it. Dynamic pages live under semantic owners such as `architecture/`, `components/`, `workflows/`, or `data-models/`; never generate path-derived `areas/**` pages.
 
 Follow the reader-first contract: start with a concise quickstart, create section directories only for real documentation areas, avoid thin one-file folders unless they have a strong boundary, explain purpose and mental model before code details, cite important claims locally, and keep source inventories at the end or under `docs/evidence/**`.
 
@@ -165,7 +162,7 @@ After CodeWiki has generated docs, answer questions in this order:
 1. `docs/**`
 2. `.agents/skills/codewiki/project/plan.yml`
 3. `.agents/skills/codewiki/project/AGENTS.md`
-4. local SQLite facts/evidence/claims
+4. local SQLite facts/evidence/claims through `codewiki query` or `codewiki claims`
 5. source files and Git history
 6. external runtime tools, only when the earlier layers are stale, insufficient, or the user asks for graph/index/memory-heavy analysis
 
@@ -197,9 +194,11 @@ This means ordinary Q&A about documented architecture should not activate Octoco
 ## Q&A Workflow
 
 1. Answer from `docs/**` first.
-2. If docs are insufficient, inspect evidence/source and say which docs are missing or stale.
-3. Cite files, symbols, commands, or generated wiki pages.
-4. Do not present hypotheses as facts.
+2. If docs are insufficient, run `codewiki query --text <query> --repo <repository-path>` and inspect active/stale SQLite context before raw source fallback.
+3. Use `codewiki claims --status stale` when freshness affects the answer; never treat stale claims as facts.
+4. Inspect source narrowly only when docs and local retrieval remain missing, stale, ambiguous, or contradicted, and say what forced the fallback.
+5. Cite files, symbols, commands, evidence, or generated wiki pages.
+6. Do not present hypotheses as facts.
 
 ## Companion Tool
 

@@ -21,11 +21,13 @@ All notable changes should be recorded here.
 
 ### Fixed
 
+- Released CodeWiki package `0.3.0` with public SQLite retrieval commands, deleted-evidence staleness, refreshed symbol inventory, collision-resistant snapshot run IDs, lexical repository identity normalization, and removal of legacy top-level area claims from durable memory and target layout guidance.
 - Released CodeWiki package `0.2.1` with a mandatory first-write preflight and final-validation execution gate after a verified `0.2.0` agent run generated reader Markdown without invoking init, WikiPlan, quality, or validation.
 - Released CodeWiki package `0.2.2` with detector/explorer isolation for `.agents/skills/codewiki/**`, preventing the project-local skill, references, manifests, and copied Rust companion from becoming target-repository stack signals or evidence.
 
 ### Changed
 
+- Q&A now requires `codewiki query`/`codewiki claims` before raw SQLite or source fallback; regenerated deterministic claims can return to active while superseded or deleted-source claims remain stale.
 - Made the current filesystem working tree the explicit init source of truth, including relevant modified/staged/untracked source; Git remains identity, provenance, change-context, and history evidence rather than a substitute for reading current code.
 - Hardened the skill/reference contract with always-active reader invariants, typed mental-model completion guidance, qualitative failure examples, page-type quality contracts, canonical confidence labels, verified no-op wording, and portable plus capability-specific onboarding questions without count quotas.
 - Split generation into deterministic evidence collection, required model mental-model/WikiPlan/page synthesis, and deterministic/semantic quality gates; companion init/sync now stop at `synthesis_incomplete` instead of publishing snapshot summaries as reader docs.
@@ -37,6 +39,7 @@ All notable changes should be recorded here.
 
 ### Added
 
+- Added `codewiki query --text ...` for active/stale claims plus file/symbol/evidence matches and `codewiki claims` for bounded status/path inspection without ad-hoc SQL.
 - Added reader-doc validation for source/run provenance, installed-skill identity, model/evaluator metadata, bounded revision count, required reader pages, portable links, duplicate structures, raw inventory patterns, Mermaid fences, cross-page links, and orphan pages.
 - Added `codewiki-preflight.sh`, packaged execution-contract regression coverage, and an explicit `$codewiki` UI prompt that names preflight and `reader_docs_ready` validation.
 - Added versioned skill package/install manifests, managed-content digest, atomic installer staging, `doctor`, `package-digest`, `validate`, helper preflight, and run-level skill provenance.

@@ -77,7 +77,7 @@ fn production_fixture_sync_marks_changed_evidence_stale() {
 
     fs::write(
         repo.join("src/App.tsx"),
-        "import React from 'react';\nexport function App() { return <main>changed</main>; }\nexport function extra() { return null; }\n",
+        "import React from 'react';\nexport function App() { return <main>changed</main>; }\nexport function extra() { return null; }\nexport function another() { return null; }\n",
     )
     .expect("mutate source");
     let sync = run_with_context(["sync"], &context);

@@ -7,13 +7,14 @@ human_fields: [goal, scope, out_of_scope, priority, success_criteria]
 ai_fields: [risks, dependencies, verification_plan, completion_summary]
 shared_fields: [status, trace, tickets_and_bugs]
 trace:
-  backlog_items: [BL-018]
+  backlog_items: [BL-018, BL-019]
   roadmap: docs/work/ROADMAP.md
   requirements: [docs/requirements/SPEC.md, docs/requirements/REQUIREMENTS.md]
   tickets:
     - docs/work/tickets/TICKET-029-wikiplan-v2-topic-taxonomy.md
     - docs/work/tickets/TICKET-030-reader-first-synthesis-and-diagrams.md
     - docs/work/tickets/TICKET-031-onboarding-quality-evals.md
+    - docs/work/tickets/TICKET-035-sqlite-retrieval-surface-v2.md
   bugs:
     - docs/work/bugs/BUG-001-companion-bypasses-reader-synthesis.md
     - docs/work/bugs/BUG-002-installed-skill-version-drift.md
@@ -24,6 +25,8 @@ trace:
   grok_audit: docs/work/research/GROK-WIKI-MEZON-AUDIT.md
   test_verification: docs/work/verifications/TEST-PHASE-002-IMPLEMENTATION.md
   docs_review: docs/work/reviews/DOCS-REVIEW-PHASE-002-IMPLEMENTATION.md
+  retrieval_test_verification: docs/work/verifications/TEST-035-sqlite-retrieval-surface-v2.md
+  retrieval_docs_review: docs/work/reviews/DOCS-REVIEW-035-sqlite-retrieval-surface-v2.md
   validation_matrix: docs/work/VALIDATION_MATRIX.md
   adrs:
     - docs/decisions/ADR-0010-reader-first-information-architecture.md
@@ -51,6 +54,7 @@ Generate evidence-backed documentation that enables a new developer to form an a
 - Reader-facing synthesis separated from deterministic evidence inventory.
 - Required LLM mental-model, WikiPlan, page-synthesis, and bounded-revision orchestration between deterministic discovery and deterministic validation/merge.
 - Installed skill/companion provenance, compatibility, and drift detection so the executed product contract is reproducible.
+- Deterministic local SQLite retrieval commands so docs-first Q&A can consume active/stale claims and bounded file/symbol/evidence context consistently across models.
 - Architecture, component, sequence, state, data, and deployment diagram policy.
 - Static quality checks plus semantic onboarding evaluations.
 - Mezon Desktop as the first real benchmark, followed by TypeScript and Python/service-shaped repositories.
@@ -69,6 +73,7 @@ Generate evidence-backed documentation that enables a new developer to form an a
 | TICKET-029 | WikiPlan v2 and concept-first topic taxonomy | in_review | `docs/work/designs/DESIGN-029-wikiplan-v2-topic-taxonomy.md` |
 | TICKET-030 | Reader-first synthesis and diagram contracts | in_review | `docs/work/designs/DESIGN-030-reader-first-synthesis-and-diagrams.md` |
 | TICKET-031 | Developer-onboarding quality evaluations | in_review | `docs/work/designs/DESIGN-031-onboarding-quality-evals.md` |
+| TICKET-035 | SQLite retrieval surface V2 | done | `docs/work/designs/DESIGN-035-sqlite-retrieval-surface-v2.md` |
 
 ## Bugs
 
@@ -132,7 +137,8 @@ Generate evidence-backed documentation that enables a new developer to form an a
 - [x] Real-user failure where a verified skill wrote docs without a control plane is reproduced and guarded by mandatory preflight/validation entry commands.
 - [x] Fresh project-local install excludes its managed skill/companion payload while preserving current modified and untracked target source evidence.
 - [x] Independent package `0.2.2` forward synthesis passed source/diagram/cross-page/docs-only gates and reached `reader_docs_ready` on the clean JavaScript fixture.
+- [x] Package `0.3.0` retrieval, freshness, lexical repository identity, and no-areas skill contract pass full and fresh-installed verification.
 
 ## Completion Summary
 
-WikiPlan v2, legacy migration, hierarchy/ownership/cycle validation, the evidence-only companion boundary, reader-doc validation, package/install manifests, mandatory agent preflight, doctor/helper validation, and run provenance are implemented. Package `0.2.2` hardens current-working-tree exploration, reader contracts, capability-aware eval guidance, and excludes project-local CodeWiki payloads from target evidence. A clean checkout of Mezon Desktop commit `9d7ba65` produced six concept-first reader pages and passed deterministic validation as `reader_docs_ready`. Phase closure remains gated by human UAT and the accepted cross-model/TypeScript/Python comparison scope; those gates are not silently waived.
+WikiPlan v2, legacy migration, hierarchy/ownership/cycle validation, the evidence-only companion boundary, reader-doc validation, package/install manifests, mandatory agent preflight, doctor/helper validation, and run provenance are implemented. Package `0.2.2` hardens current-working-tree exploration and source isolation; package `0.3.0` adds deterministic local SQLite retrieval and claim-freshness hardening. A clean checkout of Mezon Desktop commit `9d7ba65` produced six concept-first reader pages and passed deterministic validation as `reader_docs_ready`. Phase closure remains gated by human UAT and the accepted cross-model/TypeScript/Python comparison scope; those gates are not silently waived.

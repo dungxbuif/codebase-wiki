@@ -7,8 +7,9 @@ use codewiki_docs::{
 };
 use codewiki_explore::explore_repository;
 use codewiki_store::{
-    CodeWikiConfig, DetectedStack, RepositoryIdentity, SourceRecord, StatePaths, StoreLayout,
-    WikiPlan, apply_migrations_with_sqlite, persist_exploration_with_sqlite, render_sources_yaml,
+    ClaimStatusFilter, CodeWikiConfig, DetectedStack, RepositoryIdentity, SourceRecord, StatePaths,
+    StoreLayout, WikiPlan, apply_migrations_with_sqlite, persist_exploration_with_sqlite,
+    render_claim_inventory_with_sqlite, render_qa_context_with_sqlite, render_sources_yaml,
     render_target_agents_md,
 };
 use std::fs;
@@ -48,15 +49,36 @@ enum Command {
     Help,
     Version,
     Status,
-    Doctor { skill_root: PathBuf },
-    PackageDigest { skill_root: PathBuf },
-    Init { repo_root: PathBuf },
-    Sync { repo_root: PathBuf },
-    Validate { repo_root: PathBuf },
+    Doctor {
+        skill_root: PathBuf,
+    },
+    PackageDigest {
+        skill_root: PathBuf,
+    },
+    Init {
+        repo_root: PathBuf,
+    },
+    Sync {
+        repo_root: PathBuf,
+    },
+    Validate {
+        repo_root: PathBuf,
+    },
+    Query {
+        repo_root: PathBuf,
+        text: String,
+        limit: usize,
+    },
+    Claims {
+        repo_root: PathBuf,
+        status: ClaimStatusFilter,
+        source_path: Option<String>,
+        limit: usize,
+    },
 }
 
 /// Version of the contract between the skill workflow and Rust companion.
-pub const COMPANION_INTERFACE_VERSION: u32 = 2;
+pub const COMPANION_INTERFACE_VERSION: u32 = 3;
 
 /// Runtime context used by commands that touch the filesystem.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -128,6 +150,23 @@ where
             Ok(summary) => CliOutput::ok(summary),
             Err(message) => CliOutput::error(1, format!("error: {message}\n")),
         },
+        Ok(Command::Query {
+            repo_root,
+            text,
+            limit,
+        }) => match query_repo(&repo_root, context, &text, limit) {
+            Ok(summary) => CliOutput::ok(summary),
+            Err(message) => CliOutput::error(1, format!("error: {message}\n")),
+        },
+        Ok(Command::Claims {
+            repo_root,
+            status,
+            source_path,
+            limit,
+        }) => match claims_repo(&repo_root, context, status, source_path.as_deref(), limit) {
+            Ok(summary) => CliOutput::ok(summary),
+            Err(message) => CliOutput::error(1, format!("error: {message}\n")),
+        },
         Err(message) => CliOutput::error(2, message),
     }
 }
@@ -196,6 +235,8 @@ where
             }
             Ok(Command::Validate { repo_root })
         }
+        "query" => parse_query_args(args.map(|arg| arg.as_ref().to_string()).collect(), cwd),
+        "claims" => parse_claims_args(args.map(|arg| arg.as_ref().to_string()).collect(), cwd),
         unknown => Err(format!(
             "error: unknown command `{unknown}`\n\nRun `codewiki help` for available commands.\n"
         )),
@@ -216,6 +257,8 @@ fn help_text() -> String {
         "  codewiki init [path]",
         "  codewiki sync [path]",
         "  codewiki validate [path]",
+        "  codewiki query --text <query> [--repo <path>] [--limit <1..50>]",
+        "  codewiki claims [--repo <path>] [--status active|stale|all] [--path <source-path>] [--limit <1..200>]",
         "",
         "Internal/diagnostic commands:",
         "  codewiki package-digest [skill-root]",
@@ -224,6 +267,113 @@ fn help_text() -> String {
         "",
     ]
     .join("\n")
+}
+
+fn parse_query_args(args: Vec<String>, cwd: &Path) -> Result<Command, String> {
+    let usage =
+        "error: usage is `codewiki query --text <query> [--repo <path>] [--limit <1..50>]`\n";
+    let mut repo_root = cwd.to_path_buf();
+    let mut text = None;
+    let mut limit = 10;
+    let mut index = 0;
+    while index < args.len() {
+        let flag = &args[index];
+        let value = args.get(index + 1).ok_or_else(|| usage.to_string())?;
+        match flag.as_str() {
+            "--text" => text = Some(value.clone()),
+            "--repo" => repo_root = resolve_repo_path(cwd, value),
+            "--limit" => limit = parse_bounded_limit(value, 50, usage)?,
+            _ => return Err(usage.to_string()),
+        }
+        index += 2;
+    }
+    let text = text
+        .filter(|value| !value.trim().is_empty())
+        .ok_or_else(|| usage.to_string())?;
+    Ok(Command::Query {
+        repo_root,
+        text,
+        limit,
+    })
+}
+
+fn parse_claims_args(args: Vec<String>, cwd: &Path) -> Result<Command, String> {
+    let usage = "error: usage is `codewiki claims [--repo <path>] [--status active|stale|all] [--path <source-path>] [--limit <1..200>]`\n";
+    let mut repo_root = cwd.to_path_buf();
+    let mut status = ClaimStatusFilter::All;
+    let mut source_path = None;
+    let mut limit = 50;
+    let mut index = 0;
+    while index < args.len() {
+        let flag = &args[index];
+        let value = args.get(index + 1).ok_or_else(|| usage.to_string())?;
+        match flag.as_str() {
+            "--repo" => repo_root = resolve_repo_path(cwd, value),
+            "--status" => {
+                status = ClaimStatusFilter::parse(value).ok_or_else(|| usage.to_string())?
+            }
+            "--path" => source_path = Some(value.clone()),
+            "--limit" => limit = parse_bounded_limit(value, 200, usage)?,
+            _ => return Err(usage.to_string()),
+        }
+        index += 2;
+    }
+    Ok(Command::Claims {
+        repo_root,
+        status,
+        source_path,
+        limit,
+    })
+}
+
+fn parse_bounded_limit(value: &str, maximum: usize, usage: &str) -> Result<usize, String> {
+    let limit = value.parse::<usize>().map_err(|_| usage.to_string())?;
+    if !(1..=maximum).contains(&limit) {
+        return Err(format!("error: limit must be in 1..={maximum}\n"));
+    }
+    Ok(limit)
+}
+
+fn query_repo(
+    repo_root: &Path,
+    context: &RuntimeContext,
+    query: &str,
+    limit: usize,
+) -> Result<String, String> {
+    let sqlite_path = existing_state_db(repo_root, context)?;
+    let packet =
+        render_qa_context_with_sqlite(&context.sqlite_executable, &sqlite_path, query, limit)?;
+    Ok(packet.markdown)
+}
+
+fn claims_repo(
+    repo_root: &Path,
+    context: &RuntimeContext,
+    status: ClaimStatusFilter,
+    source_path: Option<&str>,
+    limit: usize,
+) -> Result<String, String> {
+    let sqlite_path = existing_state_db(repo_root, context)?;
+    render_claim_inventory_with_sqlite(
+        &context.sqlite_executable,
+        sqlite_path,
+        status,
+        source_path,
+        limit,
+    )
+}
+
+fn existing_state_db(repo_root: &Path, context: &RuntimeContext) -> Result<PathBuf, String> {
+    let identity = RepositoryIdentity::new(repo_root, None);
+    let state_paths = StatePaths::resolve(&context.app_data_base, &context.cache_base, &identity);
+    if !state_paths.sqlite_path.is_file() {
+        return Err(format!(
+            "CodeWiki SQLite state not found for `{}`; run `codewiki init {}` first",
+            repo_root.display(),
+            repo_root.display()
+        ));
+    }
+    Ok(state_paths.sqlite_path)
 }
 
 fn sync_repo(repo_root: &Path, context: &RuntimeContext) -> Result<String, String> {
@@ -333,7 +483,7 @@ fn status_text() -> String {
     let docs = WikiDocsLayout::default();
 
     format!(
-        "CodeWiki companion tool ready\nruntime: rust\ncompanion_interface_version: {}\n{}commands: help, version, status, doctor, init, sync, validate\nrepository detection: {}\ncommitted config: {}\ncommitted plan: {}\nlocal agents: {}\nlocal state: {}\ndocs root: {}\n",
+        "CodeWiki companion tool ready\nruntime: rust\ncompanion_interface_version: {}\n{}commands: help, version, status, doctor, init, sync, validate, query, claims\nrepository detection: {}\ncommitted config: {}\ncommitted plan: {}\nlocal agents: {}\nlocal state: {}\ndocs root: {}\n",
         COMPANION_INTERFACE_VERSION,
         runtime_skill_metadata(),
         detection.summary(),
@@ -1156,10 +1306,37 @@ fn rename_case_safely(source: &Path, target: &Path) -> Result<(), String> {
 
 fn resolve_repo_path(cwd: &Path, path: &str) -> PathBuf {
     let path = PathBuf::from(path);
-    if path.is_absolute() {
+    let resolved = if path.is_absolute() {
         path
     } else {
         cwd.join(path)
+    };
+    lexical_normalize_path(&resolved)
+}
+
+fn lexical_normalize_path(path: &Path) -> PathBuf {
+    let rooted = path.has_root();
+    let mut normalized = PathBuf::new();
+    for component in path.components() {
+        match component {
+            std::path::Component::Prefix(prefix) => normalized.push(prefix.as_os_str()),
+            std::path::Component::RootDir => normalized.push(component.as_os_str()),
+            std::path::Component::CurDir => {}
+            std::path::Component::ParentDir => {
+                let ends_in_parent = normalized
+                    .file_name()
+                    .is_some_and(|name| name == std::ffi::OsStr::new(".."));
+                if (ends_in_parent || !normalized.pop()) && !rooted {
+                    normalized.push("..");
+                }
+            }
+            std::path::Component::Normal(part) => normalized.push(part),
+        }
+    }
+    if normalized.as_os_str().is_empty() {
+        PathBuf::from(".")
+    } else {
+        normalized
     }
 }
 
@@ -1219,7 +1396,7 @@ mod tests {
 
         assert_eq!(output.exit_code, 0);
         assert!(output.stdout.contains("runtime: rust"));
-        assert!(output.stdout.contains("companion_interface_version: 2"));
+        assert!(output.stdout.contains("companion_interface_version: 3"));
         assert!(
             output
                 .stdout
@@ -1241,6 +1418,102 @@ mod tests {
         assert!(output.stdout.contains("codewiki sync [path]"));
         assert!(output.stdout.contains("codewiki doctor"));
         assert!(output.stdout.contains("codewiki validate [path]"));
+        assert!(output.stdout.contains("codewiki query --text"));
+        assert!(output.stdout.contains("codewiki claims"));
+    }
+
+    #[test]
+    fn public_query_and_claim_commands_read_initialized_sqlite_state() {
+        let sqlite = if Path::new("/usr/bin/sqlite3").exists() {
+            PathBuf::from("/usr/bin/sqlite3")
+        } else {
+            PathBuf::from("sqlite3")
+        };
+        let base = temp_path("codewiki-query-cli");
+        let repo = base.join("repo");
+        fs::create_dir_all(repo.join("src")).expect("mkdir src");
+        fs::write(repo.join("src/main.rs"), "pub fn start() {}\n").expect("write source");
+        let context = RuntimeContext {
+            cwd: repo.clone(),
+            app_data_base: base.join("app-data"),
+            cache_base: base.join("cache"),
+            sqlite_executable: sqlite,
+        };
+        assert_eq!(run_with_context(["init"], &context).exit_code, 0);
+
+        let query = run_with_context(["query", "--text", "start", "--repo", "."], &context);
+        assert_eq!(query.exit_code, 0, "{}", query.stderr);
+        assert!(query.stdout.contains("# CodeWiki Q&A Context"));
+        assert!(query.stdout.contains("Matching Symbols"));
+        assert!(query.stdout.contains("start"));
+
+        let claims = run_with_context(
+            [
+                "claims",
+                "--status",
+                "active",
+                "--path",
+                "src/main.rs",
+                "--repo",
+                repo.to_str().unwrap(),
+            ],
+            &context,
+        );
+        assert_eq!(claims.exit_code, 0, "{}", claims.stderr);
+        assert!(claims.stdout.contains("# CodeWiki Claims"));
+        assert!(claims.stdout.contains("src/main.rs"));
+
+        let _ = fs::remove_dir_all(base);
+    }
+
+    #[test]
+    fn query_rejects_missing_text_and_invalid_limit() {
+        let missing = run(["query"]);
+        assert_eq!(missing.exit_code, 2);
+        assert!(missing.stderr.contains("--text"));
+
+        let invalid = run(["query", "--text", "auth", "--limit", "0"]);
+        assert_eq!(invalid.exit_code, 2);
+        assert!(invalid.stderr.contains("1..=50"));
+
+        let invalid_status = run(["claims", "--status", "unknown"]);
+        assert_eq!(invalid_status.exit_code, 2);
+        assert!(invalid_status.stderr.contains("active|stale|all"));
+    }
+
+    #[test]
+    fn query_does_not_create_missing_state() {
+        let base = temp_path("codewiki-query-missing-state");
+        let repo = base.join("repo");
+        fs::create_dir_all(&repo).expect("mkdir repo");
+        let context = RuntimeContext {
+            cwd: repo.clone(),
+            app_data_base: base.join("app-data"),
+            cache_base: base.join("cache"),
+            sqlite_executable: PathBuf::from("sqlite3"),
+        };
+
+        let output = run_with_context(["query", "--text", "auth"], &context);
+
+        assert_eq!(output.exit_code, 1);
+        assert!(output.stderr.contains("SQLite state not found"));
+        assert!(!context.app_data_base.exists());
+        let _ = fs::remove_dir_all(base);
+    }
+
+    #[test]
+    fn repository_paths_are_lexically_normalized_without_resolving_aliases() {
+        let cwd = Path::new("/var/folders/example/repo");
+
+        assert_eq!(resolve_repo_path(cwd, "."), cwd);
+        assert_eq!(
+            resolve_repo_path(cwd, "../repo/./src/.."),
+            cwd.to_path_buf()
+        );
+        assert_eq!(
+            resolve_repo_path(cwd, "/private/var/folders/example/repo"),
+            PathBuf::from("/private/var/folders/example/repo")
+        );
     }
 
     #[test]
@@ -1257,7 +1530,7 @@ mod tests {
         fs::create_dir_all(root.join("references")).expect("mkdir skill");
         fs::write(
             root.join("package.yml"),
-            "schema_version: 1\npackage_version: \"0.2.0\"\nskill_contract_version: 2\nreference_contract_version: 2\ncompanion_interface_version: 2\nwikiplan_schema_min: 2\nwikiplan_schema_max: 2\n",
+            "schema_version: 1\npackage_version: \"0.3.0\"\nskill_contract_version: 4\nreference_contract_version: 4\ncompanion_interface_version: 3\nwikiplan_schema_min: 2\nwikiplan_schema_max: 2\n",
         )
         .expect("write package");
         fs::write(root.join("SKILL.md"), "# Skill\n").expect("write skill");
@@ -1266,7 +1539,7 @@ mod tests {
         fs::write(
             root.join("INSTALLATION.yml"),
             format!(
-                "schema_version: 1\npackage_version: \"0.2.0\"\nskill_contract_version: 2\nreference_contract_version: 2\nsource_revision: \"test\"\nmanaged_digest: \"{digest}\"\ncompanion_interface_version: 2\ninstall_scope: local\n"
+                "schema_version: 1\npackage_version: \"0.3.0\"\nskill_contract_version: 4\nreference_contract_version: 4\nsource_revision: \"test\"\nmanaged_digest: \"{digest}\"\ncompanion_interface_version: 3\ninstall_scope: local\n"
             ),
         )
         .expect("write installation");
@@ -1298,7 +1571,7 @@ mod tests {
         .expect("write report");
         fs::write(
             repo.join(".agents/skills/codewiki/project/run.yml"),
-            "schema_version: 1\ncompanion_interface_version: 2\ngeneration_status: synthesis_incomplete\nskill_installation:\n  state: verified\nstages:\n  discovery: complete\n  evidence_persistence: complete\n  repository_mental_model: pending\n  wikiplan: scaffold_only\n  page_synthesis: pending\n  quality: pending\n",
+            "schema_version: 1\ncompanion_interface_version: 3\ngeneration_status: synthesis_incomplete\nskill_installation:\n  state: verified\nstages:\n  discovery: complete\n  evidence_persistence: complete\n  repository_mental_model: pending\n  wikiplan: scaffold_only\n  page_synthesis: pending\n  quality: pending\n",
         )
         .expect("write run provenance");
         fs::write(

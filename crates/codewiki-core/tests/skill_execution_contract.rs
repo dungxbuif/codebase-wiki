@@ -44,6 +44,8 @@ fn packaged_skill_requires_reader_first_prompt_contract() {
         .expect("read docs-structure reference");
     let sync = fs::read_to_string(root.join("skill/codewiki/references/sync.md"))
         .expect("read sync reference");
+    let qa = fs::read_to_string(root.join("skill/codewiki/references/qa.md"))
+        .expect("read qa reference");
     let package =
         fs::read_to_string(root.join("skill/codewiki/package.yml")).expect("read package");
 
@@ -52,6 +54,9 @@ fn packaged_skill_requires_reader_first_prompt_contract() {
     assert!(skill.contains("current filesystem working tree"));
     assert!(skill.contains("repository mental model and WikiPlan"));
     assert!(skill.contains("explanation before source inventory"));
+    assert!(!skill.contains("  areas/"));
+    assert!(skill.contains("codewiki query --text <query>"));
+    assert!(skill.contains("codewiki claims --status stale"));
 
     assert!(init.contains("working tree is the source of truth"));
     assert!(init.contains("relevant untracked source files"));
@@ -92,9 +97,11 @@ fn packaged_skill_requires_reader_first_prompt_contract() {
     assert!(sync.contains("report `wiki is current`"));
     assert!(sync.contains("Do not touch timestamps or rewrite any file"));
 
-    assert!(package.contains("package_version: \"0.2.2\""));
-    assert!(package.contains("skill_contract_version: 3"));
-    assert!(package.contains("reference_contract_version: 3"));
+    assert!(package.contains("package_version: \"0.3.0\""));
+    assert!(package.contains("skill_contract_version: 4"));
+    assert!(package.contains("reference_contract_version: 4"));
+    assert!(qa.contains("codewiki query --text"));
+    assert!(qa.contains("codewiki claims --repo"));
 
     for forbidden_quota in [
         "pages shorter than 200 words",

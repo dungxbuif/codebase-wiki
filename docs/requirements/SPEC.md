@@ -67,7 +67,8 @@ CodeWiki is a Codex skill that builds and maintains a semantic wiki for software
 - Non-Git sources are supported through user-provided source extension skills, not bundled providers.
 - Local runtime state lives outside the repo in SQLite and is keyed by repository identity.
 - Rebuildable cache is separated from durable runtime state.
-- Q&A should answer from generated docs first, then source evidence when docs are insufficient.
+- Q&A should answer from generated docs first, then use `codewiki query`/`codewiki claims` for repository-scoped local SQLite context before source evidence fallback.
+- Local retrieval separates active/stale claims and can match bounded file, symbol, and evidence metadata without dumping source contents or requiring agents to author SQL.
 - Q&A should activate external runtime tools only after docs, plan, agent instructions, local SQLite evidence, and source/Git inspection are insufficient for the requested answer.
 - Sync detects stale docs, records portable generated-body integrity, refreshes only verified-unchanged generated bodies automatically, and preserves manual edits for semantic reconciliation.
 - WikiPlan records an evidence-backed repository mental model before creating a hierarchy, canonical concept ownership, reading order, and per-page contracts.

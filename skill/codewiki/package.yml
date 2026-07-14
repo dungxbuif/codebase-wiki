@@ -1,8 +1,8 @@
 schema_version: 1
-package_version: "0.2.2"
-skill_contract_version: 3
-reference_contract_version: 3
-companion_interface_version: 2
+package_version: "0.3.0"
+skill_contract_version: 4
+reference_contract_version: 4
+companion_interface_version: 3
 wikiplan_schema_min: 2
 wikiplan_schema_max: 2
 managed_paths:

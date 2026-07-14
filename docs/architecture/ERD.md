@@ -61,6 +61,8 @@ shared_fields: [status, trace]
 - Deleting a repository cascades to all repo-scoped state.
 - Evidence summaries must not store secret values.
 - Confidence/status values are text in the first migration so the agent/runtime can evolve labels before hard enum constraints are introduced.
+- Complete non-truncated sync removes absent rows from current `files`/`symbols` inventory only after claims linked to their retained evidence records become stale; truncated exploration does not infer deletion.
+- Re-derived deterministic claims update their existing row to active, while claims whose statement ID is no longer produced remain stale for audit/retrieval.
 
 ## Migrations
 

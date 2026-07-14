@@ -128,7 +128,7 @@ pub fn validate_reader_workspace(workspace_root: &Path) -> ReaderDocsQualityRepo
         String::new()
     });
     for required in [
-        "companion_interface_version: 2",
+        "companion_interface_version: 3",
         "skill_installation:\n  state: verified",
         "discovery: complete",
         "evidence_persistence: complete",

@@ -4,14 +4,14 @@ version = 4
 
 [[package]]
 name = "codewiki-cli"
-version = "0.2.2"
+version = "0.3.0"
 dependencies = [
  "codewiki-core",
 ]
 
 [[package]]
 name = "codewiki-core"
-version = "0.2.2"
+version = "0.3.0"
 dependencies = [
  "codewiki-detect",
  "codewiki-docs",
@@ -22,26 +22,26 @@ dependencies = [
 
 [[package]]
 name = "codewiki-detect"
-version = "0.2.2"
+version = "0.3.0"
 
 [[package]]
 name = "codewiki-docs"
-version = "0.2.2"
+version = "0.3.0"
 dependencies = [
  "codewiki-explore",
 ]
 
 [[package]]
 name = "codewiki-explore"
-version = "0.2.2"
+version = "0.3.0"
 
 [[package]]
 name = "codewiki-provider"
-version = "0.2.2"
+version = "0.3.0"
 
 [[package]]
 name = "codewiki-store"
-version = "0.2.2"
+version = "0.3.0"
 dependencies = [
  "codewiki-explore",
 ]
