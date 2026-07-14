@@ -17,6 +17,7 @@ trace:
   bugs:
     - docs/work/bugs/BUG-001-companion-bypasses-reader-synthesis.md
     - docs/work/bugs/BUG-002-installed-skill-version-drift.md
+    - docs/work/bugs/BUG-003-skill-can-bypass-init-gate.md
   research: docs/work/research/READER-FIRST-DOCS-AUDIT.md
   reference_research: docs/work/research/REFERENCE-DOCS-QUALITY-RESEARCH.md
   grok_audit: docs/work/research/GROK-WIKI-MEZON-AUDIT.md
@@ -74,6 +75,7 @@ Generate evidence-backed documentation that enables a new developer to form an a
 | --- | --- | --- | --- |
 | BUG-001 | Companion bypasses reader synthesis | fixed, regression_verified, in_review | `docs/work/research/GROK-WIKI-MEZON-AUDIT.md`, `docs/work/designs/DESIGN-030-reader-first-synthesis-and-diagrams.md` |
 | BUG-002 | Installed skill version drift is undetectable | fixed, regression_verified, in_review | `docs/work/designs/DESIGN-032-skill-install-version-integrity.md`, `docs/decisions/ADR-0011-skill-distribution-version-integrity.md` |
+| BUG-003 | Skill can bypass init and validation gates | fixed, regression_verified, in_review | `docs/work/designs/DESIGN-033-mandatory-skill-execution-gate.md` |
 
 ## Dependencies
 
@@ -125,7 +127,8 @@ Generate evidence-backed documentation that enables a new developer to form an a
 - [x] Implementation began after approval.
 - [x] Pinned Mezon synthesis reached `reader_docs_ready` on a clean source commit.
 - [x] Full workspace tests, scoped strict Clippy, installer/helper syntax, and installed-helper validation pass.
+- [x] Real-user failure where a verified skill wrote docs without a control plane is reproduced and guarded by mandatory preflight/validation entry commands.
 
 ## Completion Summary
 
-WikiPlan v2, legacy migration, hierarchy/ownership/cycle validation, the evidence-only companion boundary, reader-doc validation, package/install manifests, doctor/helper preflight, and run provenance are implemented. A clean checkout of Mezon Desktop commit `9d7ba65` produced six concept-first reader pages and passed deterministic validation as `reader_docs_ready`; the docs-only answers and source audit are recorded in `docs/work/benchmarks/MEZON-DESKTOP-9D7BA65.md`. Phase closure remains gated by human UAT and the accepted cross-model/TypeScript/Python comparison scope; those gates are not silently waived.
+WikiPlan v2, legacy migration, hierarchy/ownership/cycle validation, the evidence-only companion boundary, reader-doc validation, package/install manifests, mandatory agent preflight, doctor/helper validation, and run provenance are implemented. A clean checkout of Mezon Desktop commit `9d7ba65` produced six concept-first reader pages and passed deterministic validation as `reader_docs_ready`; the later real-user run that bypassed init is captured as BUG-003 and fixed in package `0.2.1`. Phase closure remains gated by human UAT and the accepted cross-model/TypeScript/Python comparison scope; those gates are not silently waived.

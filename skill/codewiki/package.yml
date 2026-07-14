@@ -1,5 +1,5 @@
 schema_version: 1
-package_version: "0.2.0"
+package_version: "0.2.1"
 skill_contract_version: 2
 reference_contract_version: 2
 companion_interface_version: 2

@@ -37,6 +37,7 @@ trace:
 - Legacy-plan and plan-integrity gaps are closed; the remaining human UAT and broader comparison gates are explicitly separated from implemented work, so PHASE-002 is not falsely marked done.
 - Reader-first skill references and package/version contracts match current companion behavior.
 - The pinned Mezon benchmark records source/model/package identity, docs-only answers, source-audit results, and the same-model evaluator limitation.
+- BUG-003 records the user's failed package 0.2.0 forward run, and package 0.2.1 docs now make preflight the first write and validation the last workflow command.
 
 ## Result
 

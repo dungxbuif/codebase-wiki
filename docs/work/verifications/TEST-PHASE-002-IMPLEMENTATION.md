@@ -27,7 +27,7 @@ Verify WikiPlan v2 serialization/migration, evidence-only init/sync, reader-doc 
 
 | Command | Result | Notes |
 | --- | --- | --- |
-| `rtk cargo test --workspace --no-fail-fast` | pass | 46 tests, 14 suites. |
+| `rtk cargo test --workspace --no-fail-fast` | pass | 47 tests, 15 suites. |
 | `rtk cargo fmt --all` | pass | Workspace formatted before tests. |
 | `rtk cargo clippy -p codewiki-core -p codewiki-docs -p codewiki-store --all-targets --no-deps -- -D warnings` | pass | No issues in changed Rust crates. |
 | `rtk cargo clippy --workspace --all-targets -- -D warnings` | blocked by pre-existing lint | `codewiki-detect::detect_file_signals` already exceeds Clippy's argument threshold; unrelated detector code was not changed. |
@@ -37,6 +37,11 @@ Verify WikiPlan v2 serialization/migration, evidence-only init/sync, reader-doc 
 | Installed helper `init` with temporary app/cache roots | pass | Created four `docs/evidence/**` pages, recorded verified skill identity, and stopped at `synthesis_incomplete`. |
 | Installed helper `init` against clean Mezon commit `9d7ba65` | pass | Recorded the exact source commit and `source_dirty: false` before repo-local control files were created. |
 | Installed helper `validate` against synthesized Mezon wiki | pass | Six reader pages checked; `generation_status: reader_docs_ready`. |
+| `rtk cargo test -p codewiki-core --test skill_execution_contract` | pass after expected red | Proves the packaged skill has a mandatory preflight, explicit `$codewiki` UI prompt, and final `reader_docs_ready` contract. |
+| `rtk bash -n skill/codewiki/scripts/codewiki-preflight.sh` | pass | Mandatory first-write wrapper syntax valid. |
+| Clean fixture `codewiki-preflight.sh init` and `sync` | pass | Init created six control/four evidence files and no reader docs; sync preserved a no-op/incomplete state. |
+| Skill YAML/frontmatter validation | pass with Ruby YAML fallback | `skill-creator`'s `quick_validate.py` and generator could not run because both available Python runtimes lack PyYAML; no dependency was installed. Equivalent frontmatter, name/description, `interface`, and `$codewiki` prompt checks passed. |
+| Fresh-agent forward test on a clean three-crate fixture | pass for BUG-003 boundary | With no diagnosis/expected answer, the agent invoked installed preflight first; six control/four evidence artifacts existed while no reader page existed. The run was intentionally stopped after proving the first-write boundary; prior pinned Mezon validation remains the end-to-end final-gate proof. |
 
 ## Fix/Test Attempt Log
 
@@ -53,7 +58,7 @@ Verify WikiPlan v2 serialization/migration, evidence-only init/sync, reader-doc 
 
 ## Automated Tests
 
-- Passed: 46
+- Passed: 47
 - Failed: 0
 - Skipped: 0
 
@@ -62,6 +67,7 @@ Verify WikiPlan v2 serialization/migration, evidence-only init/sync, reader-doc 
 - Inspected the supplied Grok-Wiki Overview and Network pages; confirmed duplicate frontmatter/Related sections, temporary `file://` links, and renderer-specific tags match the regression fixture.
 - Inspected temporary installed `run.yml`, WikiPlan v2 scaffold, and generated tree; no reader page was produced by companion init.
 - Audited six Mezon reader pages against pinned source anchors and answered nine critical onboarding questions using the reader surface; zero critical hallucinations, broken links, orphan pages, duplicate topic owners, or prerequisite cycles were found.
+- Reproduced a later real-user 0.2.0 run that wrote six reader pages without any control plane; companion validation rejected the output. Package 0.2.1 adds the mandatory execution gate and regression proof under BUG-003.
 
 ## UAT
 

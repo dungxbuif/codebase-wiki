@@ -19,6 +19,10 @@ All notable changes should be recorded here.
 
 ## [Unreleased]
 
+### Fixed
+
+- Released CodeWiki package `0.2.1` with a mandatory first-write preflight and final-validation execution gate after a verified `0.2.0` agent run generated reader Markdown without invoking init, WikiPlan, quality, or validation.
+
 ### Changed
 
 - Split generation into deterministic evidence collection, required model mental-model/WikiPlan/page synthesis, and deterministic/semantic quality gates; companion init/sync now stop at `synthesis_incomplete` instead of publishing snapshot summaries as reader docs.
@@ -31,6 +35,7 @@ All notable changes should be recorded here.
 ### Added
 
 - Added reader-doc validation for source/run provenance, installed-skill identity, model/evaluator metadata, bounded revision count, required reader pages, portable links, duplicate structures, raw inventory patterns, Mermaid fences, cross-page links, and orphan pages.
+- Added `codewiki-preflight.sh`, packaged execution-contract regression coverage, and an explicit `$codewiki` UI prompt that names preflight and `reader_docs_ready` validation.
 - Added versioned skill package/install manifests, managed-content digest, atomic installer staging, `doctor`, `package-digest`, `validate`, helper preflight, and run-level skill provenance.
 - Added reader-first synthesis/diagram/quality references and Mezon/Grok-Wiki regression research covering concept-first planning and export-hygiene failures.
 - Added a pinned Mezon Desktop `9d7ba65` benchmark: six reader pages passed docs-only questions, source audit, installed-skill provenance, and deterministic `reader_docs_ready` validation.

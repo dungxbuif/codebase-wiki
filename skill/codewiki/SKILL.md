@@ -32,6 +32,25 @@ Use this skill when the user asks to:
 - Support non-Git sources through `.agents/skills/codewiki/project/sources.yml` and user-provided source extension skills.
 - Do not install every provider by default. Use Octocode as the first-choice code-intelligence provider when filesystem/Git exploration is insufficient; use codebase-memory-mcp and CocoIndex only under their specific triggers.
 
+## Mandatory Execution Gate
+
+For every init or sync request, the first filesystem mutation MUST be the installed preflight command:
+
+```text
+<resolved-skill-root>/scripts/codewiki-preflight.sh init <repository-path>
+<resolved-skill-root>/scripts/codewiki-preflight.sh sync <repository-path>
+```
+
+Resolve the active skill root from the skill that loaded these instructions; prefer the project-local installation when present. Do not create or modify reader-facing Markdown before preflight succeeds and proves the control plane, evidence pages, and source provenance exist. Init must return `synthesis_incomplete`; sync may return `reader_docs_ready` only for a verified no-op, in which case preserve the docs. Do not replace this command with an improvised repository summary.
+
+After model planning/synthesis and quality review, the final mutating workflow command MUST be:
+
+```text
+<resolved-skill-root>/scripts/codewiki-helper.sh validate <repository-path>
+```
+
+Never call generation complete, successful, ready, or onboarding-quality unless validation returns `generation_status: reader_docs_ready`. If preflight or validation fails, report the exact failure and leave the run incomplete.
+
 ## Reference Loading
 
 Keep this file as the compact router. Load bundled references only when needed:
@@ -134,26 +153,26 @@ This means ordinary Q&A about documented architecture should not activate Octoco
 
 ## Init Workflow
 
-1. Resolve repository identity from Git and filesystem context.
-2. Detect language, package manager, framework/library, entrypoint, test/build, and docs signals.
-3. Inspect existing docs before source where useful.
-4. Explore source semantically with bounded file, area, symbol, import/dependency-hint, convention, and evidence snapshots.
-5. Use the companion to persist bounded evidence; expect `generation_status: synthesis_incomplete`.
-6. Build the repository mental model and WikiPlan v2 page contracts from evidence.
-7. Generate reader-first `docs/**` one page contract at a time and mark uncertainty explicitly.
-8. Run contract, source, diagram, cross-page, and isolated docs-only onboarding evaluation; perform at most one bounded revision.
-9. Write the quality report and run companion validation. Init is complete only at `reader_docs_ready`.
-10. Record verification commands or skip reasons.
+1. Run the mandatory `codewiki-preflight.sh init <repository-path>` gate before writing reader docs; expect `generation_status: synthesis_incomplete`.
+2. Resolve repository identity from Git and filesystem context.
+3. Inspect existing docs and bounded evidence before source where useful.
+4. Explore source semantically for the mental model, conventions, and page-specific evidence gaps.
+5. Build the repository mental model and WikiPlan v2 page contracts from evidence.
+6. Generate reader-first `docs/**` one page contract at a time and mark uncertainty explicitly.
+7. Run contract, source, diagram, cross-page, and isolated docs-only onboarding evaluation; perform at most one bounded revision.
+8. Write the quality report and run the mandatory companion validation command.
+9. Record verification commands or skip reasons. Init is complete only at `reader_docs_ready`.
 
 ## Sync Workflow
 
-1. Compare Git state, known evidence, generated pages, and changed files.
-2. Read the current affected docs and detect manual changes before generating replacements.
-3. Mark stale pages and stale claims before rewriting.
-4. Refresh unchanged generated regions automatically only when their recorded integrity hash still matches.
-5. If a generated body was manually edited, preserve it and semantically merge refreshed evidence around the user's contribution; do not restore old machine wording.
-6. Preserve unmarked and legacy hashless pages unless the user explicitly authorizes replacement.
-7. Record what changed, what was preserved, and why.
+1. Run the mandatory `codewiki-preflight.sh sync <repository-path>` gate before modifying reader docs.
+2. Compare Git state, known evidence, generated pages, and changed files.
+3. Read the current affected docs and detect manual changes before generating replacements.
+4. Mark stale pages and stale claims before rewriting.
+5. Refresh unchanged generated regions automatically only when their recorded integrity hash still matches.
+6. If a generated body was manually edited, preserve it and semantically merge refreshed evidence around the user's contribution; do not restore old machine wording.
+7. Preserve unmarked and legacy hashless pages unless the user explicitly authorizes replacement.
+8. Run mandatory companion validation and record what changed, what was preserved, and why.
 
 ## Q&A Workflow
 

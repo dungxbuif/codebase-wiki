@@ -1,4 +1,4 @@
-display_name: CodeWiki
-short_description: Generate and maintain semantic repo wikis with evidence-backed docs.
-default_prompt: Generate or sync a CodeWiki semantic wiki for this repository.
-
+interface:
+  display_name: "CodeWiki"
+  short_description: "Generate evidence-backed semantic repository wikis"
+  default_prompt: "Use $codewiki to run mandatory codewiki-preflight.sh, synthesize reader-first repository docs, and validate reader_docs_ready."

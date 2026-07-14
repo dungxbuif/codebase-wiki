@@ -1,5 +1,9 @@
 # CodeWiki Sync Workflow
 
+## Mandatory First Write
+
+Before changing any reader-facing Markdown, run the active installed skill's `scripts/codewiki-preflight.sh sync <repository-path>`. If it fails, preserve current docs and report the failure. Direct regeneration without this control/evidence gate is not a CodeWiki sync.
+
 Load this reference when the user asks to update, refresh, reconcile, or sync an existing CodeWiki after repository changes.
 
 Also load `docs-structure.md`.

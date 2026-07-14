@@ -32,12 +32,13 @@ updated: 2026-07-14
 
 ## Current Status
 
-- Status: Reader-first PHASE-002 is in review; implementation, distribution integrity, and the pinned Mezon synthesis benchmark pass.
+- Status: Reader-first PHASE-002 is in review; package 0.2.1 now guards the real-user init-bypass failure with mandatory preflight and final validation.
 - Active backlog: `docs/work/BACKLOG.md`
 - Current queue focus: obtain human onboarding UAT and execute the accepted independent/cross-model TypeScript/Python comparison scope without weakening quality gates.
 - Active phase: `docs/work/phases/PHASE-002-reader-first-docs-quality.md` (in_review).
 - Active ticket: `docs/work/tickets/TICKET-031-onboarding-quality-evals.md` (in_review); TICKET-029/030 implementation is complete.
 - Active bugs: BUG-001 and BUG-002 are fixed and regression-verified, pending final phase/UAT review.
+- Active bug: BUG-003 is fixed and regression-verified after the verified 0.2.0 skill bypassed init during the user's Mezon run.
 
 ## Current Focus
 
@@ -147,6 +148,8 @@ Make CodeWiki-generated docs sufficient for a new developer to understand the sy
 
 ## Recent Decisions
 
+- Make the installed `codewiki-preflight.sh init|sync` command the first filesystem mutation for generation, and require helper validation as the final workflow command before any success claim.
+- Keep reader prose model-driven; do not move synthesis into the companion merely to enforce orchestration.
 - Capture source provenance before repo-local initialization writes control files, so a clean benchmark remains `source_dirty: false`.
 - Preserve v1 plans as `plan.v1.legacy.yml` and require explicit v2 enrichment; reject conflicting legacy control planes instead of silently coexisting.
 - Require plan hierarchy, unique canonical topic ownership, valid prerequisites, acyclic dependencies, and one plan contract for every reader page.

@@ -1,5 +1,9 @@
 # CodeWiki Init Workflow
 
+## Mandatory First Write
+
+Before creating or changing any reader-facing Markdown, run the active installed skill's `scripts/codewiki-preflight.sh init <repository-path>`. If it fails, stop reader synthesis and report the failure. Direct Markdown generation without this control/evidence gate is not a CodeWiki init.
+
 Load this reference when the user asks to initialize, generate, bootstrap, or create a CodeWiki for a repository.
 
 Also load `docs-structure.md`.
