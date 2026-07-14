@@ -90,7 +90,7 @@ docs/
 
 `docs/**` is the human/agent knowledge surface and the first source for Q&A. `.agents/skills/codewiki/project/**` is the committed control plane. SQLite state and rebuildable caches live outside the repository/workspace in platform app-data/cache directories.
 
-Semantic exploration v1 records bounded file, area, symbol, import/dependency-hint, and evidence-reference snapshots. These hints seed generated docs and future claim promotion, but they are not treated as fully resolved architecture without additional evidence.
+Semantic exploration v1 records bounded file, area, symbol, import/dependency-hint, and evidence-reference snapshots. These hints seed generated docs and future claim promotion, but they are not treated as fully resolved architecture without additional evidence. In project-local mode, detector/explorer traversal excludes the managed `.agents/skills/codewiki/**` runtime so installed skill references and copied companion source cannot become target-repository evidence.
 
 Claim persistence v1 promotes deterministic source-backed structure claims from semantic snapshots and writes repository, run, file, symbol, evidence, claim, and claim/evidence-link rows into local SQLite. Generated `docs/evidence/CLAIMS.md` mirrors those promoted claims so docs-first Q&A and SQLite-backed Q&A can share the same evidence base.
 

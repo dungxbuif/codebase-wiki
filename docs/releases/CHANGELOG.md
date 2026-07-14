@@ -22,9 +22,12 @@ All notable changes should be recorded here.
 ### Fixed
 
 - Released CodeWiki package `0.2.1` with a mandatory first-write preflight and final-validation execution gate after a verified `0.2.0` agent run generated reader Markdown without invoking init, WikiPlan, quality, or validation.
+- Released CodeWiki package `0.2.2` with detector/explorer isolation for `.agents/skills/codewiki/**`, preventing the project-local skill, references, manifests, and copied Rust companion from becoming target-repository stack signals or evidence.
 
 ### Changed
 
+- Made the current filesystem working tree the explicit init source of truth, including relevant modified/staged/untracked source; Git remains identity, provenance, change-context, and history evidence rather than a substitute for reading current code.
+- Hardened the skill/reference contract with always-active reader invariants, typed mental-model completion guidance, qualitative failure examples, page-type quality contracts, canonical confidence labels, verified no-op wording, and portable plus capability-specific onboarding questions without count quotas.
 - Split generation into deterministic evidence collection, required model mental-model/WikiPlan/page synthesis, and deterministic/semantic quality gates; companion init/sync now stop at `synthesis_incomplete` instead of publishing snapshot summaries as reader docs.
 - Upgraded committed planning to WikiPlan v2 with repository mental-model and typed reader/evidence/diagram/refresh/acceptance page contracts; path-derived `areas/**` generation is removed.
 - Added explicit v1-plan preservation/enrichment, legacy-control-plane rejection, and plan integrity checks for hierarchy, unique topic ownership, prerequisites, cycles, synthesized coverage, and unplanned reader pages.

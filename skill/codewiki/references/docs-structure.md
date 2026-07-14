@@ -83,6 +83,25 @@ This structure may live either inside the source repository or inside a separate
 - `evidence/COMMANDS.md`: commands run or recommended, with result summaries when available.
 - `evidence/CLAIMS.md`: durable claims with evidence links, confidence, status, and owning page.
 
+## Page-Type Quality Contracts
+
+Only `QUICKSTART.md` and `conventions/OVERVIEW.md` are unconditional after successful init. Create every other page only for an evidence-backed reader job.
+
+| Page type | Reader outcome and required content | Must not become |
+| --- | --- | --- |
+| `QUICKSTART.md` | Form a five-minute project mental model: purpose, status, prerequisites, shortest verified start path, system at a glance, major concepts, task-oriented reading paths, limitations, freshness, and backlog. | Feature dump, full file/symbol list, or duplicate architecture page. |
+| `SOURCE-MAP.md` | Map a concept or change request to its owning subsystem, responsibility, boundary, dependencies, entrypoints, likely change location, and canonical page. | Repository tree, exhaustive package table, or lexical-import dump. |
+| Architecture/component page | Explain runtime/component boundaries, ownership, dependency direction, collaborators, control/data paths, constraints, extension points, risks, tests, and related flows. | Every class/file, unexplained boxes, one-file wrapper, or ordered trace with no ownership model. |
+| Domain page | Explain actors, project language, concepts, relationships, invariants, lifecycles, ownership, examples, and exceptions. | Struct/enum catalog or generic domain essay detached from repository evidence. |
+| Workflow page | Trace goal, actors, preconditions, trigger, happy path, failures, retries/recovery, state/data effects, observability, change location, risks, and verification. | UI click list, file list, or sequence that omits system effects and failure behavior. |
+| Data-model page | Explain stores/schemas, entity ownership, relationships/keys, invariants, lifecycle, migrations, consistency, sensitivity, and read/write paths. | Type list without ownership, invariants, or migration impact. |
+| API/interface page | Explain consumers, contract families, authentication/authorization when applicable, lifecycle, errors, compatibility, representative use, change risks, and tests. | Exhaustive generated method/signature reference without contract guidance. |
+| Operations page | Provide evidenced prerequisites, configuration names without secrets, verified commands and expected results, topology, observability, diagnosis, and recovery/rollback where applicable. | Unverified command collection or secret-bearing setup guide. |
+| Testing page | Map change types to test layers, exact verified commands, fixtures/environments, known gaps/flakiness, and failure interpretation. | Test-file inventory or unsupported coverage claims. |
+| Conventions page | Record convention, scope, classification, evidence, confidence, examples, counterexamples/exceptions, rationale when evidenced, and change impact. | Generic ecosystem advice or a single example presented as an adopted convention. |
+| Glossary/open-questions page | Define project language or record uncertainty with impact, attempted evidence, owner/next action, and affected pages. | Identifier index, generic TODO list, or questions with no impact. |
+| `evidence/**` | Make source, command, claim, confidence, staleness, and provenance auditable. | Primary onboarding path or duplicate narrative documentation. |
+
 ## Evidence Requirements
 
 Each durable claim should point to at least one of:
@@ -96,3 +115,14 @@ Each durable claim should point to at least one of:
 - explicit hypothesis marker with confidence and open question.
 
 Do not present hypotheses as facts.
+
+## Claim Confidence Labels
+
+Use the canonical claim/page/evidence confidence labels consistently:
+
+- `confirmed`: directly supported by authoritative evidence.
+- `source-backed`: supported by source evidence but not independently confirmed.
+- `hypothesis`: plausible but incomplete; mark it explicitly and never present it as fact.
+- `watchlist`: weak or transient signal worth revisiting before it influences reader guidance.
+
+`inferred` is a convention classification governed by `conventions.md`, not a generic claim confidence label.

@@ -32,13 +32,14 @@ updated: 2026-07-14
 
 ## Current Status
 
-- Status: Reader-first PHASE-002 is in review; package 0.2.1 now guards the real-user init-bypass failure with mandatory preflight and final validation.
+- Status: Reader-first PHASE-002 is in review; package 0.2.2 hardens current-working-tree exploration, reader/eval contracts, and project-local discovery isolation.
 - Active backlog: `docs/work/BACKLOG.md`
 - Current queue focus: obtain human onboarding UAT and execute the accepted independent/cross-model TypeScript/Python comparison scope without weakening quality gates.
 - Active phase: `docs/work/phases/PHASE-002-reader-first-docs-quality.md` (in_review).
 - Active ticket: `docs/work/tickets/TICKET-031-onboarding-quality-evals.md` (in_review); TICKET-029/030 implementation is complete.
 - Active bugs: BUG-001 and BUG-002 are fixed and regression-verified, pending final phase/UAT review.
 - Active bug: BUG-003 is fixed and regression-verified after the verified 0.2.0 skill bypassed init during the user's Mezon run.
+- Active bug: BUG-004 is fixed and regression-verified after a fresh package forward test found installed CodeWiki skill/companion files contaminating target detection and evidence.
 
 ## Current Focus
 
@@ -51,6 +52,7 @@ Make CodeWiki-generated docs sufficient for a new developer to understand the sy
 - `docs/work/research/GROK-WIKI-MEZON-AUDIT.md`
 - `docs/work/bugs/BUG-001-companion-bypasses-reader-synthesis.md`
 - `docs/work/bugs/BUG-002-installed-skill-version-drift.md`
+- `docs/work/bugs/BUG-004-installed-skill-self-contaminates-source-discovery.md`
 - `docs/work/phases/PHASE-002-reader-first-docs-quality.md`
 - `docs/work/tickets/TICKET-029-wikiplan-v2-topic-taxonomy.md`
 - `docs/work/tickets/TICKET-030-reader-first-synthesis-and-diagrams.md`
@@ -59,6 +61,7 @@ Make CodeWiki-generated docs sufficient for a new developer to understand the sy
 - `docs/work/designs/DESIGN-030-reader-first-synthesis-and-diagrams.md`
 - `docs/work/designs/DESIGN-031-onboarding-quality-evals.md`
 - `docs/work/designs/DESIGN-032-skill-install-version-integrity.md`
+- `docs/work/designs/DESIGN-034-exclude-installed-codewiki-payload-from-source-discovery.md`
 - `docs/decisions/ADR-0010-reader-first-information-architecture.md`
 - `docs/decisions/ADR-0011-skill-distribution-version-integrity.md`
 - `skill/codewiki/package.yml`

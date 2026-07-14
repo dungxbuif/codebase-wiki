@@ -73,5 +73,7 @@ Approved by the user on 2026-07-14.
 
 - Unit/integration regressions prove deterministic init/sync emit evidence only and remain `synthesis_incomplete`.
 - `codewiki validate` rejects incomplete plan/run/model provenance, Grok export artifacts, raw inventories, broken/orphan links, malformed Mermaid fences, and unpassed isolated review stages.
-- Full workspace: 43 tests passed across 14 suites on 2026-07-14.
-- Remaining review gap: execute and visually inspect a complete pinned Mezon synthesis run before ticket verification.
+- Package `0.2.2` keeps a compact always-active reader contract, requires current-working-tree inspection, exposes qualitative failure patterns and typed mental-model fields, and ports approved page-type contracts into the always-loaded references without count quotas.
+- Packaged contract regression fails if these invariants or contract versions disappear.
+- Full workspace: 50 tests passed across 15 suites on 2026-07-14; scoped strict Clippy passes.
+- Remaining review gap: human UAT and the broader accepted comparison scope remain phase-level gates.

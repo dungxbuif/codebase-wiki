@@ -22,6 +22,8 @@ Create the initial repo-native semantic wiki without approval gates. The output 
    - Use Git remote, root path, branch, and HEAD when available.
    - Record dirty worktree status as context, not as an error.
    - Treat Git as the default source for code changes.
+   - The current working tree is the source of truth for init. Inspect tracked, staged, modified, and relevant untracked source files; record deleted paths as provenance.
+   - Git metadata and diffs do not replace reading current source. `HEAD` identifies a base revision, not necessarily the code the developer is running.
 
 2. Resolve wiki workspace placement.
    - If the user clearly wants repo-local docs, use the source repository as the workspace.
@@ -44,6 +46,9 @@ Create the initial repo-native semantic wiki without approval gates. The output 
    - Discover project, language, framework/library, and area conventions from explicit config plus repeated code evidence.
    - Expand scope only when evidence requires it.
    - Avoid secrets and generated/vendor/cache directories.
+   - Trace current runtime boundaries, control/data flow, state ownership, failure paths, and safe-change verification beyond lexical symbol/import hints.
+   - Continue until every repository mental-model field and planned reader question has relevant evidence or an explicit known unknown. Do not use file counts or consecutive-file counts as completion proxies.
+   - If important cross-file relationships remain unresolved after bounded filesystem exploration, activate Octocode when available and record the trigger; otherwise retain reduced confidence and the named gap.
 
 6. Run companion evidence initialization when available.
    - Treat `generation_status: synthesis_incomplete` as the correct evidence-ready state.

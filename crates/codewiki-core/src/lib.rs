@@ -1467,6 +1467,74 @@ mod tests {
     }
 
     #[test]
+    fn init_explores_current_working_tree_including_untracked_source() {
+        let sqlite = if Path::new("/usr/bin/sqlite3").exists() {
+            PathBuf::from("/usr/bin/sqlite3")
+        } else {
+            PathBuf::from("sqlite3")
+        };
+        let base = temp_path("codewiki-current-working-tree");
+        let repo = base.join("repo");
+        fs::create_dir_all(repo.join("src")).expect("mkdir src");
+        fs::write(repo.join("src/tracked.rs"), "pub fn tracked() {}\n")
+            .expect("write tracked source");
+
+        for args in [
+            vec!["init", "-q"],
+            vec!["add", "src/tracked.rs"],
+            vec![
+                "-c",
+                "user.name=CodeWiki Test",
+                "-c",
+                "user.email=codewiki@example.invalid",
+                "commit",
+                "-q",
+                "-m",
+                "fixture",
+            ],
+        ] {
+            let status = std::process::Command::new("git")
+                .args(args)
+                .current_dir(&repo)
+                .status()
+                .expect("run git fixture command");
+            assert!(status.success());
+        }
+
+        fs::write(
+            repo.join("src/untracked.rs"),
+            "pub fn current_working_tree_only() {}\n",
+        )
+        .expect("write untracked source");
+        let context = RuntimeContext {
+            cwd: repo.clone(),
+            app_data_base: base.join("app-data"),
+            cache_base: base.join("cache"),
+            sqlite_executable: sqlite,
+        };
+
+        let output = run_with_context(["init"], &context);
+
+        assert_eq!(output.exit_code, 0, "{}", output.stderr);
+        let sources = fs::read_to_string(repo.join("docs/evidence/SOURCES.md"))
+            .expect("read source evidence");
+        assert!(sources.contains("src/tracked.rs"));
+        assert!(sources.contains("src/untracked.rs"));
+        let plan = fs::read_to_string(repo.join(".agents/skills/codewiki/project/plan.yml"))
+            .expect("read plan");
+        assert!(plan.contains("source_dirty: true"));
+        assert!(
+            sqlite_count(
+                &context.sqlite_executable,
+                &find_state_db(&context),
+                "symbols"
+            ) >= 2
+        );
+
+        let _ = fs::remove_dir_all(base);
+    }
+
+    #[test]
     fn init_preserves_existing_files() {
         let sqlite = if Path::new("/usr/bin/sqlite3").exists() {
             PathBuf::from("/usr/bin/sqlite3")

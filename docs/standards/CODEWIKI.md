@@ -15,6 +15,7 @@ These standards apply to CodeWiki product work in addition to the general Harnes
 - Generated docs must distinguish evidence-backed facts from hypotheses and open questions.
 - Lexical dependency hints are hints until verified by deeper source analysis or provider evidence.
 - Stale claims must not be used as facts without narrow source re-check.
+- Project-local discovery must exclude CodeWiki's managed `.agents/skills/codewiki/**` runtime while continuing to inspect relevant current-working-tree source, including uncommitted and untracked files.
 
 ## Reader Documentation Quality
 

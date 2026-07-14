@@ -51,6 +51,15 @@ pub struct RepositoryDetection {
     pub docs: Vec<String>,
 }
 
+#[derive(Debug, Default)]
+struct DetectionSignals {
+    package_managers: BTreeSet<String>,
+    frameworks: BTreeSet<String>,
+    entrypoints: BTreeSet<String>,
+    tests: BTreeSet<String>,
+    docs: BTreeSet<String>,
+}
+
 impl RepositoryDetection {
     /// Render a stable Markdown summary.
     pub fn to_markdown(&self) -> String {
@@ -73,36 +82,23 @@ pub fn detect_repository(root: impl AsRef<Path>) -> std::io::Result<RepositoryDe
     collect_files(root, root, 0, &mut files)?;
 
     let mut languages = BTreeSet::new();
-    let mut package_managers = BTreeSet::new();
-    let mut frameworks = BTreeSet::new();
-    let mut entrypoints = BTreeSet::new();
-    let mut tests = BTreeSet::new();
-    let mut docs = BTreeSet::new();
+    let mut signals = DetectionSignals::default();
 
     for path in &files {
         let rel = path.to_string_lossy();
         if let Some(language) = language_for_path(path) {
             languages.insert(language.to_string());
         }
-        detect_file_signals(
-            root,
-            path,
-            &rel,
-            &mut package_managers,
-            &mut frameworks,
-            &mut entrypoints,
-            &mut tests,
-            &mut docs,
-        );
+        detect_file_signals(root, path, &rel, &mut signals);
     }
 
     Ok(RepositoryDetection {
         languages: languages.into_iter().collect(),
-        package_managers: package_managers.into_iter().collect(),
-        frameworks: frameworks.into_iter().collect(),
-        entrypoints: entrypoints.into_iter().collect(),
-        tests: tests.into_iter().collect(),
-        docs: docs.into_iter().collect(),
+        package_managers: signals.package_managers.into_iter().collect(),
+        frameworks: signals.frameworks.into_iter().collect(),
+        entrypoints: signals.entrypoints.into_iter().collect(),
+        tests: signals.tests.into_iter().collect(),
+        docs: signals.docs.into_iter().collect(),
     })
 }
 
@@ -124,13 +120,13 @@ fn collect_files(
         if should_skip(&name) {
             continue;
         }
+        let relative = path.strip_prefix(root).unwrap_or(&path).to_path_buf();
+        if is_generated_codewiki_path(&relative) {
+            continue;
+        }
         if path.is_dir() {
             collect_files(root, &path, depth + 1, files)?;
         } else if path.is_file() {
-            let relative = path.strip_prefix(root).unwrap_or(&path).to_path_buf();
-            if is_generated_codewiki_path(&relative) {
-                continue;
-            }
             files.push(relative);
         }
         if files.len() >= 2_000 {
@@ -141,7 +137,7 @@ fn collect_files(
 }
 
 fn is_generated_codewiki_path(path: &Path) -> bool {
-    path.starts_with(".agents/skills/codewiki/project") || is_generated_docs_path(path)
+    path.starts_with(".agents/skills/codewiki") || is_generated_docs_path(path)
 }
 
 fn is_generated_docs_path(path: &Path) -> bool {
@@ -196,79 +192,74 @@ fn language_for_path(path: &Path) -> Option<&'static str> {
     }
 }
 
-fn detect_file_signals(
-    root: &Path,
-    path: &Path,
-    rel: &str,
-    package_managers: &mut BTreeSet<String>,
-    frameworks: &mut BTreeSet<String>,
-    entrypoints: &mut BTreeSet<String>,
-    tests: &mut BTreeSet<String>,
-    docs: &mut BTreeSet<String>,
-) {
+fn detect_file_signals(root: &Path, path: &Path, rel: &str, signals: &mut DetectionSignals) {
     let file_name = path
         .file_name()
         .and_then(|name| name.to_str())
         .unwrap_or("");
     match file_name {
         "Cargo.toml" => {
-            package_managers.insert("Cargo".to_string());
-            entrypoints.insert(rel.to_string());
+            signals.package_managers.insert("Cargo".to_string());
+            signals.entrypoints.insert(rel.to_string());
         }
         "package.json" => {
-            package_managers.insert("npm-compatible".to_string());
-            entrypoints.insert(rel.to_string());
-            inspect_package_json(root.join(path), frameworks);
+            signals
+                .package_managers
+                .insert("npm-compatible".to_string());
+            signals.entrypoints.insert(rel.to_string());
+            inspect_package_json(root.join(path), &mut signals.frameworks);
         }
         "pnpm-lock.yaml" => {
-            package_managers.insert("pnpm".to_string());
+            signals.package_managers.insert("pnpm".to_string());
         }
         "yarn.lock" => {
-            package_managers.insert("Yarn".to_string());
+            signals.package_managers.insert("Yarn".to_string());
         }
         "bun.lockb" | "bun.lock" => {
-            package_managers.insert("Bun".to_string());
+            signals.package_managers.insert("Bun".to_string());
         }
         "pyproject.toml" => {
-            package_managers.insert("Python packaging".to_string());
-            inspect_text_file(root.join(path), frameworks);
+            signals
+                .package_managers
+                .insert("Python packaging".to_string());
+            inspect_text_file(root.join(path), &mut signals.frameworks);
         }
         "requirements.txt" => {
-            package_managers.insert("pip".to_string());
-            inspect_text_file(root.join(path), frameworks);
+            signals.package_managers.insert("pip".to_string());
+            inspect_text_file(root.join(path), &mut signals.frameworks);
         }
         "go.mod" => {
-            package_managers.insert("Go modules".to_string());
+            signals.package_managers.insert("Go modules".to_string());
         }
         "pom.xml" => {
-            package_managers.insert("Maven".to_string());
+            signals.package_managers.insert("Maven".to_string());
         }
         "build.gradle" | "build.gradle.kts" => {
-            package_managers.insert("Gradle".to_string());
+            signals.package_managers.insert("Gradle".to_string());
         }
         "next.config.js" | "next.config.mjs" | "next.config.ts" => {
-            frameworks.insert("Next.js".to_string());
+            signals.frameworks.insert("Next.js".to_string());
         }
         "vite.config.ts" | "vite.config.js" => {
-            frameworks.insert("Vite".to_string());
+            signals.frameworks.insert("Vite".to_string());
         }
         "README.md" | "README" | "CONTRIBUTING.md" => {
-            docs.insert(rel.to_string());
+            signals.docs.insert(rel.to_string());
         }
         _ => {}
     }
 
     if rel.starts_with("docs/") || rel.contains("/docs/") {
-        docs.insert(rel.to_string());
+        signals.docs.insert(rel.to_string());
     }
     if rel.contains("test") || rel.contains("spec") || rel.starts_with("tests/") {
-        tests.insert(rel.to_string());
+        signals.tests.insert(rel.to_string());
     }
     if matches!(
         rel,
         "src/main.rs" | "src/lib.rs" | "main.py" | "app.py" | "src/index.ts" | "src/index.js"
     ) {
-        entrypoints.insert(rel.to_string());
+        signals.entrypoints.insert(rel.to_string());
     }
 }
 
@@ -378,11 +369,34 @@ mod tests {
             ".agents/skills/codewiki/project/plan.yml",
             "schema_version: 1\n",
         );
+        write_file(
+            &root,
+            ".agents/skills/codewiki/SKILL.md",
+            "# installed skill\n",
+        );
+        write_file(
+            &root,
+            ".agents/skills/codewiki/companion/Cargo.toml",
+            "[workspace]\nmembers = []\n",
+        );
+        write_file(
+            &root,
+            ".agents/skills/codewiki/companion/crates/runtime/src/lib.rs",
+            "pub fn codewiki_runtime() {}\n",
+        );
         write_file(&root, "README.md", "# source doc\n");
 
         let detected = detect_repository(&root).expect("detect");
 
         assert_eq!(detected.docs, vec!["README.md".to_string()]);
+        assert!(!detected.languages.contains(&"Rust".to_string()));
+        assert!(!detected.package_managers.contains(&"Cargo".to_string()));
+        assert!(
+            detected
+                .entrypoints
+                .iter()
+                .all(|path| !path.starts_with(".agents/skills/codewiki"))
+        );
         let _ = fs::remove_dir_all(root);
     }
 

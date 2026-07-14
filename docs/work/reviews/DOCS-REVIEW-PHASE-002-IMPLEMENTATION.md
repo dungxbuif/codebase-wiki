@@ -10,8 +10,8 @@ trace:
   backlog_item: BL-018
   requirement: REQ-014
   phase: docs/work/phases/PHASE-002-reader-first-docs-quality.md
-  ticket_or_bug: [TICKET-029, TICKET-030, TICKET-031, BUG-001, BUG-002]
-  detail_design: [DESIGN-029, DESIGN-030, DESIGN-031, DESIGN-032]
+  ticket_or_bug: [TICKET-029, TICKET-030, TICKET-031, BUG-001, BUG-002, BUG-003, BUG-004]
+  detail_design: [DESIGN-029, DESIGN-030, DESIGN-031, DESIGN-032, DESIGN-033, DESIGN-034]
   test_verification: docs/work/verifications/TEST-PHASE-002-IMPLEMENTATION.md
   validation_matrix: docs/work/VALIDATION_MATRIX.md
   adrs: [ADR-0010, ADR-0011]
@@ -38,6 +38,9 @@ trace:
 - Reader-first skill references and package/version contracts match current companion behavior.
 - The pinned Mezon benchmark records source/model/package identity, docs-only answers, source-audit results, and the same-model evaluator limitation.
 - BUG-003 records the user's failed package 0.2.0 forward run, and package 0.2.1 docs now make preflight the first write and validation the last workflow command.
+- BUG-004 records installed-skill self-contamination found during package `0.2.2` forward testing; architecture and standards now state that managed CodeWiki runtime files are excluded while current target working-tree source remains visible.
+- Prompt hardening stays within ADR-0010: qualitative reader questions/evidence/known-unknown gates replace proposed word/file/page count quotas.
+- Independent clean-fixture synthesis used the packaged contract v3, documented dirty/untracked audit behavior, passed portable/capability questions, and reached `reader_docs_ready` without installed-runtime evidence.
 
 ## Result
 

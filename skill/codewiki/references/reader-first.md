@@ -32,6 +32,22 @@ Every planned reader page records:
 
 Never keep `pending-llm-selection` or `llm_semantic_planning_pending` in a completed WikiPlan. Do not create a page from a directory, config file, or filename alone.
 
+## Mental Model Completion Checklist
+
+Complete the persisted repository mental model before page architecture. Every item must cite relevant evidence or remain an explicit known unknown:
+
+- `systems`: major products, services, applications, or libraries;
+- `actors`: people, external systems, scheduled work, and runtime initiators;
+- `boundaries`: responsibility, ownership, trust, and dependency direction;
+- `runtimes`: processes, executors, threads, workers, and deployment contexts;
+- `workflows`: critical end-to-end success, failure, retry, or recovery paths;
+- `state ownership`: durable and in-memory state, authoritative writers, and observers;
+- `integrations`: external services, protocols, platform/native boundaries, and generated contracts;
+- `change risks`: high-blast-radius surfaces and their verification paths;
+- `known unknowns`: unresolved questions, inspected evidence, impact, and next evidence needed.
+
+Do not start page drafting while a critical runtime boundary, state owner, or workflow is silently unknown. Expand source exploration, activate the justified optional provider, or preserve the uncertainty explicitly.
+
 ## Page Reading Order
 
 1. Purpose and reader outcome.
@@ -44,6 +60,20 @@ Never keep `pending-llm-selection` or `llm_semantic_planning_pending` in a compl
 8. Optional evidence appendix.
 
 Important claims receive claim-local evidence. Do not begin reader pages with a source inventory. Raw files, symbols, imports, and deterministic claims remain under `docs/evidence/**` or the control plane.
+
+## Automatic Failure Patterns
+
+Fail the relevant quality gate when a reader page:
+
+- opens with a file list, directory tree, symbol table, or evidence inventory instead of purpose and explanation, except for an approved evidence/reference page;
+- treats a directory, file, class, function, lexical import, or framework name as a system boundary without explaining responsibility and runtime evidence;
+- says what a component contains but not why it exists, what it owns, who collaborates with it, or how a developer changes it safely;
+- presents an architecture, ownership, workflow, or convention claim without a local source/command/doc anchor or explicit hypothesis marker;
+- includes a diagram without stating the reader question, purpose, scope, or meaning of its important edges;
+- duplicates detailed ownership across pages instead of selecting one canonical home;
+- says "see the source" without a specific starting anchor and relevance reason;
+- reports an unverified command, start path, or safety check as verified;
+- leaves a declared reader question or acceptance check unanswered without recording a known unknown.
 
 ## Diagram Rules
 
@@ -77,6 +107,15 @@ notes: "Concise evidence and remaining non-critical gaps."
 ```
 
 Run a docs-only reader against reader pages without source, plan evidence, SQLite, or reference outputs. Separately audit important claims against source. Check canonical ownership, terminology, overlap, links, diagrams, change guidance, risks, and tests.
+
+## Docs-Only Onboarding Evaluation
+
+Evaluate two complementary question sets without source access:
+
+1. Portable questions: what the repository does and for whom; how to reach a verified start path; which major boundaries own what; how one critical workflow succeeds and fails; where a representative change should begin; what can break; and how to verify it.
+2. Capability-specific questions derived from the mental model and page contracts. Ask about API, persistence, authentication, deployment, eventing, native integration, media, or similar capabilities only when evidence shows that the repository has them.
+
+For every critical question, record the expected concepts, canonical owning page, required evidence, critical misconceptions, answer result, and any explicit known unknown. Page-contract `reader_questions` and `acceptance_checks` remain authoritative; a fixed generic question must not force an irrelevant page into the wiki.
 
 If a critical gate fails, revise the owning page once using named gaps and rerun the gates. After that, report `quality_failed`; do not loop or lower the gate.
 

@@ -70,3 +70,4 @@ Approved by the user on 2026-07-14; implementation remains in progress.
 - TypeScript, Python, and Rust fixtures prove evidence initialization and semantic persistence, but do not yet execute the full docs-only question rubric.
 - Pinned Mezon commit `9d7ba654830c0e6278d0eb413a0eb9a992f01a55` synthesized six reader pages and reached `reader_docs_ready`; the reproducibility manifest, docs-only answers, source audit, and evaluator-independence caveat are recorded in `docs/work/benchmarks/MEZON-DESKTOP-9D7BA65.md`.
 - Human UAT, cross-model comparison, full semantic rubric calibration, media-depth coverage, and executed TypeScript/Python docs-only question sets remain phase-level follow-up gates.
+- Package `0.2.2` now requires portable onboarding questions plus capability-specific questions derived from the mental model/WikiPlan, preventing irrelevant API/data/deployment pages from being forced into every repository.

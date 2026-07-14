@@ -18,6 +18,7 @@ trace:
     - docs/work/bugs/BUG-001-companion-bypasses-reader-synthesis.md
     - docs/work/bugs/BUG-002-installed-skill-version-drift.md
     - docs/work/bugs/BUG-003-skill-can-bypass-init-gate.md
+    - docs/work/bugs/BUG-004-installed-skill-self-contaminates-source-discovery.md
   research: docs/work/research/READER-FIRST-DOCS-AUDIT.md
   reference_research: docs/work/research/REFERENCE-DOCS-QUALITY-RESEARCH.md
   grok_audit: docs/work/research/GROK-WIKI-MEZON-AUDIT.md
@@ -76,6 +77,7 @@ Generate evidence-backed documentation that enables a new developer to form an a
 | BUG-001 | Companion bypasses reader synthesis | fixed, regression_verified, in_review | `docs/work/research/GROK-WIKI-MEZON-AUDIT.md`, `docs/work/designs/DESIGN-030-reader-first-synthesis-and-diagrams.md` |
 | BUG-002 | Installed skill version drift is undetectable | fixed, regression_verified, in_review | `docs/work/designs/DESIGN-032-skill-install-version-integrity.md`, `docs/decisions/ADR-0011-skill-distribution-version-integrity.md` |
 | BUG-003 | Skill can bypass init and validation gates | fixed, regression_verified, in_review | `docs/work/designs/DESIGN-033-mandatory-skill-execution-gate.md` |
+| BUG-004 | Installed skill self-contaminates target source discovery | fixed, regression_verified, in_review | `docs/work/designs/DESIGN-034-exclude-installed-codewiki-payload-from-source-discovery.md` |
 
 ## Dependencies
 
@@ -123,12 +125,14 @@ Generate evidence-backed documentation that enables a new developer to form an a
 - [x] Risks, dependencies, and verification strategy are recorded.
 - [x] BUG-001 is reproduced and its architectural root cause is recorded.
 - [x] BUG-002 is reproduced and its distribution/versioning root cause is recorded.
-- [x] Human approved ADR-0010, ADR-0011, and the four detail designs.
+- [x] Human approved ADR-0010, ADR-0011, and the six PHASE-002 detail designs through the original and follow-up implementation requests.
 - [x] Implementation began after approval.
 - [x] Pinned Mezon synthesis reached `reader_docs_ready` on a clean source commit.
 - [x] Full workspace tests, scoped strict Clippy, installer/helper syntax, and installed-helper validation pass.
 - [x] Real-user failure where a verified skill wrote docs without a control plane is reproduced and guarded by mandatory preflight/validation entry commands.
+- [x] Fresh project-local install excludes its managed skill/companion payload while preserving current modified and untracked target source evidence.
+- [x] Independent package `0.2.2` forward synthesis passed source/diagram/cross-page/docs-only gates and reached `reader_docs_ready` on the clean JavaScript fixture.
 
 ## Completion Summary
 
-WikiPlan v2, legacy migration, hierarchy/ownership/cycle validation, the evidence-only companion boundary, reader-doc validation, package/install manifests, mandatory agent preflight, doctor/helper validation, and run provenance are implemented. A clean checkout of Mezon Desktop commit `9d7ba65` produced six concept-first reader pages and passed deterministic validation as `reader_docs_ready`; the later real-user run that bypassed init is captured as BUG-003 and fixed in package `0.2.1`. Phase closure remains gated by human UAT and the accepted cross-model/TypeScript/Python comparison scope; those gates are not silently waived.
+WikiPlan v2, legacy migration, hierarchy/ownership/cycle validation, the evidence-only companion boundary, reader-doc validation, package/install manifests, mandatory agent preflight, doctor/helper validation, and run provenance are implemented. Package `0.2.2` hardens current-working-tree exploration, reader contracts, capability-aware eval guidance, and excludes project-local CodeWiki payloads from target evidence. A clean checkout of Mezon Desktop commit `9d7ba65` produced six concept-first reader pages and passed deterministic validation as `reader_docs_ready`. Phase closure remains gated by human UAT and the accepted cross-model/TypeScript/Python comparison scope; those gates are not silently waived.

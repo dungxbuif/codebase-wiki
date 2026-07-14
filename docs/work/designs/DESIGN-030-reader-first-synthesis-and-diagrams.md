@@ -167,3 +167,17 @@ Before acceptance, review the wiki as one reading surface:
 - Add Grok-export-inspired artifact-hygiene fixtures for duplicated frontmatter/sections, temporary absolute links, renderer tags, and missing provenance.
 - Verify ADR-0009 human-edit preservation.
 - Update skill references, requirements, architecture, standards, validation, context, traceability, and changelog.
+
+## 11. Prompt-Contract Hardening Follow-Up
+
+The user approved a follow-up on 2026-07-14 after reviewing the latest generated docs and the OpenWiki/deepwiki-open prompt patterns. This follow-up clarifies the accepted contract without introducing count-based quality proxies:
+
+- Keep a compact always-active reader contract in `SKILL.md`: preflight before reader writes, current-working-tree source inspection, mental model and WikiPlan before drafting, explanation before source inventory, explicit hypotheses, and final isolated evaluation/validation.
+- Treat the current filesystem working tree as init's source of truth. Git supplies identity, provenance, dirty/change context, and history; it does not replace reading current tracked, modified, staged, and relevant untracked source.
+- Add concise failure examples to `reader-first.md` so agents can recognize inventory-first prose, unsupported architecture claims, decorative diagrams, duplicate page ownership, and implementation detail without reader outcome.
+- Expose the implemented `RepositoryMentalModel` fields as the planning checklist rather than inventing a second template.
+- Move the approved page-type `reader outcome / required content / must not become` contract into the always-loaded docs-structure reference.
+- Expose the existing canonical claim confidence labels (`confirmed`, `source-backed`, `hypothesis`, `watchlist`) without adding `inferred` to the generic claim model.
+- Keep page length, file count, source count, diagram count, and repository-size thresholds out of acceptance logic. Coverage is proven by reader questions, evidence, known unknowns, and safe-change tasks.
+
+Regression coverage must fail when the packaged skill omits these entry/reference invariants. The package and skill/reference contract versions advance so installed copies cannot silently appear equivalent to the prior prompt contract.

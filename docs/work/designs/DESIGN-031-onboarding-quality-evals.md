@@ -103,3 +103,12 @@ The same harness runs against a TypeScript application and Python/service fixtur
 - Record exact generation/eval commands and model/provider metadata.
 - Add UAT and test-verification artifacts before phase completion.
 - Update validation matrix, testing strategy, skill completion rules, context, traceability, and changelog.
+
+## 9. Portable And Capability-Specific Questions
+
+The docs-only evaluation combines two question sets:
+
+1. Portable questions that apply to any repository: purpose and users, verified start path, major responsibility boundaries, one critical end-to-end workflow, safe starting location for a representative change, risks, and verification.
+2. Capability-specific questions derived from the repository mental model and WikiPlan. API, persistence, authentication, deployment, eventing, native integration, or similar questions become required only when repository evidence establishes that capability.
+
+Each critical question records expected concepts, canonical owning page, required evidence, critical misconceptions, and whether the answer is an explicit known unknown. Fixed generic questions must not force irrelevant API, data, or deployment pages into repositories that do not have those capabilities.

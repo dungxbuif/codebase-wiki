@@ -1,7 +1,7 @@
 schema_version: 1
-package_version: "0.2.1"
-skill_contract_version: 2
-reference_contract_version: 2
+package_version: "0.2.2"
+skill_contract_version: 3
+reference_contract_version: 3
 companion_interface_version: 2
 wikiplan_schema_min: 2
 wikiplan_schema_max: 2

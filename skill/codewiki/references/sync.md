@@ -70,3 +70,9 @@ Update only the wiki content affected by repository or documentation changes. Pr
 - Small change set: update at most the directly affected page(s).
 - Broad architecture/runtime change: update the canonical top-level pages plus affected area pages.
 - If more than three pages need edits, re-check the impact plan before writing.
+
+## Verified No-Op
+
+A sync is a verified no-op only when the preflight and docs impact plan find no current source, human-doc, provider, claim, convention, page-contract, or integrity change that requires reconciliation. Git diff is an input to that decision, not sufficient proof by itself; inspect the current affected source whenever a possible impact exists.
+
+When the wiki and control state remain valid, report `wiki is current` and preserve every file. Do not touch timestamps or rewrite any file solely to prove that sync ran. If an unplanned file or capability could change the mental model, expand the impact review instead of hiding it outside existing plan coverage.

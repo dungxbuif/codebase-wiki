@@ -349,12 +349,15 @@ fn collect_candidate_files(
         if should_skip(&name) {
             continue;
         }
+        let relative = path.strip_prefix(root).unwrap_or(&path).to_path_buf();
+        if is_generated_codewiki_path(&relative) {
+            continue;
+        }
 
         if path.is_dir() {
             collect_candidate_files(root, &path, depth + 1, file_limit, files, truncated)?;
         } else if path.is_file() {
-            let relative = path.strip_prefix(root).unwrap_or(&path).to_path_buf();
-            if is_generated_codewiki_path(&relative) || !is_semantic_candidate(&relative) {
+            if !is_semantic_candidate(&relative) {
                 continue;
             }
             files.push(relative);
@@ -365,7 +368,7 @@ fn collect_candidate_files(
 }
 
 fn is_generated_codewiki_path(path: &Path) -> bool {
-    path.starts_with(".agents/skills/codewiki/project") || is_generated_docs_path(path)
+    path.starts_with(".agents/skills/codewiki") || is_generated_docs_path(path)
 }
 
 fn is_generated_docs_path(path: &Path) -> bool {
@@ -759,6 +762,49 @@ mod tests {
                 .iter()
                 .all(|file| file.path != "docs/conventions/OVERVIEW.md")
         );
+        let _ = fs::remove_dir_all(root);
+    }
+
+    #[test]
+    fn ignores_installed_codewiki_skill_and_companion_payload() {
+        let root = temp_path("codewiki-explore-installed-skill");
+        fs::create_dir_all(root.join(".agents/skills/codewiki/companion/src"))
+            .expect("mkdir installed companion");
+        fs::create_dir_all(root.join("src")).expect("mkdir target src");
+        fs::write(
+            root.join(".agents/skills/codewiki/SKILL.md"),
+            "# installed skill\n",
+        )
+        .expect("write installed skill");
+        fs::write(
+            root.join(".agents/skills/codewiki/companion/Cargo.toml"),
+            "[package]\nname = \"installed-codewiki\"\n",
+        )
+        .expect("write installed manifest");
+        fs::write(
+            root.join(".agents/skills/codewiki/companion/src/lib.rs"),
+            "pub fn installed_runtime() {}\n",
+        )
+        .expect("write installed source");
+        fs::write(root.join("src/app.js"), "export function app() {}\n")
+            .expect("write target source");
+
+        let snapshot = explore_repository(&root).expect("explore");
+
+        assert!(snapshot.files.iter().any(|file| file.path == "src/app.js"));
+        assert!(
+            snapshot
+                .files
+                .iter()
+                .all(|file| !file.path.starts_with(".agents/skills/codewiki"))
+        );
+        assert!(
+            snapshot
+                .evidence
+                .iter()
+                .all(|evidence| !evidence.path.starts_with(".agents/skills/codewiki"))
+        );
+
         let _ = fs::remove_dir_all(root);
     }
 

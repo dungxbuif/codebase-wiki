@@ -51,6 +51,26 @@ After model planning/synthesis and quality review, the final mutating workflow c
 
 Never call generation complete, successful, ready, or onboarding-quality unless validation returns `generation_status: reader_docs_ready`. If preflight or validation fails, report the exact failure and leave the run incomplete.
 
+## Always-Active Reader Contract
+
+These invariants apply even before detailed references are loaded:
+
+1. Treat the current filesystem working tree as init's source of truth; use Git for identity, provenance, change context, and history, not as a substitute for reading current code.
+2. Complete the evidence-backed repository mental model and WikiPlan before drafting any reader page.
+3. Put purpose, reader outcome, and plain-language explanation before source inventory or implementation mapping.
+4. Keep important claims source-backed and label hypotheses explicitly; never turn lexical symbol/import hints into architecture facts by themselves.
+5. Make every page and diagram answer a named reader question, then run isolated docs-only evaluation, source audit, and final companion validation before reporting success.
+
+## Always-Active Anti-Patterns
+
+Reject output that exhibits any of these patterns before loading any reference:
+
+- **File-list opener**: starting any reader page with a directory tree, file list, or symbol inventory before explaining purpose and reader outcome.
+- **Unanchored claim**: asserting an architecture or behavior fact without citing at least one file path, symbol name, command, or existing doc as evidence.
+- **Uncaptioned diagram**: creating a diagram with no caption that explicitly names the reader question the diagram answers.
+- **False completion**: declaring init or sync complete, successful, or onboarding-ready before both `codewiki-preflight.sh` and `codewiki-helper.sh validate` return success.
+- **Unlabeled hypothesis**: presenting speculative content as confirmed fact without an explicit hypothesis marker, evidence gap, and confidence note.
+
 ## Reference Loading
 
 Keep this file as the compact router. Load bundled references only when needed:
@@ -154,7 +174,7 @@ This means ordinary Q&A about documented architecture should not activate Octoco
 ## Init Workflow
 
 1. Run the mandatory `codewiki-preflight.sh init <repository-path>` gate before writing reader docs; expect `generation_status: synthesis_incomplete`.
-2. Resolve repository identity from Git and filesystem context.
+2. Resolve repository identity from Git and filesystem context, then inspect the current working tree, including relevant uncommitted and untracked source.
 3. Inspect existing docs and bounded evidence before source where useful.
 4. Explore source semantically for the mental model, conventions, and page-specific evidence gaps.
 5. Build the repository mental model and WikiPlan v2 page contracts from evidence.

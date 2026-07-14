@@ -1,4 +1,4 @@
 interface:
   display_name: "CodeWiki"
   short_description: "Generate evidence-backed semantic repository wikis"
-  default_prompt: "Use $codewiki to run mandatory codewiki-preflight.sh, synthesize reader-first repository docs, and validate reader_docs_ready."
+  default_prompt: "Use $codewiki to run mandatory codewiki-preflight.sh, inspect the current working tree, build the repository mental model and WikiPlan, synthesize reader-first docs, and validate reader_docs_ready."
